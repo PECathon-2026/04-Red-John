@@ -1,5 +1,7 @@
 # DevPilot — Architecture Plan
 
+> **Superseded.** This was the original plan. The system as built is described in [ARCHITECTURE.md](ARCHITECTURE.md); it differs in places (e.g. Atlas is a rule-based orchestrator, Scribe is optional, and the backend lives in `backend_main/`).
+
 > PS-001 · *Plan like a Shogun. Build like a Samurai. Test like a Sentinel. Adapt until the mission is complete.*
 >
 > DevPilot turns a natural-language request into a working, tested, reviewed change on a small local repository.
