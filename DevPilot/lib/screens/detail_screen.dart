@@ -7,6 +7,9 @@ import '../theme/app_theme.dart';
 import '../widgets/agent_card.dart';
 import '../widgets/artifact_stream.dart';
 import '../widgets/macro_deck.dart';
+import '../widgets/modals/evidence_modal.dart';
+import '../widgets/modals/issue_resolver_modal.dart';
+import '../widgets/modals/patch_review_modal.dart';
 import '../widgets/terminal_feed.dart';
 import '../widgets/vitals_bar.dart';
 
@@ -298,110 +301,206 @@ class _DetailScreenState extends State<DetailScreen> {
 
   // --- 3. Session & Host Card ---
   Widget _buildSessionCard() {
+    final issues = widget.service.openIssues.where((i) => !i.isResolved).toList();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceInverse, // Ink #0E0F0C
-          borderRadius: AppTheme.cardRadius,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Left: Space Grotesk display numeral "21"
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        '21',
-                        style: AppTheme.displayMd.copyWith(
-                          color: AppTheme.onInverse,
-                          fontSize: 38,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'November, 10 AM',
-                          style: AppTheme.bodySmall.copyWith(
-                            color: AppTheme.onInverse.withValues(alpha: 0.7),
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary, // Electric Lime Dot
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'LAN E2EE • ',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.primary,
-                        ),
-                      ),
-                      Text(
-                        'devpilot.lan',
-                        style: AppTheme.caption.copyWith(
-                          color: AppTheme.onInverse.withValues(alpha: 0.8),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceInverse, // Ink #0E0F0C
+              borderRadius: AppTheme.cardRadius,
             ),
-            const SizedBox(width: 12),
-
-            // Right: Host Share link pill
-            GestureDetector(
-              onTap: _handleShareLink,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface, // Warm Paper Button
-                  borderRadius: AppTheme.pillRadius,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left: Mission ID / Progress
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            widget.project.id.startsWith('mission-') || widget.project.id.length > 8
+                                ? widget.project.id.substring(0, 8)
+                                : '21',
+                            style: AppTheme.displayMd.copyWith(
+                              color: AppTheme.onInverse,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              widget.project.duration,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: AppTheme.onInverse.withValues(alpha: 0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.primary, // Electric Lime Dot
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'LAN E2EE • ',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.primary,
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              widget.service.apiClient.baseUrl.contains('127.0.0.1') ||
+                                      widget.service.apiClient.baseUrl.contains('10.0.2.2')
+                                  ? 'devpilot.lan'
+                                  : widget.service.apiClient.baseUrl,
+                              style: AppTheme.caption.copyWith(
+                                color: AppTheme.onInverse.withValues(alpha: 0.8),
+                                letterSpacing: 0.5,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Row(
+                const SizedBox(width: 12),
+
+                // Right: Diff Review & Share pills
+                Row(
                   children: [
-                    Icon(Icons.link_rounded, size: 16, color: AppTheme.onSurface),
-                    SizedBox(width: 6),
-                    Text(
-                      'Share link',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.onSurface,
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        PatchReviewModal.show(context, widget.service);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentOrange.withValues(alpha: 0.2),
+                          borderRadius: AppTheme.pillRadius,
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.difference_outlined, size: 14, color: AppTheme.accentOrange),
+                            SizedBox(width: 4),
+                            Text(
+                              'Diff',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.accentOrange,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: _handleShareLink,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface, // Warm Paper Button
+                          borderRadius: AppTheme.pillRadius,
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.link_rounded, size: 14, color: AppTheme.onSurface),
+                            SizedBox(width: 4),
+                            Text(
+                              'Share link',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // If there are open issues / human clarification questions
+          if (issues.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () {
+                HapticFeedback.mediumImpact();
+                IssueResolverModal.show(context, service: widget.service, issue: issues.first);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.statusAmber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.statusAmber),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.help_center_rounded, color: AppTheme.statusAmber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CLARIFICATION REQUIRED (${issues.length})',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.statusAmber,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            issues.first.text,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppTheme.statusAmber),
                   ],
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -736,13 +835,12 @@ class _DetailScreenState extends State<DetailScreen> {
             artifacts: artifacts,
             onArtifactTap: (artifact) {
               HapticFeedback.lightImpact();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Previewing artifact: ${artifact.name}'),
-                  backgroundColor: AppTheme.surfaceInverse,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final matching = widget.service.evidenceRecords.where((e) => e.evidenceId == artifact.id).toList();
+              if (matching.isNotEmpty) {
+                EvidenceModal.show(context, matching.first);
+              } else {
+                PatchReviewModal.show(context, widget.service);
+              }
             },
           ),
         ],
@@ -763,7 +861,13 @@ class _DetailScreenState extends State<DetailScreen> {
           const SizedBox(height: 14),
           MacroDeck(
             onAction: (action) {
-              widget.service.triggerAction(action);
+              if (action == 'Kill All' || action.toLowerCase().contains('kill') || action.toLowerCase().contains('halt')) {
+                widget.service.stopActiveMission();
+              } else if (action == 'Review Diff' || action.toLowerCase().contains('diff') || action.toLowerCase().contains('patch')) {
+                PatchReviewModal.show(context, widget.service);
+              } else {
+                widget.service.triggerAction(action);
+              }
             },
           ),
         ],

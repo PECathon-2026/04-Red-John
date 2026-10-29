@@ -55,6 +55,8 @@ class AppTheme {
   static const Color surfaceCard = surfaceRaised;
   static const Color darkPill = surfaceInverse;
   static const Color textDark = onSurface;
+  static const Color textPrimary = onSurface;
+  static const Color primaryDark = onSurface;
   static const Color textSecondary = onSurfaceVariant;
   static const Color textLight = onInverse;
   static const Color borderSubtle = border;

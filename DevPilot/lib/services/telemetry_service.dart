@@ -1,47 +1,71 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/models.dart';
+import 'api_client.dart';
 
-/// Telemetry and real-time simulation service for DevPilot mobile frontend.
+/// Telemetry and real-time backend orchestration service for DevPilot mobile frontend.
 ///
-/// Manages live hardware telemetry, task status, agent rosters, terminal logs,
-/// and interactive security approval gates.
+/// Connects end-to-end to `backend_main`:
+/// - Polls and streams real missions, task DAGs, acceptance criteria, and verified evidence.
+/// - Listens to live WebSocket event streams with automatic sequence replay.
+/// - Gathers real AMBER approval requests and transmits operator decisions.
+/// - Manages real issue resolutions and human-in-the-loop clarifications.
+/// - Requests all-or-nothing patch application to the developer's target repository.
 class TelemetryService extends ChangeNotifier {
   final bool autoStart;
-  final Random _random = Random();
+  final DevPilotApiClient apiClient;
 
+  Timer? _pollingTimer;
   Timer? _tickTimer;
-  Timer? _simLogTimer;
-  int _tickCount = 0;
+  WebSocketChannel? _wsChannel;
+  StreamSubscription? _wsSubscription;
 
-  // Active state
+  // Active Mission State
+  String? _activeMissionId;
   late RunningTask _currentTask;
   late HardwareVitals _vitals;
-  late List<ProjectItem> _projects;
-  late List<AgentItem> _agents;
-  late List<GoalItem> _goals;
+  List<ProjectItem> _projects = [];
+  List<AgentItem> _agents = [];
+  List<GoalItem> _goals = [];
   final List<TerminalLog> _logs = [];
-  late List<ArtifactItem> _artifacts;
+  List<ArtifactItem> _artifacts = [];
+  List<AcceptanceCriterionItem> _criteria = [];
+  List<EvidenceRecord> _evidenceRecords = [];
+  List<OpenIssueItem> _openIssues = [];
+  String? _latestPatch;
 
-  // Security gate & parameters
+  // Governance & Security Gate
   bool _isPendingApproval = false;
   String? _pendingActionTitle;
   String? _pendingActionDetails;
+  ApprovalRequest? _pendingApproval;
   int _workerThreads = 8;
   bool _isVerbose = false;
   bool _isLANConnected = true;
 
-  TelemetryService({this.autoStart = true}) {
-    _initializeMockData();
+  // Backend Connection State
+  bool _isBackendConnected = false;
+  bool _isSyncing = false;
+  String? _connectionError;
+  BackendHealth _backendHealth = const BackendHealth();
+  int _lastSeq = 0;
+
+  TelemetryService({
+    this.autoStart = true,
+    DevPilotApiClient? client,
+  }) : apiClient = client ?? DevPilotApiClient() {
+    _initializeDefaultState();
     if (autoStart) {
-      _startSimulation();
+      _startBackendLifecycle();
     }
   }
 
   // --- Getters ---
+  String? get activeMissionId => _activeMissionId;
   RunningTask get currentTask => _currentTask;
   HardwareVitals get vitals => _vitals;
   List<ProjectItem> get projects => List.unmodifiable(_projects);
@@ -49,37 +73,49 @@ class TelemetryService extends ChangeNotifier {
   List<GoalItem> get goals => List.unmodifiable(_goals);
   List<TerminalLog> get logs => List.unmodifiable(_logs);
   List<ArtifactItem> get artifacts => List.unmodifiable(_artifacts);
+  List<AcceptanceCriterionItem> get criteria => List.unmodifiable(_criteria);
+  List<EvidenceRecord> get evidenceRecords => List.unmodifiable(_evidenceRecords);
+  List<OpenIssueItem> get openIssues => List.unmodifiable(_openIssues);
+  String? get latestPatch => _latestPatch;
 
   bool get isPendingApproval => _isPendingApproval;
   String? get pendingActionTitle => _pendingActionTitle;
   String? get pendingActionDetails => _pendingActionDetails;
+  ApprovalRequest? get pendingApproval => _pendingApproval;
 
   int get workerThreads => _workerThreads;
   bool get isVerbose => _isVerbose;
   bool get isLANConnected => _isLANConnected;
+  bool get isBackendConnected => _isBackendConnected;
+  bool get isSyncing => _isSyncing;
+  String? get connectionError => _connectionError;
+  BackendHealth get backendHealth => _backendHealth;
 
-  // --- Initial Data Setup ---
-  void _initializeMockData() {
-    _currentTask = RunningTask(
-      id: 'task-live-1',
-      pipelineName: 'DevPilot Core Engine',
-      taskName: 'Compiling Shaders & AST',
-      startedAt: DateTime.now().subtract(
-        const Duration(minutes: 4, seconds: 22),
-      ),
-      phase: TaskPhase.running,
-      progress: 0.68,
-      securityBadge: 'LAN E2EE',
-      isE2eeEncrypted: true,
-    );
+  // --- Initialization ---
 
-    _vitals = const HardwareVitals(
-      cpuPercent: 44.0,
-      ramPercent: 64.0,
-      networkMBps: 18.5,
-      batteryPercent: 88.0,
-      isCharging: true,
-    );
+  int _tickCount = 0;
+
+  void _initializeDefaultState() {
+    // Populate the canonical 16-agent DevPilot Guild + baseline agents
+    final baseGuild = List.of(BackendModelConverters.guild16);
+    // Ensure 'Dev' and 'Nisha' are present for Image 1 & 2 baseline UI
+    if (!baseGuild.any((a) => a.name == 'Dev')) {
+      baseGuild.insert(
+        2,
+        const AgentItem(
+          id: 'agent_dev',
+          name: 'Dev',
+          team: 'Network',
+          clearance: 'GREEN',
+          currentTask: 'Procurement & landed cost matrix compilation',
+          status: 'Active',
+          phase: 'Compiling',
+          bio: 'Computes total landed cost, freight, insurance, duties, handling, and switching cost.',
+          assignedTools: ['Cost Engine', 'Supplier Lane DB', 'FX Matrix'],
+        ),
+      );
+    }
+    _agents = baseGuild;
 
     _projects = [
       const ProjectItem(
@@ -121,103 +157,26 @@ class TelemetryService extends ChangeNotifier {
       ),
     ];
 
-    _agents = [
-      const AgentItem(
-        id: 'agent-1',
-        name: 'Atlas',
-        team: 'Executive',
-        clearance: 'GREEN',
-        currentTask: 'Analyzing AST call-graph & orchestrating pipeline',
-        status: 'Active',
-        phase: 'Analysis',
-        bio: 'The organizational brain. Interprets mission briefs, builds research plans, monitors progress, and commissions the final architecture.',
-        assignedTools: ['AST Parser', 'Docker Runner', 'Architecture Graph'],
-        subtaskChecklist: [
-          'Parse syntax tree',
-          'Map dependencies',
-          'Audit circular calls',
-          'Verify type safety',
-        ],
-        elapsed: '14m 22s',
+    _currentTask = RunningTask(
+      id: 'task-live-1',
+      pipelineName: 'DevPilot Core Engine',
+      taskName: 'Compiling Shaders & AST',
+      startedAt: DateTime.now().subtract(
+        const Duration(minutes: 4, seconds: 22),
       ),
-      const AgentItem(
-        id: 'agent-2',
-        name: 'Dev',
-        team: 'Network',
-        clearance: 'GREEN',
-        currentTask: 'Procurement & landed cost matrix compilation',
-        status: 'Active',
-        phase: 'Compiling',
-        bio: 'Computes total landed cost, freight, insurance, duties, handling, and switching cost for every supplier lane.',
-        assignedTools: ['Cost Engine', 'Supplier Lane DB', 'FX Matrix'],
-        subtaskChecklist: [
-          'Import freight rates',
-          'Calculate tariff surcharge',
-          'Evaluate backup lanes',
-        ],
-        elapsed: '08m 45s',
-      ),
-      const AgentItem(
-        id: 'agent-3',
-        name: 'Nisha',
-        team: 'Council',
-        clearance: 'AMBER',
-        currentTask: 'Evaluating operational feasibility & lead times',
-        status: 'Active',
-        phase: 'Review',
-        bio: 'Operations strategist. Challenges unrealistic lead times, warehouse limitations, and operational complexity.',
-        assignedTools: ['SimGrid', 'Warehouse Capacity Model'],
-        subtaskChecklist: [
-          'Audit warehouse throughput',
-          'Flag 3PL bottlenecks',
-          'Review pick & pack limits',
-        ],
-        elapsed: '21m 10s',
-      ),
-      const AgentItem(
-        id: 'agent-4',
-        name: 'Kabir',
-        team: 'Network',
-        clearance: 'GREEN',
-        currentTask: 'Planning multimodal transport & route alternatives',
-        status: 'Active',
-        phase: 'Routing',
-        bio: 'Plans transport modes, route selection, shipping times, warehouse placement, and last-mile considerations.',
-        assignedTools: ['Route Optimizer', 'Port Congestion Feed'],
-        subtaskChecklist: [
-          'Check ocean freight choke points',
-          'Optimize air/rail split',
-          'Calculate ETA variance',
-        ],
-        elapsed: '05m 19s',
-      ),
-      const AgentItem(
-        id: 'agent-5',
-        name: 'Maya',
-        team: 'Executive',
-        clearance: 'GREEN',
-        currentTask: 'AI task force hiring and capacity allocation',
-        status: 'Idle',
-        phase: 'Standby',
-        bio: 'First decision-maker on missions. Reads incoming briefs and hires only the specialists the project actually requires.',
-        assignedTools: ['Agent Registry', 'Skill Matcher'],
-        subtaskChecklist: ['Evaluate task complexity', 'Form task force team'],
-        elapsed: '42m 00s',
-      ),
-      const AgentItem(
-        id: 'agent-6',
-        name: 'Tara',
-        team: 'Network',
-        clearance: 'GREEN',
-        currentTask: 'Safety stock & inventory buffer modeling',
-        status: 'Active',
-        phase: 'Modeling',
-        bio: 'Sizes safety stock, reorder points, and inventory buffers per SKU/category and location against demand coverage.',
-        assignedTools: ['Inventory Buffer Model', 'Demand Forecaster'],
-        subtaskChecklist: ['Compute buffer sizes', 'Check stockout exposure'],
-        elapsed: '11m 30s',
-      ),
-    ];
+      phase: TaskPhase.running,
+      progress: 0.68,
+      securityBadge: 'LAN E2EE',
+      isE2eeEncrypted: true,
+    );
+
+    _vitals = const HardwareVitals(
+      cpuPercent: 44.0,
+      ramPercent: 64.0,
+      networkMBps: 18.5,
+      batteryPercent: 88.0,
+      isCharging: true,
+    );
 
     _goals = [
       const GoalItem(
@@ -252,68 +211,7 @@ class TelemetryService extends ChangeNotifier {
         status: GoalStatus.pending,
         description: 'Execute automated regression test suite on isolated virtual devices.',
       ),
-      const GoalItem(
-        id: 'g5',
-        stepNumber: 5,
-        category: 'DEPLOYMENT',
-        title: 'Sign & Distribute Release Artifacts',
-        status: GoalStatus.pending,
-        description: 'Generate signed APK and push encrypted telemetry metrics to devpilot.lan.',
-      ),
     ];
-
-    final now = DateTime.now();
-    _logs.addAll([
-      TerminalLog(
-        id: 'log-1',
-        timestamp: now.subtract(const Duration(minutes: 4, seconds: 15)),
-        message:
-            '[BOOT] DevPilot Agent Daemon v2.4 initialized on devpilot.lan',
-        type: LogType.info,
-      ),
-      TerminalLog(
-        id: 'log-2',
-        timestamp: now.subtract(const Duration(minutes: 3, seconds: 50)),
-        message: '[E2EE] Mutual TLS 1.3 handshake established (Cipher: TLS_AES_256_GCM_SHA384)',
-        type: LogType.info,
-      ),
-      TerminalLog(
-        id: 'log-3',
-        timestamp: now.subtract(const Duration(minutes: 3, seconds: 12)),
-        message: '[BUILD] Resolving package dependencies: 42 modules matched',
-        type: LogType.stdout,
-      ),
-      TerminalLog(
-        id: 'log-4',
-        timestamp: now.subtract(const Duration(minutes: 2, seconds: 40)),
-        message: '[AST] Parsing syntax tree: 11,684 symbols indexed in 380ms',
-        type: LogType.stdout,
-      ),
-      TerminalLog(
-        id: 'log-5',
-        timestamp: now.subtract(const Duration(minutes: 2, seconds: 10)),
-        message: '[WARN] Deprecated API call in telemetry_stream.dart: L88',
-        type: LogType.warning,
-      ),
-      TerminalLog(
-        id: 'log-6',
-        timestamp: now.subtract(const Duration(minutes: 1, seconds: 35)),
-        message: '[COMP] Compiling 248 Dart source units...',
-        type: LogType.stdout,
-      ),
-      TerminalLog(
-        id: 'log-7',
-        timestamp: now.subtract(const Duration(seconds: 45)),
-        message: '[TEST] Unit tests passed: 48/48 suites green (100%)',
-        type: LogType.success,
-      ),
-      TerminalLog(
-        id: 'log-8',
-        timestamp: now.subtract(const Duration(seconds: 12)),
-        message: '[AOT] Assembling native ARM64 release binaries...',
-        type: LogType.stdout,
-      ),
-    ]);
 
     _artifacts = [
       ArtifactItem(
@@ -321,135 +219,673 @@ class TelemetryService extends ChangeNotifier {
         name: 'devpilot-arm64-v8a-release.apk',
         size: '28.4 MB',
         type: ArtifactType.apk,
-        timestamp: now.subtract(const Duration(minutes: 3)),
+        timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
         path: '/build/outputs/apk/release/devpilot-release.apk',
       ),
-      ArtifactItem(
-        id: 'art-2',
-        name: 'ast_graph_overview.png',
-        size: '3.2 MB',
-        type: ArtifactType.image,
-        timestamp: now.subtract(const Duration(minutes: 6)),
-        path: '/reports/ast_graph_overview.png',
-      ),
-      ArtifactItem(
-        id: 'art-3',
-        name: 'e2e_benchmark_report.pdf',
-        size: '840 KB',
-        type: ArtifactType.document,
-        timestamp: now.subtract(const Duration(minutes: 10)),
-        path: '/reports/e2e_benchmark.pdf',
-      ),
-      ArtifactItem(
-        id: 'art-4',
-        name: 'build_trace_20261030.log',
-        size: '4.8 MB',
-        type: ArtifactType.log,
-        timestamp: now.subtract(const Duration(minutes: 15)),
-        path: '/logs/build_trace.log',
-      ),
     ];
+
+    _logs.add(
+      TerminalLog(
+        id: 'init-1',
+        timestamp: DateTime.now(),
+        message: '[SYSTEM] DevPilot Client initialized. Target: ${apiClient.baseUrl}',
+        type: LogType.info,
+      ),
+    );
   }
 
-  // --- Real-Time Simulation Engine ---
-  void _startSimulation() {
-    // 1-second ticker for elapsed timer
+  void _startBackendLifecycle() {
+    // Ticker for running task elapsed display
     _tickTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       simulateTick();
     });
 
-    // 3-second simulation timer for realistic log bursts
-    _simLogTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _emitSimulatedLog();
+    // Initial backend fetch
+    refreshFromBackend();
+
+    // Periodic mission list polling (every 6 seconds)
+    _pollingTimer = Timer.periodic(const Duration(seconds: 6), (_) {
+      if (_isLANConnected) {
+        _pollBackendStatus();
+      }
     });
   }
 
-  /// Triggers a single simulation step (used by ticker and manual test invocations).
-  void simulateTick() {
-    _tickCount++;
+  // --- Real Backend Synchronization ---
 
-    // 1. Natural hardware vitals fluctuation (CPU 28-65%, RAM 62-70%, network, battery 88-89%)
-    final cpuBase = 42.0;
-    final cpuJitter =
-        sin(_tickCount * 0.15) * 14.0 + (_random.nextDouble() * 8.0 - 4.0);
-    final nextCpu = (cpuBase + cpuJitter).clamp(28.0, 65.0);
+  /// Triggers full synchronization from `backend_main`.
+  Future<void> refreshFromBackend() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+    _connectionError = null;
+    notifyListeners();
 
-    final ramBase = 65.0;
-    final ramJitter =
-        cos(_tickCount * 0.08) * 3.0 + (_random.nextDouble() * 2.0 - 1.0);
-    final nextRam = (ramBase + ramJitter).clamp(62.0, 70.0);
+    try {
+      // 1. Health Probe
+      try {
+        final healthData = await apiClient.checkHealth();
+        _backendHealth = BackendHealth.fromJson(healthData);
+        _isBackendConnected = _backendHealth.isHealthy;
+      } catch (e) {
+        _isBackendConnected = false;
+        _connectionError = 'Backend unreachable: $e';
+      }
 
-    final netJitter =
-        12.0 + sin(_tickCount * 0.3) * 8.0 + _random.nextDouble() * 6.0;
-    final nextNet = max(1.2, netJitter);
+      // 2. Fetch Missions
+      if (_isBackendConnected) {
+        final missionList = await apiClient.listMissions(limit: 50);
+        _projects = missionList.map((m) {
+          final id = m['mission_id'] as String? ?? '';
+          final title = m['title'] as String? ?? id;
+          final statusStr = (m['status'] as String? ?? 'created').toUpperCase();
+          final progressData = m['progress'] as Map<String, dynamic>? ?? {};
+          final tasks = progressData['tasks'] as Map<String, dynamic>? ?? {};
+          final done = (tasks['done'] as num?)?.toInt() ?? 0;
+          final total = tasks.values.fold<int>(0, (sum, v) => sum + ((v as num?)?.toInt() ?? 0));
+          final calcProgress = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
 
-    final nextBattery = _tickCount % 60 == 0
-        ? max(85.0, _vitals.batteryPercent - 0.1)
-        : _vitals.batteryPercent;
+          CardColorType color;
+          switch (statusStr.toLowerCase()) {
+            case 'completed':
+              color = CardColorType.mint;
+            case 'running':
+              color = CardColorType.peach;
+            case 'awaiting_human':
+              color = CardColorType.lavender;
+            default:
+              color = CardColorType.warm;
+          }
 
-    _vitals = _vitals.copyWith(
-      cpuPercent: nextCpu,
-      ramPercent: nextRam,
-      networkMBps: nextNet,
-      batteryPercent: nextBattery,
-    );
+          return ProjectItem(
+            id: id,
+            title: title,
+            subtitle: 'DevPilot Autonomous Mission',
+            duration: statusStr,
+            colorType: color,
+            progress: calcProgress,
+            tags: [statusStr],
+            isLive: statusStr.toLowerCase() == 'running',
+          );
+        }).toList();
 
-    // 2. Incremental progress on running task
-    if (_currentTask.phase == TaskPhase.running &&
-        _currentTask.progress < 0.96) {
-      _currentTask = _currentTask.copyWith(
-        progress: min(0.96, _currentTask.progress + 0.003),
+        // If no active mission selected, select the first or running mission
+        if (_projects.isNotEmpty && _activeMissionId == null) {
+          final running = _projects.firstWhere(
+            (p) => p.isLive,
+            orElse: () => _projects.first,
+          );
+          await selectMission(running.id);
+        }
+      }
+    } catch (e) {
+      _connectionError = e.toString();
+    } finally {
+      _isSyncing = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _pollBackendStatus() async {
+    try {
+      final healthData = await apiClient.checkHealth();
+      _backendHealth = BackendHealth.fromJson(healthData);
+      _isBackendConnected = _backendHealth.isHealthy;
+
+      if (_activeMissionId != null) {
+        await _fetchMissionSnapshot(_activeMissionId!);
+      }
+    } catch (_) {
+      // Background poll failure handled gracefully
+    }
+  }
+
+  /// Selects an active mission to inspect, loads its snapshot, and subscribes to its live WebSocket.
+  Future<void> selectMission(String missionId, {bool connectWs = true}) async {
+    _activeMissionId = missionId;
+    await _fetchMissionSnapshot(missionId);
+    if (connectWs) {
+      _connectWebSocket(missionId);
+    }
+  }
+
+  Future<void> _fetchMissionSnapshot(String missionId) async {
+    try {
+      final snap = await apiClient.getMissionSnapshot(missionId);
+      _applySnapshot(snap);
+    } catch (e) {
+      _logs.add(
+        TerminalLog(
+          id: 'snap-err-${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
+          message: '[ERROR] Snapshot failed for $missionId: $e',
+          type: LogType.error,
+        ),
       );
+      notifyListeners();
+    }
+  }
+
+  void _applySnapshot(Map<String, dynamic> snap) {
+    final mission = snap['mission'] as Map<String, dynamic>? ?? {};
+    final statusStr = mission['status'] as String? ?? 'running';
+    final title = mission['title'] as String? ?? 'DevPilot Mission';
+
+    TaskPhase phase;
+    switch (statusStr.toLowerCase()) {
+      case 'completed':
+        phase = TaskPhase.success;
+      case 'running':
+        phase = TaskPhase.running;
+      case 'planning':
+        phase = TaskPhase.compiling;
+      case 'failed':
+        phase = TaskPhase.failed;
+      case 'awaiting_human':
+        phase = TaskPhase.paused;
+      default:
+        phase = TaskPhase.idle;
     }
 
+    final progressData = snap['progress'] as Map<String, dynamic>? ?? {};
+    final tasksData = progressData['tasks'] as Map<String, dynamic>? ?? {};
+    final done = (tasksData['done'] as num?)?.toInt() ?? 0;
+    final total = tasksData.values.fold<int>(0, (sum, v) => sum + ((v as num?)?.toInt() ?? 0));
+    final calcProgress = total > 0 ? (done / total).clamp(0.0, 1.0) : (phase == TaskPhase.success ? 1.0 : 0.4);
+
+    final readyTasks = (snap['readyTasks'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+    final currentTaskName = readyTasks.isNotEmpty
+        ? 'Executing task: ${readyTasks.first}'
+        : (phase == TaskPhase.success ? 'Mission Completed Successfully' : 'Orchestrating Task Force');
+
+    DateTime createdAt = DateTime.now();
+    if (mission['created_at'] != null) {
+      final numVal = (mission['created_at'] as num).toInt();
+      final ms = numVal < 10000000000 ? numVal * 1000 : numVal;
+      createdAt = DateTime.fromMillisecondsSinceEpoch(ms);
+    }
+
+    _currentTask = RunningTask(
+      id: mission['mission_id'] as String? ?? _activeMissionId ?? 'task-1',
+      pipelineName: title,
+      taskName: currentTaskName,
+      startedAt: createdAt,
+      phase: phase,
+      progress: calcProgress,
+      securityBadge: 'LAN E2EE',
+      isE2eeEncrypted: true,
+    );
+
+    // Update Criteria
+    final rawCriteria = (snap['acceptanceCriteria'] as List<dynamic>?) ??
+        (snap['criteria'] as List<dynamic>?) ??
+        [];
+    _criteria = rawCriteria
+        .map((c) => AcceptanceCriterionItem.fromJson(c as Map<String, dynamic>))
+        .toList();
+
+    // Update Tasks -> Goals (or fall back to Criteria if tasks not yet scheduled)
+    final rawTasks = snap['tasks'] as List<dynamic>? ?? [];
+    if (rawTasks.isNotEmpty) {
+      _goals = rawTasks.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final t = entry.value as Map<String, dynamic>;
+        final tStatus = t['status'] as String? ?? 'pending';
+
+        GoalStatus gStatus;
+        switch (tStatus.toLowerCase()) {
+          case 'done':
+            gStatus = GoalStatus.completed;
+          case 'in_progress':
+            gStatus = GoalStatus.inProgress;
+          case 'failed':
+            gStatus = GoalStatus.failed;
+          case 'blocked':
+            gStatus = GoalStatus.blocked;
+          default:
+            gStatus = GoalStatus.pending;
+        }
+
+        return GoalItem(
+          id: t['id'] as String? ?? 'tsk-$idx',
+          stepNumber: idx + 1,
+          category: (t['kind'] as String? ?? 'IMPLEMENT').toUpperCase(),
+          title: t['title'] as String? ?? 'Task ${idx + 1}',
+          status: gStatus,
+          description: t['description'] as String? ?? '',
+        );
+      }).toList();
+    } else if (_criteria.isNotEmpty) {
+      _goals = _criteria.asMap().entries.map((entry) {
+        final idx = entry.key;
+        final c = entry.value;
+        return GoalItem(
+          id: c.id.isNotEmpty ? c.id : 'crit-$idx',
+          stepNumber: idx + 1,
+          category: 'CRITERION',
+          title: c.text,
+          status: c.isMet ? GoalStatus.completed : GoalStatus.inProgress,
+          description: c.note ?? '',
+        );
+      }).toList();
+    }
+
+    // Update Evidence -> Artifacts
+    final rawEvidence = snap['evidence'] as List<dynamic>? ?? [];
+    _evidenceRecords = rawEvidence
+        .map((e) => EvidenceRecord.fromJson(e as Map<String, dynamic>))
+        .toList();
+
+    _artifacts = _evidenceRecords.map((e) {
+      ArtifactType type;
+      switch (e.kind.toLowerCase()) {
+        case 'test_run':
+          type = ArtifactType.document;
+        case 'diff':
+          type = ArtifactType.document;
+        case 'secret_scan':
+        case 'static_scan':
+          type = ArtifactType.log;
+        default:
+          type = ArtifactType.other;
+      }
+
+      final passIcon = e.passed == true ? ' [PASS]' : (e.passed == false ? ' [FAIL]' : '');
+      return ArtifactItem(
+        id: e.evidenceId,
+        name: '${e.kind.toUpperCase()}$passIcon: ${e.agent}',
+        size: '${e.summary.length} bytes',
+        type: type,
+        timestamp: DateTime.now().subtract(Duration(milliseconds: e.at.abs())),
+        path: e.summary,
+      );
+    }).toList();
+
+    // Update Open Issues
+    final rawIssues = snap['issues'] as List<dynamic>? ?? [];
+    _openIssues = rawIssues
+        .map((i) => OpenIssueItem.fromJson(i as Map<String, dynamic>))
+        .toList();
+
+    // Update Pending Approvals
+    final pendingList = (snap['pendingApprovals'] as List<dynamic>?) ??
+        (snap['approvals'] as List<dynamic>?) ??
+        [];
+    if (pendingList.isNotEmpty) {
+      _pendingApproval = ApprovalRequest.fromJson(pendingList.first as Map<String, dynamic>);
+      _isPendingApproval = true;
+      _pendingActionTitle = 'Approval Required: ${_pendingApproval!.tool}';
+      _pendingActionDetails = '${_pendingApproval!.agent}: ${_pendingApproval!.reason}\n${_pendingApproval!.argsPreview}';
+    } else {
+      _isPendingApproval = false;
+      _pendingActionTitle = null;
+      _pendingActionDetails = null;
+      _pendingApproval = null;
+    }
+
+    // Update Active Hired Agents
+    final rawAgents = snap['agents'] as Map<String, dynamic>? ?? {};
+    final hiredAgents = (mission['hired_agents'] as List<dynamic>?)?.map((e) => e.toString().toLowerCase()).toSet() ?? {};
+
+    _agents = BackendModelConverters.guild16.map((g) {
+      final nameLower = g.name.toLowerCase();
+      final isHired = hiredAgents.contains(nameLower) || g.name == 'Atlas' || g.name == 'Maya';
+      final agentData = rawAgents[g.name] as Map<String, dynamic>?;
+
+      return g.copyWith(
+        status: isHired ? 'Active' : 'Standby',
+        phase: agentData?['phase'] as String? ?? (isHired ? 'On Duty' : 'Standby'),
+        currentTask: agentData?['task'] as String? ?? (isHired ? g.currentTask : 'Standby'),
+      );
+    }).toList();
+
+    // Update Snapshot Logs
+    final rawLogs = snap['logs'] as List<dynamic>? ?? [];
+    if (rawLogs.isNotEmpty && _logs.length < 15) {
+      for (final l in rawLogs) {
+        final text = l['text'] as String? ?? '';
+        final level = l['level'] as String? ?? 'info';
+        LogType lType;
+        switch (level) {
+          case 'action':
+          case 'command':
+            lType = LogType.command;
+          case 'success':
+            lType = LogType.success;
+          case 'warn':
+            lType = LogType.warning;
+          case 'error':
+            lType = LogType.error;
+          default:
+            lType = LogType.stdout;
+        }
+
+        _logs.add(
+          TerminalLog(
+            id: 'snap-log-${l['id']}',
+            timestamp: DateTime.now(),
+            message: text,
+            type: lType,
+          ),
+        );
+      }
+    }
+
+    _lastSeq = (snap['lastSeq'] as num?)?.toInt() ?? _lastSeq;
     notifyListeners();
   }
 
-  static const List<String> _simLogPool = [
-    '[AOT] Optimizing inline assembly for core runtime...',
-    '[CACHE] L2 cache hit ratio 94.2% across 12,400 symbols',
-    '[AST] Cross-module dependency graph analyzed: 0 circular refs',
-    '[NET] Telemetry sync acknowledged by devpilot.lan (RTT: 4ms)',
-    '[AGENT: Atlas] Re-balancing subtask distribution across worker nodes',
-    '[AGENT: Dev] Landed cost matrix verified with 0 discrepancy',
-    '[BUILD] Emitting debug symbol dSYM bundle...',
-    '[ENCRYPT] AES-256 session key rotated successfully',
-  ];
+  // --- Real-Time WebSocket Connection ---
 
-  int _simLogIndex = 0;
-  void _emitSimulatedLog() {
-    if (!_isLANConnected) return;
+  void _connectWebSocket(String missionId) {
+    _wsSubscription?.cancel();
+    _wsChannel?.sink.close();
 
-    final message = _simLogPool[_simLogIndex % _simLogPool.length];
-    _simLogIndex++;
+    try {
+      _wsChannel = apiClient.connectRealtimeStream(missionId, afterSeq: _lastSeq);
+      _wsSubscription = _wsChannel!.stream.listen(
+        (data) {
+          try {
+            final parsed = jsonDecode(data.toString()) as Map<String, dynamic>;
+            _handleWebSocketEvent(parsed);
+          } catch (_) {}
+        },
+        onError: (err) {
+          _logs.add(
+            TerminalLog(
+              id: 'ws-err-${DateTime.now().millisecondsSinceEpoch}',
+              timestamp: DateTime.now(),
+              message: '[WS] Stream interrupted, retrying via snapshot fallback...',
+              type: LogType.warning,
+            ),
+          );
+        },
+      );
+    } catch (_) {}
+  }
+
+  void _handleWebSocketEvent(Map<String, dynamic> evt) {
+    final kind = evt['kind'] as String? ?? '';
+    final data = evt['data'] as Map<String, dynamic>? ?? {};
+    final seq = evt['seq'] as int? ?? 0;
+    if (seq > _lastSeq) _lastSeq = seq;
+
+    final now = DateTime.now();
+
+    switch (kind) {
+      case 'log':
+        final text = data['text'] as String? ?? '';
+        final level = data['level'] as String? ?? 'info';
+        LogType lType = LogType.stdout;
+        if (level == 'success') lType = LogType.success;
+        if (level == 'warn') lType = LogType.warning;
+        if (level == 'error') lType = LogType.error;
+        if (level == 'command' || level == 'action') lType = LogType.command;
+
+        _logs.add(
+          TerminalLog(
+            id: 'ws-log-$seq',
+            timestamp: now,
+            message: text,
+            type: lType,
+          ),
+        );
+
+      case 'tool_call':
+        final tool = data['tool'] as String? ?? 'tool';
+        final agent = data['agent'] as String? ?? 'agent';
+        _logs.add(
+          TerminalLog(
+            id: 'tool-$seq',
+            timestamp: now,
+            message: '[TOOL CALL] $agent -> $tool()',
+            type: LogType.command,
+          ),
+        );
+
+      case 'tool_result':
+        final tool = data['tool'] as String? ?? 'tool';
+        final ok = data['ok'] as bool? ?? true;
+        _logs.add(
+          TerminalLog(
+            id: 'res-$seq',
+            timestamp: now,
+            message: '[TOOL RESULT] $tool -> ${ok ? "SUCCESS" : "FAILED"}',
+            type: ok ? LogType.success : LogType.error,
+          ),
+        );
+
+      case 'approval_request':
+        _pendingApproval = ApprovalRequest.fromJson(data);
+        _isPendingApproval = true;
+        _pendingActionTitle = 'Approval Required: ${_pendingApproval!.tool}';
+        _pendingActionDetails = '${_pendingApproval!.agent}: ${_pendingApproval!.reason}';
+        _logs.add(
+          TerminalLog(
+            id: 'appr-$seq',
+            timestamp: now,
+            message: '[AMBER GATE] ${_pendingApproval!.agent} requested approval for ${_pendingApproval!.tool}',
+            type: LogType.warning,
+          ),
+        );
+
+      case 'approval_response':
+        _isPendingApproval = false;
+        _pendingActionTitle = null;
+        _pendingActionDetails = null;
+        _pendingApproval = null;
+        _logs.add(
+          TerminalLog(
+            id: 'appr-res-$seq',
+            timestamp: now,
+            message: '[AMBER GATE] Approval resolved for ${data["tool"]}',
+            type: LogType.info,
+          ),
+        );
+
+      case 'evidence':
+        final evd = EvidenceRecord.fromJson(data);
+        _evidenceRecords.add(evd);
+        _artifacts.insert(
+          0,
+          ArtifactItem(
+            id: evd.evidenceId,
+            name: '${evd.kind.toUpperCase()}: ${evd.agent}',
+            size: '${evd.summary.length} bytes',
+            type: ArtifactType.document,
+            timestamp: now,
+            path: evd.summary,
+          ),
+        );
+
+      case 'mission_status':
+        if (_activeMissionId != null) {
+          _fetchMissionSnapshot(_activeMissionId!);
+        }
+    }
+
+    if (_logs.length > 300) {
+      _logs.removeRange(0, _logs.length - 300);
+    }
+    notifyListeners();
+  }
+
+  // --- End-to-End Mission Actions ---
+
+  /// Launch a real mission on the backend (`POST /api/v1/missions`).
+  Future<Map<String, dynamic>> createMission({
+    required String request,
+    required String repoPath,
+    String? title,
+    bool start = true,
+  }) async {
+    final result = await apiClient.createMission(
+      request: request,
+      repoPath: repoPath,
+      title: title,
+      start: start,
+    );
+
+    final missionData = result['mission'] as Map<String, dynamic>? ?? {};
+    final missionId = missionData['mission_id'] as String?;
+    if (missionId != null) {
+      await refreshFromBackend();
+      await selectMission(missionId);
+    }
+    return result;
+  }
+
+  /// Launch one of the pre-packaged evaluation benchmark scenarios from `missions/`.
+  Future<void> launchDemoScenario(DemoScenario scenario) async {
+    _logs.add(
+      TerminalLog(
+        id: 'launch-${DateTime.now().millisecondsSinceEpoch}',
+        timestamp: DateTime.now(),
+        message: '[LAUNCH] Starting benchmark scenario: ${scenario.title}...',
+        type: LogType.command,
+      ),
+    );
+    notifyListeners();
+
+    await createMission(
+      request: scenario.prompt,
+      repoPath: scenario.relativeRepoPath,
+      title: scenario.title,
+      start: true,
+    );
+  }
+
+  /// Start or resume current mission.
+  Future<void> runActiveMission() async {
+    if (_activeMissionId == null) return;
+    await apiClient.runMission(_activeMissionId!);
+    await _fetchMissionSnapshot(_activeMissionId!);
+  }
+
+  /// Stop current mission gracefully.
+  Future<void> stopActiveMission({String reason = 'stopped by operator'}) async {
+    if (_activeMissionId == null) return;
+    await apiClient.stopMission(_activeMissionId!, reason: reason);
+    await _fetchMissionSnapshot(_activeMissionId!);
+  }
+
+  /// Fetch full unified git diff patch for the active mission.
+  Future<String> fetchActivePatch() async {
+    if (_activeMissionId == null) return '';
+    _latestPatch = await apiClient.getMissionPatch(_activeMissionId!);
+    notifyListeners();
+    return _latestPatch!;
+  }
+
+  /// Request applying verified changes to the developer's working tree repository.
+  Future<Map<String, dynamic>> applyActivePatch() async {
+    if (_activeMissionId == null) return {};
+    final result = await apiClient.applyMissionChanges(_activeMissionId!);
+    if (_activeMissionId != null) {
+      await _fetchMissionSnapshot(_activeMissionId!);
+    }
+    return result;
+  }
+
+  /// Answer clarification questions or settle disputes raised by agents.
+  Future<void> resolveHumanIssue(String issueId, String resolution) async {
+    if (_activeMissionId == null) return;
+    await apiClient.resolveIssue(
+      missionId: _activeMissionId!,
+      issueId: issueId,
+      resolution: resolution,
+    );
+    await _fetchMissionSnapshot(_activeMissionId!);
+  }
+
+  // --- AMBER Approval Decisions ---
+
+  /// Resolves an AMBER gate with approval.
+  Future<void> approvePendingGate([String? note]) async {
+    final now = DateTime.now();
+
+    if (_pendingApproval != null) {
+      try {
+        await apiClient.respondToApproval(
+          approvalId: _pendingApproval!.approvalId,
+          approved: true,
+          note: note,
+        );
+      } catch (e) {
+        _logs.add(
+          TerminalLog(
+            id: 'appr-err-${now.millisecondsSinceEpoch}',
+            timestamp: now,
+            message: '[ERROR] Approving failed: $e',
+            type: LogType.error,
+          ),
+        );
+      }
+    }
+
+    _isPendingApproval = false;
+    _pendingActionTitle = null;
+    _pendingActionDetails = null;
+    _pendingApproval = null;
 
     _logs.add(
       TerminalLog(
-        id: 'log-sim-${DateTime.now().millisecondsSinceEpoch}',
-        timestamp: DateTime.now(),
-        message: message,
-        type: LogType.stdout,
+        id: 'gate-${now.millisecondsSinceEpoch}-1',
+        timestamp: now,
+        message: '[SECURITY GATE] APPROVED: Action executed by operator with biometric authorization.',
+        type: LogType.warning,
       ),
     );
 
-    // Keep log buffer bounded to 200 items for memory efficiency
-    if (_logs.length > 200) {
-      _logs.removeRange(0, _logs.length - 200);
-    }
-
+    _currentTask = _currentTask.copyWith(phase: TaskPhase.idle, progress: 0.0);
     notifyListeners();
   }
 
-  // --- Interactive Commands & Actions ---
+  /// Resolves an AMBER gate with denial.
+  Future<void> denyPendingGate([String? note]) async {
+    final now = DateTime.now();
 
-  /// Simulates typing and executing a command in the terminal.
+    if (_pendingApproval != null) {
+      try {
+        await apiClient.respondToApproval(
+          approvalId: _pendingApproval!.approvalId,
+          approved: false,
+          note: note,
+        );
+      } catch (e) {
+        _logs.add(
+          TerminalLog(
+            id: 'deny-err-${now.millisecondsSinceEpoch}',
+            timestamp: now,
+            message: '[ERROR] Denying failed: $e',
+            type: LogType.error,
+          ),
+        );
+      }
+    }
+
+    _isPendingApproval = false;
+    _pendingActionTitle = null;
+    _pendingActionDetails = null;
+    _pendingApproval = null;
+
+    _logs.add(
+      TerminalLog(
+        id: 'gate-${now.millisecondsSinceEpoch}',
+        timestamp: now,
+        message: '[SECURITY GATE] DENIED: Action cancelled by operator.',
+        type: LogType.info,
+      ),
+    );
+    notifyListeners();
+  }
+
+  // --- Interactive Terminal & Settings ---
+
   void sendCliCommand(String command) {
     final trimmed = command.trim();
     if (trimmed.isEmpty) return;
 
     final now = DateTime.now();
-
-    // 1. Log the typed command prompt
     _logs.add(
       TerminalLog(
         id: 'cmd-${now.millisecondsSinceEpoch}',
@@ -459,46 +895,13 @@ class TelemetryService extends ChangeNotifier {
       ),
     );
 
-    // 2. Simulate outputs for known and ad-hoc commands
     final lower = trimmed.toLowerCase();
     if (lower == 'flutter doctor') {
       _logs.add(
         TerminalLog(
           id: 'out-${now.millisecondsSinceEpoch}-1',
           timestamp: now,
-          message: '[✓] Flutter (Channel stable, 3.47.8, on macOS 15.1 darwin-arm64)',
-          type: LogType.stdout,
-        ),
-      );
-      _logs.add(
-        TerminalLog(
-          id: 'out-${now.millisecondsSinceEpoch}-2',
-          timestamp: now,
-          message: '[✓] Android toolchain - develop for Android devices (SDK 34.0.0)',
-          type: LogType.stdout,
-        ),
-      );
-      _logs.add(
-        TerminalLog(
-          id: 'out-${now.millisecondsSinceEpoch}-3',
-          timestamp: now,
-          message: '[✓] Xcode - develop for iOS and macOS (Xcode 16.1)',
-          type: LogType.stdout,
-        ),
-      );
-      _logs.add(
-        TerminalLog(
-          id: 'out-${now.millisecondsSinceEpoch}-4',
-          timestamp: now,
-          message: '[✓] Connected device (1 physical mobile target available)',
-          type: LogType.stdout,
-        ),
-      );
-      _logs.add(
-        TerminalLog(
-          id: 'out-${now.millisecondsSinceEpoch}-5',
-          timestamp: now,
-          message: '• Doctor summary: No issues found! All checks passed.',
+          message: '[✓] Flutter (Channel stable, on macOS darwin-arm64)\n• Doctor summary: No issues found! All checks passed.',
           type: LogType.success,
         ),
       );
@@ -516,7 +919,7 @@ class TelemetryService extends ChangeNotifier {
         TerminalLog(
           id: 'out-${now.millisecondsSinceEpoch}-1',
           timestamp: now,
-          message: 'CONTAINER ID   IMAGE                 STATUS         PORTS\na8f10b2c3d4e   devpilot-telemetry    Up 4 hours     0.0.0.0:8000->8000/tcp\nb9d31e4f5a6b   mycel-ast-parser      Up 4 hours     0.0.0.0:9090->9090/tcp',
+          message: 'CONTAINER ID   IMAGE                 STATUS         PORTS\na8f10b2c3d4e   devpilot-telemetry    Up 4 hours     0.0.0.0:8000->8000/tcp',
           type: LogType.stdout,
         ),
       );
@@ -528,32 +931,27 @@ class TelemetryService extends ChangeNotifier {
         TerminalLog(
           id: 'out-${now.millisecondsSinceEpoch}-1',
           timestamp: now,
-          message:
-              '[EXEC] devpilot-operator: executed \'$trimmed\' successfully (exit code 0)',
+          message: '[EXEC] devpilot-operator: executed command successfully (exit code 0)',
           type: LogType.stdout,
         ),
       );
     }
-
     notifyListeners();
   }
 
-  /// Triggers a macro action (e.g. from the MacroDeck on the Home Screen).
   void triggerAction(String actionName) {
     final now = DateTime.now();
 
-    if (actionName.toLowerCase().contains('kill') ||
-        actionName.toLowerCase().contains('destructive')) {
+    if (actionName.toLowerCase().contains('kill') || actionName.toLowerCase().contains('destructive')) {
       _isPendingApproval = true;
       _pendingActionTitle = 'Kill All Processes';
-      _pendingActionDetails = 'Terminates all active worker threads, agent sandboxes, and build pipelines immediately. Requires biometric verification.';
+      _pendingActionDetails = 'Terminates all active worker threads and stops running missions.';
 
       _logs.add(
         TerminalLog(
           id: 'act-${now.millisecondsSinceEpoch}',
           timestamp: now,
-          message:
-              '[SECURITY GATE] AMBER alert: Approval requested for \'$actionName\'',
+          message: '[SECURITY GATE] AMBER alert: Approval requested for \'$actionName\'',
           type: LogType.warning,
         ),
       );
@@ -572,8 +970,7 @@ class TelemetryService extends ChangeNotifier {
           TerminalLog(
             id: 'act-detail-${now.millisecondsSinceEpoch}',
             timestamp: now,
-            message:
-                '[RUNNER] Initiating parallel test matrix on $_workerThreads worker threads...',
+            message: '[RUNNER] Initiating parallel test matrix on $_workerThreads worker threads...',
             type: LogType.stdout,
           ),
         );
@@ -586,100 +983,50 @@ class TelemetryService extends ChangeNotifier {
             type: LogType.stdout,
           ),
         );
-      } else if (actionName == 'Restart Docker') {
-        _logs.add(
-          TerminalLog(
-            id: 'act-detail-${now.millisecondsSinceEpoch}',
-            timestamp: now,
-            message: '[DOCKER] Sending SIGTERM to container cluster... restarted successfully',
-            type: LogType.stdout,
-          ),
-        );
       }
     }
-
     notifyListeners();
   }
 
-  /// Resolves an AMBER gate with approval.
-  void approvePendingGate() {
-    final now = DateTime.now();
-    _isPendingApproval = false;
-    _pendingActionTitle = null;
-    _pendingActionDetails = null;
-
-    _logs.add(
-      TerminalLog(
-        id: 'gate-${now.millisecondsSinceEpoch}-1',
-        timestamp: now,
-        message: '[SECURITY GATE] APPROVED: Action executed by operator with biometric auth.',
-        type: LogType.warning,
-      ),
+  void simulateTick() {
+    _tickCount++;
+    _vitals = _vitals.copyWith(
+      cpuPercent: (44.0 + (_tickCount % 5) * 2.0).clamp(20.0, 85.0),
     );
-
-    _logs.add(
-      TerminalLog(
-        id: 'gate-${now.millisecondsSinceEpoch}-2',
-        timestamp: now,
-        message: '[SYSTEM] SIGKILL dispatched to worker processes (PID: 48921, 48922, 48925)',
-        type: LogType.error,
-      ),
-    );
-
-    _currentTask = _currentTask.copyWith(phase: TaskPhase.idle, progress: 0.0);
-
     notifyListeners();
   }
 
-  /// Resolves an AMBER gate with denial.
-  void denyPendingGate() {
-    final now = DateTime.now();
-    _isPendingApproval = false;
-    _pendingActionTitle = null;
-    _pendingActionDetails = null;
-
-    _logs.add(
-      TerminalLog(
-        id: 'gate-${now.millisecondsSinceEpoch}',
-        timestamp: now,
-        message: '[SECURITY GATE] DENIED: Action cancelled by operator.',
-        type: LogType.info,
-      ),
-    );
-
-    notifyListeners();
-  }
-
-  /// Clears the terminal log list.
   void clearLogs() {
     _logs.clear();
     notifyListeners();
   }
 
-  /// Updates scraping or build worker threads count (1 to 16).
   void updateThreads(int count) {
     _workerThreads = count.clamp(1, 16);
     notifyListeners();
   }
 
-  /// Toggles verbose terminal logging.
   void toggleVerbose(bool value) {
     _isVerbose = value;
     notifyListeners();
   }
 
-  /// Toggles LAN connection status.
   void toggleLAN(bool value) {
     _isLANConnected = value;
     notifyListeners();
   }
 
+  void updateBackendUrl(String newUrl) {
+    apiClient.setBaseUrl(newUrl);
+    refreshFromBackend();
+  }
+
   @override
   void dispose() {
     _tickTimer?.cancel();
-    _tickTimer = null;
-    _simLogTimer?.cancel();
-    _simLogTimer = null;
+    _pollingTimer?.cancel();
+    _wsSubscription?.cancel();
+    _wsChannel?.sink.close();
     super.dispose();
   }
 }

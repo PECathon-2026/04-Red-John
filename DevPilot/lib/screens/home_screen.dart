@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/modals/create_mission_modal.dart';
 import '../widgets/running_task_card.dart';
 
 /// Full implementation of the Paper & Lime editorial HomeScreen.
@@ -180,6 +181,31 @@ class _HomeScreenState extends State<HomeScreen> {
           // Right: Utility icon buttons
           Row(
             children: [
+              // Launch Mission Button
+              GestureDetector(
+                key: const Key('header_launch_icon'),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  CreateMissionModal.show(context, widget.service);
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.add_rounded,
+                      size: 22,
+                      color: AppTheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+
               // Settings / Quick Action Button
               GestureDetector(
                 key: const Key('header_grid_icon'),
@@ -338,32 +364,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text('Your Projects (${projects.length})', style: AppTheme.headlineSm),
                 ],
               ),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                size: 16,
-                color: AppTheme.onSurfaceVariant,
+              IconButton(
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: AppTheme.onSurface),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  CreateMissionModal.show(context, widget.service);
+                },
               ),
             ],
           ),
         ),
         const SizedBox(height: 14),
-        SizedBox(
-          height: 235,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: projects.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 14),
-            itemBuilder: (context, index) {
-              final project = projects[index];
-              return _WorkflowCard(
-                project: project,
-                onTap: () => widget.onOpenProject(project),
-              );
-            },
+        if (projects.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                CreateMissionModal.show(context, widget.service);
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceAlt,
+                  borderRadius: AppTheme.cardRadius,
+                  border: Border.all(color: AppTheme.borderSubtle),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.rocket_launch_outlined, size: 36, color: AppTheme.primaryDark),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'No Active Missions Yet',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tap to launch a new mission or benchmark scenario',
+                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          SizedBox(
+            height: 235,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: projects.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 14),
+              itemBuilder: (context, index) {
+                final project = projects[index];
+                return _WorkflowCard(
+                  project: project,
+                  onTap: () {
+                    widget.service.selectMission(project.id);
+                    widget.onOpenProject(project);
+                  },
+                );
+              },
+            ),
           ),
-        ),
       ],
     );
   }

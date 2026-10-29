@@ -39,7 +39,12 @@ class _ParameterModalState extends State<ParameterModal> {
   @override
   void initState() {
     super.initState();
-    _hostController = TextEditingController(text: 'devpilot.lan');
+    final current = widget.service.apiClient.baseUrl;
+    _hostController = TextEditingController(
+      text: (current.contains('127.0.0.1') || current.contains('10.0.2.2'))
+          ? 'devpilot.lan'
+          : current,
+    );
   }
 
   @override
@@ -404,6 +409,11 @@ class _ParameterModalState extends State<ParameterModal> {
               child: ElevatedButton(
                 onPressed: () {
                   HapticFeedback.lightImpact();
+                  final host = _hostController.text.trim();
+                  if (host.isNotEmpty) {
+                    final target = host.startsWith('http') ? host : 'http://$host:8000';
+                    widget.service.updateBackendUrl(target);
+                  }
                   widget.onClose != null
                       ? widget.onClose!()
                       : Navigator.of(context).maybePop();
