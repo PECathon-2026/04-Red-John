@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@theme inline {
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+
+  --font-serif: 'Montserrat', var(--font-sans), sans-serif;
+  --font-sans: 'Montserrat', var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-pixel: 'Press Start 2P', monospace;
+}
+
+:root {
+  color-scheme: light;
+  
+  /* Kyoto garden dawn & washi paper aesthetics */
+  --background: #fbf6f0;
+  --foreground: #1d1d1f; /* Sumi ink black */
+
+  --card: rgba(255, 255, 255, 0.42);
+  --card-foreground: #1d1d1f;
+
+  --popover: rgba(255, 255, 255, 0.85);
+  --popover-foreground: #1d1d1f;
+
+  --primary: #18181b; /* Sumi midnight */
+  --primary-foreground: #ffffff;
+
+  --secondary: #fce7f3; /* Sakura blossom petal pink */
+  --secondary-foreground: #831843;
+
+  --muted: #f5f0f3;
+  --muted-foreground: #78716c;
+
+  --accent: #d6372b; /* Traditional Shu Vermilion */
+  --accent-foreground: #ffffff;
+
+  --destructive: #dc2626;
+
+  --border: rgba(251, 207, 232, 0.45);
+  --input: rgba(251, 207, 232, 0.5);
+  --ring: #d6372b;
+
+  --radius: 1.5rem;
+  --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/40;
+  }
+  html, body {
+    @apply h-screen w-screen overflow-hidden bg-background text-foreground font-sans antialiased;
+    background-color: #fbf6f0;
+  }
+}
+
+/* ── JAPANESE BLOB DRIFT MESH ANIMATIONS (25-40s ±6% VIEWPORT) ── */
+@keyframes blobDrift1 {
+  0% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(5%, 4%) scale(1.06); }
+  100% { transform: translate(-4%, 6%) scale(0.96); }
+}
+
+@keyframes blobDrift2 {
+  0% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(-6%, -5%) scale(1.08); }
+  100% { transform: translate(4%, -4%) scale(0.94); }
+}
+
+@keyframes blobDrift3 {
+  0% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(6%, -4%) scale(0.95); }
+  100% { transform: translate(-5%, 5%) scale(1.07); }
+}
+
+@keyframes blobDrift4 {
+  0% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(-5%, 6%) scale(1.05); }
+  100% { transform: translate(5%, -3%) scale(0.97); }
+}
+
+@keyframes blobDrift5 {
+  0% { transform: translate(0%, 0%) scale(1); }
+  50% { transform: translate(4%, -6%) scale(1.08); }
+  100% { transform: translate(-6%, 3%) scale(0.95); }
+}
+
+.animate-blob-drift-1 {
+  animation: blobDrift1 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-blob-drift-2 {
+  animation: blobDrift2 34s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-blob-drift-3 {
+  animation: blobDrift3 39s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-blob-drift-4 {
+  animation: blobDrift4 31s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-blob-drift-5 {
+  animation: blobDrift5 27s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* ── STATUS DOT 2s PULSE ── */
+@keyframes statusDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.28);
+    opacity: 0.65;
+  }
+}
+
+.animate-status-dot {
+  animation: statusDotPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ── HIGH PERFORMANCE TRANSLUCENT GLASS (LAG-FREE 60/120FPS SCROLLING) ── */
+.japan-glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  box-shadow: 
+    0 4px 16px rgba(40, 20, 25, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+  contain: paint;
+}
+
+.japan-glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(40, 20, 25, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 1.75rem;
+  box-shadow: 
+    0 12px 36px -4px rgba(214, 55, 43, 0.05),
+    0 1px 3px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+.glass-card-sm {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 16px -2px rgba(214, 55, 43, 0.04);
+}
+
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.48);
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 16px 40px -6px rgba(214, 55, 43, 0.07),
+    0 1px 3px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.glass-inner {
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+/* ── SMOOTH TRANSITIONS & ANIMATIONS ── */
+@keyframes contentSectionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.998);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-section-enter {
+  animation: contentSectionEnter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sakura-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.15);
+  }
+}
+
+.animate-sakura-pulse {
+  animation: sakura-pulse 2.2s ease-in-out infinite;
+}
+
+/* Custom discreet scrollbar */
+.clean-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(214, 55, 43, 0.25) transparent;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clean-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.clean-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.clean-scroll::-webkit-scrollbar-thumb {
+  background: rgba(214, 55, 43, 0.2);
+  border-radius: 9999px;
+}
+
+.clean-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 55, 43, 0.35);
+}
+
+/* Pixel art rendering utility */
+.pixelated {
+  image-rendering: pixelated;
+}
