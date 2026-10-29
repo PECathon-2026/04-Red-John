@@ -12,7 +12,7 @@ import 'package:devpilot/widgets/artifact_stream.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   group('VitalsBar Widget', () {
     testWidgets('renders CPU, RAM, NET and Battery with charging indicator', (

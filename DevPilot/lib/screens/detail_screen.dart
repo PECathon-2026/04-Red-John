@@ -310,63 +310,69 @@ class _DetailScreenState extends State<DetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Left: Space Grotesk display numeral "21"
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '21',
-                      style: AppTheme.displayMd.copyWith(
-                        color: AppTheme.onInverse,
-                        fontSize: 38,
-                        fontWeight: FontWeight.w700,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '21',
+                        style: AppTheme.displayMd.copyWith(
+                          color: AppTheme.onInverse,
+                          fontSize: 38,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'November, 10 AM',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.onInverse.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w500,
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'November, 10 AM',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.onInverse.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primary, // Electric Lime Dot
-                        shape: BoxShape.circle,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primary, // Electric Lime Dot
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'LAN E2EE • ',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.primary,
+                      const SizedBox(width: 6),
+                      const Text(
+                        'LAN E2EE • ',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.primary,
+                        ),
                       ),
-                    ),
-                    Text(
-                      'devpilot.lan',
-                      style: AppTheme.caption.copyWith(
-                        color: AppTheme.onInverse.withValues(alpha: 0.8),
-                        letterSpacing: 0.5,
+                      Text(
+                        'devpilot.lan',
+                        style: AppTheme.caption.copyWith(
+                          color: AppTheme.onInverse.withValues(alpha: 0.8),
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(width: 12),
 
             // Right: Host Share link pill
             GestureDetector(
@@ -656,14 +662,17 @@ class _DetailScreenState extends State<DetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('LIVE TELEMETRY STREAM', style: AppTheme.labelUppercase),
-                  const SizedBox(height: 4),
-                  Text('Terminal Console', style: AppTheme.headlineSm),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('LIVE TELEMETRY STREAM', style: AppTheme.labelUppercase),
+                    const SizedBox(height: 4),
+                    Text('Terminal Console', style: AppTheme.headlineSm),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: widget.onOpenCli,
                 child: Container(

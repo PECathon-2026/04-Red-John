@@ -79,6 +79,11 @@ void main() {
         await tester.pumpAndSettle();
         expect(settingsOpened, isTrue);
 
+        // Verify Terminal Button Tap
+        await tester.tap(find.byIcon(Icons.terminal_rounded));
+        await tester.pumpAndSettle();
+        expect(terminalOpened, isTrue);
+
         // Verify Macro Kill All Action triggers onKillTriggered
         await tester.ensureVisible(find.text('Kill All'));
         await tester.tap(find.text('Kill All'));

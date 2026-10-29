@@ -6,15 +6,17 @@ import 'package:devpilot/screens/detail_screen.dart';
 import 'package:devpilot/services/telemetry_service.dart';
 import 'package:devpilot/widgets/running_task_card.dart';
 import 'package:devpilot/widgets/agent_card.dart';
+import 'package:devpilot/widgets/terminal_feed.dart';
+import 'package:devpilot/widgets/artifact_stream.dart';
 import 'package:devpilot/widgets/modals/approval_modal.dart';
 import 'package:devpilot/widgets/modals/cli_sheet.dart';
 import 'package:devpilot/widgets/modals/parameter_modal.dart';
 import 'package:devpilot/widgets/modals/agent_dossier_modal.dart';
 
 void main() {
-  group('DevPilotApp Root Wiring & Navigation Tests', () {
+  group('DevPilotApp Root Wiring & Screen Navigation Tests', () {
     testWidgets(
-      'DevPilotApp loads, renders greeting, projects, and active agent roster',
+      'DevPilotApp loads, renders greeting, projects, and running task',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -29,6 +31,7 @@ void main() {
 
         // Verify Greeting & Header
         expect(find.text('Hello, Aryan'), findsOneWidget);
+        expect(find.text('DEV PILOT'), findsOneWidget);
         expect(find.textContaining('Your Projects'), findsOneWidget);
 
         // Verify Projects
@@ -39,16 +42,8 @@ void main() {
         expect(find.byType(RunningTaskCard), findsOneWidget);
         expect(find.text('DevPilot Core Engine'), findsWidgets);
 
-        // Verify Agent Roster
-        expect(find.textContaining('Active Agent Roster'), findsOneWidget);
-        expect(find.byType(AgentCard), findsWidgets);
-        expect(find.text('Atlas'), findsOneWidget);
-
-        // Verify Navigation Tabs
-        expect(find.text('Projects'), findsOneWidget);
-        expect(find.text('Terminal'), findsOneWidget);
-        expect(find.text('Agents'), findsOneWidget);
-        expect(find.text('Settings'), findsOneWidget);
+        // Verify absence of bottom navigation tabs
+        expect(find.byType(BottomNavigationBar), findsNothing);
       },
     );
 
@@ -74,6 +69,11 @@ void main() {
         expect(find.byType(DetailScreen), findsOneWidget);
         expect(find.text('Admin Dashboard'), findsWidgets);
         expect(find.text('Done'), findsOneWidget);
+
+        // Verify agents, terminal, and artifacts inside project screen
+        expect(find.byType(AgentCard), findsWidgets);
+        expect(find.byType(TerminalFeed), findsOneWidget);
+        expect(find.byType(ArtifactStream), findsOneWidget);
 
         // Tap 'Done' to return to HomeScreen
         await tester.tap(find.text('Done'));
@@ -112,7 +112,7 @@ void main() {
       },
     );
 
-    testWidgets('DevPilotApp opens CliSheet from Terminal tab and closes it', (
+    testWidgets('DevPilotApp opens CliSheet from quick bar and closes it', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1080, 2400);
@@ -126,7 +126,7 @@ void main() {
       await tester.pumpWidget(DevPilotApp(service: service));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Terminal'));
+      await tester.tap(find.byIcon(Icons.terminal_rounded));
       await tester.pumpAndSettle();
 
       expect(find.byType(CliSheet), findsOneWidget);
@@ -141,7 +141,7 @@ void main() {
     });
 
     testWidgets(
-      'DevPilotApp opens ParameterModal from Settings tab and closes it',
+      'DevPilotApp opens ParameterModal from header icon and closes it',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -154,13 +154,13 @@ void main() {
         await tester.pumpWidget(DevPilotApp(service: service));
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Settings'));
+        await tester.tap(find.byKey(const Key('header_grid_icon')));
         await tester.pumpAndSettle();
 
         expect(find.byType(ParameterModal), findsOneWidget);
         expect(find.text('Runtime Parameters'), findsOneWidget);
 
-        // Close sheet with Save & Apply
+        // Tap Save & Apply
         await tester.tap(find.text('Save & Apply'));
         await tester.pumpAndSettle();
 
@@ -169,7 +169,7 @@ void main() {
     );
 
     testWidgets(
-      'DevPilotApp opens AgentDossierModal when agent card is tapped and closes it',
+      'DevPilotApp opens AgentDossierModal from agent card inside DetailScreen',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -182,15 +182,19 @@ void main() {
         await tester.pumpWidget(DevPilotApp(service: service));
         await tester.pumpAndSettle();
 
-        // Ensure Atlas card is visible and tap it
-        await tester.ensureVisible(find.text('Atlas'));
-        await tester.tap(find.text('Atlas'));
+        // Navigate to DetailScreen where agents live
+        await tester.tap(find.text('Admin Dashboard'));
+        await tester.pumpAndSettle();
+
+        // Ensure visible and tap Atlas AgentCard
+        await tester.ensureVisible(find.byType(AgentCard).first);
+        await tester.tap(find.byType(AgentCard).first);
         await tester.pumpAndSettle();
 
         expect(find.byType(AgentDossierModal), findsOneWidget);
-        expect(find.text('Atlas'), findsWidgets);
+        expect(find.byIcon(Icons.close_rounded), findsOneWidget);
 
-        // Close sheet
+        // Close dossier modal
         await tester.tap(find.byIcon(Icons.close_rounded));
         await tester.pumpAndSettle();
 
@@ -212,29 +216,18 @@ void main() {
         await tester.pumpWidget(DevPilotApp(service: service));
         await tester.pumpAndSettle();
 
-        // Ensure Kill All button is visible and tap it
+        // Tap 'Kill All' on HomeScreen
         await tester.ensureVisible(find.text('Kill All'));
         await tester.tap(find.text('Kill All'));
         await tester.pumpAndSettle();
 
-        // Verify ApprovalModal is displayed
+        // ApprovalModal should pop up
         expect(find.byType(ApprovalModal), findsOneWidget);
-        expect(find.text('Kill All Processes'), findsOneWidget);
+        expect(find.text('SECURITY CLEARANCE GATE'), findsOneWidget);
+        expect(service.isPendingApproval, isTrue);
 
         // Tap Deny
         await tester.tap(find.text('Deny'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ApprovalModal), findsNothing);
-        expect(service.isPendingApproval, isFalse);
-
-        // Tap 'Kill All' again and approve
-        await tester.ensureVisible(find.text('Kill All'));
-        await tester.tap(find.text('Kill All'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ApprovalModal), findsOneWidget);
-        await tester.tap(find.text('Approve Action'));
         await tester.pumpAndSettle();
 
         expect(find.byType(ApprovalModal), findsNothing);

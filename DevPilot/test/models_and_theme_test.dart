@@ -6,7 +6,7 @@ import 'package:devpilot/models/models.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  GoogleFonts.config.allowRuntimeFetching = false;
+  GoogleFonts.config.allowRuntimeFetching = true;
 
   group('AppTheme Tokens & ThemeData', () {
     test('AppTheme defines Paper & Lime color tokens and aliases', () {
