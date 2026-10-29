@@ -224,6 +224,9 @@ class TelemetryService extends ChangeNotifier {
       ),
     ];
 
+    _evidenceRecords = [];
+    _openIssues = [];
+
     _logs.add(
       TerminalLog(
         id: 'init-1',
@@ -274,39 +277,7 @@ class TelemetryService extends ChangeNotifier {
       // 2. Fetch Missions
       if (_isBackendConnected) {
         final missionList = await apiClient.listMissions(limit: 50);
-        _projects = missionList.map((m) {
-          final id = m['mission_id'] as String? ?? '';
-          final title = m['title'] as String? ?? id;
-          final statusStr = (m['status'] as String? ?? 'created').toUpperCase();
-          final progressData = m['progress'] as Map<String, dynamic>? ?? {};
-          final tasks = progressData['tasks'] as Map<String, dynamic>? ?? {};
-          final done = (tasks['done'] as num?)?.toInt() ?? 0;
-          final total = tasks.values.fold<int>(0, (sum, v) => sum + ((v as num?)?.toInt() ?? 0));
-          final calcProgress = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
-
-          CardColorType color;
-          switch (statusStr.toLowerCase()) {
-            case 'completed':
-              color = CardColorType.mint;
-            case 'running':
-              color = CardColorType.peach;
-            case 'awaiting_human':
-              color = CardColorType.lavender;
-            default:
-              color = CardColorType.warm;
-          }
-
-          return ProjectItem(
-            id: id,
-            title: title,
-            subtitle: 'DevPilot Autonomous Mission',
-            duration: statusStr,
-            colorType: color,
-            progress: calcProgress,
-            tags: [statusStr],
-            isLive: statusStr.toLowerCase() == 'running',
-          );
-        }).toList();
+        _updateProjectsList(missionList);
 
         // If no active mission selected, select the first or running mission
         if (_projects.isNotEmpty && _activeMissionId == null) {
@@ -325,15 +296,64 @@ class TelemetryService extends ChangeNotifier {
     }
   }
 
+  void _updateProjectsList(List<Map<String, dynamic>> missionList) {
+    _projects = missionList.map((m) {
+      final id = m['mission_id'] as String? ?? '';
+      final title = m['title'] as String? ?? id;
+      final statusStr = (m['status'] as String? ?? 'created').toUpperCase();
+      final progressData = m['progress'] as Map<String, dynamic>? ?? {};
+      final tasks = progressData['tasks'] as Map<String, dynamic>? ?? {};
+      final done = (tasks['done'] as num?)?.toInt() ?? 0;
+      final total = tasks.values.fold<int>(0, (sum, v) => sum + ((v as num?)?.toInt() ?? 0));
+      final calcProgress = total > 0 ? (done / total).clamp(0.0, 1.0) : 0.0;
+
+      CardColorType color;
+      switch (statusStr.toLowerCase()) {
+        case 'completed':
+          color = CardColorType.mint;
+        case 'running':
+          color = CardColorType.peach;
+        case 'awaiting_human':
+          color = CardColorType.lavender;
+        default:
+          color = CardColorType.warm;
+      }
+
+      return ProjectItem(
+        id: id,
+        title: title,
+        subtitle: 'DevPilot Autonomous Mission',
+        duration: statusStr,
+        colorType: color,
+        progress: calcProgress,
+        tags: [statusStr],
+        isLive: statusStr.toLowerCase() == 'running',
+      );
+    }).toList();
+  }
+
   Future<void> _pollBackendStatus() async {
     try {
       final healthData = await apiClient.checkHealth();
       _backendHealth = BackendHealth.fromJson(healthData);
       _isBackendConnected = _backendHealth.isHealthy;
 
+      if (_isBackendConnected) {
+        final missionList = await apiClient.listMissions(limit: 50);
+        _updateProjectsList(missionList);
+        if (_projects.isNotEmpty && _activeMissionId == null) {
+          final running = _projects.firstWhere(
+            (p) => p.isLive,
+            orElse: () => _projects.first,
+          );
+          await selectMission(running.id);
+        }
+      }
+
       if (_activeMissionId != null) {
         await _fetchMissionSnapshot(_activeMissionId!);
       }
+      notifyListeners();
     } catch (_) {
       // Background poll failure handled gracefully
     }
@@ -990,10 +1010,9 @@ class TelemetryService extends ChangeNotifier {
 
   void simulateTick() {
     _tickCount++;
-    _vitals = _vitals.copyWith(
-      cpuPercent: (44.0 + (_tickCount % 5) * 2.0).clamp(20.0, 85.0),
-    );
-    notifyListeners();
+    if (_activeMissionId != null) {
+      notifyListeners();
+    }
   }
 
   void clearLogs() {

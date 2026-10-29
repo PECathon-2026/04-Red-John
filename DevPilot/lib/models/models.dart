@@ -857,13 +857,25 @@ class BackendHealth {
 
   factory BackendHealth.fromJson(Map<String, dynamic> json) {
     final checks = json['checks'] as Map<String, dynamic>? ?? {};
-    final routes = json['llm_routes'] as List<dynamic>? ?? [];
+    final routes = json['llm_routes'];
+    int routeCount = 0;
+    if (routes is List) {
+      routeCount = routes.length;
+    } else if (routes is Map) {
+      for (final v in routes.values) {
+        if (v is List) {
+          routeCount += v.length;
+        } else {
+          routeCount += 1;
+        }
+      }
+    }
     return BackendHealth(
       isHealthy: json['status'] == 'ok',
       storageOk: checks['storage'] as bool? ?? false,
       eventBusOk: checks['event_bus'] as bool? ?? false,
       llmConfigured: checks['llm_configured'] as bool? ?? false,
-      llmRoutes: routes.length,
+      llmRoutes: routeCount,
     );
   }
 }
