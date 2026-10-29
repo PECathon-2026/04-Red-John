@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
-/// Editorial 5-item bottom navigation bar.
-/// Styled with a bigger, rounded architectural container, hairline border,
-/// active dot indicator, and high contrast selection states.
+/// Modern Light 5-item bottom navigation bar.
+/// Styled with a comfortable 88px height, rounded top architectural container,
+/// subtle elevation, active dot indicator, and vibrant accent states.
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final void Function(int) onTap;
@@ -28,9 +28,16 @@ class AppBottomNav extends StatelessWidget {
     return Container(
       height: 88,
       decoration: BoxDecoration(
-        color: T.background,
+        color: T.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border.all(color: T.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: SafeArea(
@@ -55,26 +62,26 @@ class AppBottomNav extends StatelessWidget {
                     children: [
                       // Active indicator dot
                       Container(
-                        width: 4,
-                        height: 4,
+                        width: 5,
+                        height: 5,
                         margin: const EdgeInsets.only(bottom: 5),
                         decoration: BoxDecoration(
-                          color: active ? T.onSurface : Colors.transparent,
+                          color: active ? T.accent : Colors.transparent,
                           shape: BoxShape.circle,
                         ),
                       ),
                       Icon(
                         active ? item.$2 : item.$1,
                         size: 24,
-                        color: active ? T.onSurface : T.onSurfaceVar,
+                        color: active ? T.accent : T.onSurfaceMuted,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         item.$3,
                         style: T.labelUpXs.copyWith(
                           fontSize: 9,
-                          letterSpacing: 1.2,
-                          color: active ? T.onSurface : T.onSurfaceVar,
+                          letterSpacing: 0.8,
+                          color: active ? T.accent : T.onSurfaceVar,
                           fontWeight:
                               active ? FontWeight.w700 : FontWeight.w500,
                         ),

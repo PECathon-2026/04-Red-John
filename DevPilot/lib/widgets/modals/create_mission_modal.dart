@@ -115,9 +115,10 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
         maxHeight: MediaQuery.of(context).size.height * 0.90,
         maxWidth: 550,
       ),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: T.surface,
-        border: Border(top: BorderSide(color: T.border, width: 1)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: const Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

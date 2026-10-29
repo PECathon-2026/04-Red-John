@@ -20,11 +20,11 @@ class ArtifactListScreen extends StatelessWidget {
 
   static Color artifactColor(ArtifactType t) => switch (t) {
         ArtifactType.apk => T.success,
-        ArtifactType.image => T.chart2,
-        ArtifactType.document => T.chart1,
-        ArtifactType.log => T.chart3,
-        ArtifactType.archive => T.chart4,
-        _ => T.onSurfaceVar,
+        ArtifactType.image => T.accentPurple,
+        ArtifactType.document => T.accentBlue,
+        ArtifactType.log => T.accentTeal,
+        ArtifactType.archive => T.amber,
+        _ => T.accent,
       };
 
   static IconData artifactIcon(ArtifactType t) => switch (t) {
@@ -40,20 +40,27 @@ class ArtifactListScreen extends StatelessWidget {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: T.background,
+      backgroundColor: T.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(T.lg),
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: T.border)),
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(artifactIcon(a.type), color: artifactColor(a.type), size: 28),
-                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: artifactColor(a.type).withValues(alpha: 0.12),
+                    borderRadius: T.rSm,
+                  ),
+                  child: Icon(artifactIcon(a.type), color: artifactColor(a.type), size: 28),
+                ),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     a.name,
@@ -77,6 +84,7 @@ class ArtifactListScreen extends StatelessWidget {
                 Expanded(
                   child: ButtonSecondary(
                     label: 'COPY PATH',
+                    borderRadius: T.rSm,
                     onTap: () {
                       Clipboard.setData(ClipboardData(text: a.path ?? a.name));
                       Navigator.pop(ctx);
@@ -90,6 +98,9 @@ class ArtifactListScreen extends StatelessWidget {
                 Expanded(
                   child: ButtonPrimary(
                     label: 'DOWNLOAD',
+                    borderRadius: T.rSm,
+                    bg: T.primary,
+                    textColor: T.onPrimary,
                     onTap: () {
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +123,7 @@ class ArtifactListScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: T.labelUpXs),
+          Text(label, style: T.labelUpXs.copyWith(color: T.onSurfaceVar)),
           Text(value, style: T.bodySm.copyWith(color: T.onSurface)),
         ],
       ),
@@ -132,6 +143,7 @@ class ArtifactListScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
+                color: T.surface,
                 border: Border(bottom: BorderSide(color: T.border)),
               ),
               child: Row(
@@ -146,9 +158,13 @@ class ArtifactListScreen extends StatelessWidget {
                       }
                     },
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(border: Border.all(color: T.border)),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: T.surfaceMuted,
+                        borderRadius: T.rSm,
+                        border: Border.all(color: T.border),
+                      ),
                       child: const Icon(Icons.arrow_back,
                           color: T.onSurface, size: 20),
                     ),
@@ -157,12 +173,12 @@ class ArtifactListScreen extends StatelessWidget {
                   Expanded(
                     child: Text('ALL ARTIFACTS', style: T.headlineSm),
                   ),
-                  BadgePill('${list.length} ASSETS'),
+                  BadgePill('${list.length} ASSETS', bg: T.surfaceMuted, textColor: T.onSurface),
                 ],
               ),
             ),
 
-            // 2-Column Hairline Lattice Grid
+            // 2-Column Grid
             Expanded(
               child: list.isEmpty
                   ? Center(
@@ -170,6 +186,7 @@ class ArtifactListScreen extends StatelessWidget {
                     )
                   : GridView.builder(
                       padding: const EdgeInsets.all(16),
+                      physics: const BouncingScrollPhysics(),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -187,8 +204,16 @@ class ArtifactListScreen extends StatelessWidget {
                           onTap: () => _inspectArtifact(context, a),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: T.surfaceMuted.withValues(alpha: 0.3),
+                              color: T.surface,
+                              borderRadius: T.rLg,
                               border: Border.all(color: T.border),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.02),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             padding: const EdgeInsets.all(14),
                             child: Column(
@@ -200,12 +225,20 @@ class ArtifactListScreen extends StatelessWidget {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(icon, size: 26, color: color),
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.12),
+                                        borderRadius: T.rSm,
+                                      ),
+                                      child: Icon(icon, size: 20, color: color),
+                                    ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: color.withValues(alpha: 0.12),
+                                        borderRadius: T.rFull,
                                       ),
                                       child: Text(
                                         a.typeLabel,
@@ -217,32 +250,20 @@ class ArtifactListScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  a.name,
-                                  style: T.labelUpSm.copyWith(
-                                    color: T.onSurface,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 8),
-                                Container(height: 1, color: T.border),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(a.size, style: T.labelUpXs),
                                     Text(
-                                      '${a.timestamp.minute}m ago',
-                                      style: T.labelUpXs.copyWith(
-                                        color: T.onSurfaceMuted,
-                                      ),
+                                      a.name,
+                                      style: T.headlineSm.copyWith(fontSize: 13),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
+                                    const SizedBox(height: 4),
+                                    Text(a.size, style: T.labelUpXs.copyWith(color: T.onSurfaceVar)),
                                   ],
                                 ),
+                                HairlineBar(0.85, color: color),
                               ],
                             ),
                           ),

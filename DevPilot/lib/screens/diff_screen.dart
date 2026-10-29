@@ -102,7 +102,6 @@ class _DiffScreenState extends State<DiffScreen> {
   }
 
   void _toggleFile(String path) {
-    HapticFeedback.lightImpact();
     setState(() {
       if (_expandedFiles.contains(path)) {
         _expandedFiles.remove(path);
@@ -112,30 +111,40 @@ class _DiffScreenState extends State<DiffScreen> {
     });
   }
 
-  Future<void> _handleApprove() async {
-    HapticFeedback.mediumImpact();
+  void _expandAll() {
+    setState(() {
+      _expandedFiles.addAll(_diffFiles.map((f) => f.path));
+    });
+  }
+
+  void _collapseAll() {
+    setState(() {
+      _expandedFiles.clear();
+    });
+  }
+
+  void _handleApprove() {
+    HapticFeedback.heavyImpact();
     setState(() => _isApplying = true);
-    await Future.delayed(const Duration(milliseconds: 700));
-    widget.service.triggerAction('Apply Patch');
-    if (mounted) {
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
       setState(() => _isApplying = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Patch applied cleanly to repository branch.'),
-          backgroundColor: Color(0xFF1E1E1E),
+          content: Text('Patch approved and merged successfully.'),
+          backgroundColor: T.success,
         ),
       );
       Navigator.of(context).maybePop();
-    }
+    });
   }
 
   void _handleReject() {
     HapticFeedback.lightImpact();
-    widget.service.triggerAction('Reject Patch');
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Patch rejected. Feedback dispatched to orchestrator.'),
-        backgroundColor: Color(0xFF1E1E1E),
+        content: Text('Patch rejected by reviewer.'),
+        backgroundColor: T.destructive,
       ),
     );
     Navigator.of(context).maybePop();
@@ -143,18 +152,19 @@ class _DiffScreenState extends State<DiffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final totalAdd = _diffFiles.fold(0, (sum, f) => sum + f.additions);
-    final totalDel = _diffFiles.fold(0, (sum, f) => sum + f.deletions);
+    final totalAdditions = _diffFiles.fold<int>(0, (sum, f) => sum + f.additions);
+    final totalDeletions = _diffFiles.fold<int>(0, (sum, f) => sum + f.deletions);
 
     return Scaffold(
       backgroundColor: T.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Top Bar
+            // Header Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
+                color: T.surface,
                 border: Border(bottom: BorderSide(color: T.border)),
               ),
               child: Row(
@@ -169,9 +179,13 @@ class _DiffScreenState extends State<DiffScreen> {
                       }
                     },
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(border: Border.all(color: T.border)),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: T.surfaceMuted,
+                        borderRadius: T.rSm,
+                        border: Border.all(color: T.border),
+                      ),
                       child: const Icon(Icons.arrow_back, color: T.onSurface, size: 20),
                     ),
                   ),
@@ -184,16 +198,54 @@ class _DiffScreenState extends State<DiffScreen> {
                         const SizedBox(height: 2),
                         Text(
                           '${_diffFiles.length} files changed',
-                          style: T.labelUpXs,
+                          style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
                         ),
                       ],
                     ),
                   ),
-                  Row(
-                    children: [
-                      Text('+$totalAdd ', style: T.labelUpSm.copyWith(color: T.success, fontWeight: FontWeight.bold)),
-                      Text('-$totalDel', style: T.labelUpSm.copyWith(color: Colors.red.shade400, fontWeight: FontWeight.bold)),
-                    ],
+                  // Totals
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: T.surfaceMuted,
+                      borderRadius: T.rFull,
+                      border: Border.all(color: T.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('+$totalAdditions', style: T.labelUpXs.copyWith(color: T.success)),
+                        const SizedBox(width: 6),
+                        Text('-$totalDeletions', style: T.labelUpXs.copyWith(color: T.destructive)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Controls Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: const BoxDecoration(
+                color: T.surfaceMuted,
+                border: Border(bottom: BorderSide(color: T.border)),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: _expandAll,
+                    child: Text('EXPAND ALL', style: T.labelUpXs.copyWith(color: T.accent)),
+                  ),
+                  const SizedBox(width: 16),
+                  GestureDetector(
+                    onTap: _collapseAll,
+                    child: Text('COLLAPSE ALL', style: T.labelUpXs.copyWith(color: T.onSurfaceVar)),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'BRANCH: main',
+                    style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
                   ),
                 ],
               ),
@@ -203,6 +255,7 @@ class _DiffScreenState extends State<DiffScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 12),
+                physics: const BouncingScrollPhysics(),
                 itemCount: _diffFiles.length,
                 itemBuilder: (context, i) {
                   final file = _diffFiles[i];
@@ -216,7 +269,7 @@ class _DiffScreenState extends State<DiffScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: const BoxDecoration(
-                color: T.surfaceMuted,
+                color: T.surface,
                 border: Border(top: BorderSide(color: T.border)),
               ),
               child: Row(
@@ -224,6 +277,7 @@ class _DiffScreenState extends State<DiffScreen> {
                   Expanded(
                     child: ButtonSecondary(
                       label: 'REJECT PATCH',
+                      borderRadius: T.rSm,
                       onTap: _handleReject,
                     ),
                   ),
@@ -231,6 +285,9 @@ class _DiffScreenState extends State<DiffScreen> {
                   Expanded(
                     child: ButtonPrimary(
                       label: _isApplying ? 'APPLYING...' : 'APPROVE & MERGE',
+                      borderRadius: T.rSm,
+                      bg: T.primary,
+                      textColor: T.onPrimary,
                       onTap: _handleApprove,
                     ),
                   ),
@@ -247,9 +304,11 @@ class _DiffScreenState extends State<DiffScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: T.background,
+        color: T.surface,
+        borderRadius: T.rMd,
         border: Border.all(color: T.border),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -258,7 +317,7 @@ class _DiffScreenState extends State<DiffScreen> {
             onTap: () => _toggleFile(file.path),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              color: T.surfaceMuted.withValues(alpha: 0.5),
+              color: T.surfaceMuted,
               child: Row(
                 children: [
                   Icon(
@@ -283,7 +342,7 @@ class _DiffScreenState extends State<DiffScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text('+${file.additions} ', style: T.labelUpXs.copyWith(color: T.success)),
-                  Text('-${file.deletions}', style: T.labelUpXs.copyWith(color: Colors.red.shade400)),
+                  Text('-${file.deletions}', style: T.labelUpXs.copyWith(color: T.destructive)),
                 ],
               ),
             ),
@@ -292,7 +351,7 @@ class _DiffScreenState extends State<DiffScreen> {
           // Code Diff Lines (when expanded)
           if (isExpanded)
             Container(
-              color: const Color(0xFF0C0C0C),
+              color: const Color(0xFF0F172A),
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -308,7 +367,7 @@ class _DiffScreenState extends State<DiffScreen> {
     final color = switch (status) {
       'added' => T.success,
       'deleted' => T.destructive,
-      _ => T.chart2,
+      _ => T.accentBlue,
     };
     final symbol = switch (status) {
       'added' => '+',
@@ -316,8 +375,11 @@ class _DiffScreenState extends State<DiffScreen> {
       _ => '~',
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.2)),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: T.rSm,
+      ),
       child: Text(
         symbol,
         style: TextStyle(
@@ -333,19 +395,19 @@ class _DiffScreenState extends State<DiffScreen> {
   Widget _buildDiffLine(DiffLine line) {
     Color stripColor = Colors.transparent;
     Color bgColor = Colors.transparent;
-    Color textColor = T.onSurfaceVar;
+    Color textColor = const Color(0xFF94A3B8);
 
     if (line.type == 'add') {
       stripColor = T.success;
-      bgColor = T.success.withValues(alpha: 0.08);
+      bgColor = T.success.withValues(alpha: 0.12);
       textColor = const Color(0xFF86EFAC);
     } else if (line.type == 'delete') {
-      stripColor = Colors.red.shade700;
-      bgColor = Colors.red.shade900.withValues(alpha: 0.12);
+      stripColor = T.destructive;
+      bgColor = T.destructive.withValues(alpha: 0.15);
       textColor = const Color(0xFFFCA5A5);
     } else if (line.text.startsWith('@@')) {
-      textColor = T.chart2;
-      bgColor = const Color(0xFF161616);
+      textColor = const Color(0xFF60A5FA);
+      bgColor = const Color(0xFF1E293B);
     }
 
     final lineNum = line.newLineNumber?.toString() ?? line.oldLineNumber?.toString() ?? ' ';
@@ -355,7 +417,7 @@ class _DiffScreenState extends State<DiffScreen> {
         color: bgColor,
         border: Border(
           left: BorderSide(
-            color: stripColor != Colors.transparent ? stripColor : T.border,
+            color: stripColor != Colors.transparent ? stripColor : const Color(0xFF334155),
             width: 3,
           ),
         ),
@@ -368,10 +430,10 @@ class _DiffScreenState extends State<DiffScreen> {
             width: 28,
             child: Text(
               lineNum,
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'monospace',
                 fontSize: 10,
-                color: T.onSurfaceMuted,
+                color: Color(0xFF64748B),
               ),
               textAlign: TextAlign.right,
             ),

@@ -6,17 +6,18 @@ import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/dicebear_avatar.dart';
 import '../widgets/modals/create_mission_modal.dart';
+import '../widgets/phosphor_icon.dart';
 import '../widgets/primitives.dart';
 
-/// Redesigned Monochrome Editorial HomeScreen.
+/// Redesigned Modern Light HomeScreen.
 ///
 /// Layout:
-/// - Top greeting: "DEVPILOT", small "hello,", under it person's front name "Aryan" (no avatar), single "+" button.
-/// - Launch Mission Widget: Card-like widget with watermark rocket icon.
-/// - Projects Section: Horizontal scroll of cards with distinct monochrome tints. No pill shape buttons.
-/// - Current Execution Section: Running agent only (no system stats).
-/// - Past Executions Section: Hairline-separated rows of completed tasks.
-/// - System Vitals Section: 2x2 Hairline lattice grid.
+/// - Top greeting: "DEVPILOT", small "hello,", under it person's front name "Aryan" (no avatar, no plus button).
+/// - Launch Mission Widget: Card widget with subtle watermark rocket icon and accent button.
+/// - Projects Section: Horizontal scroll of cards with distinct accent colors and rounded corners. No pill shape buttons.
+/// - Current Execution Section: Running agent only (no system stats), clean circular avatar with no box behind it.
+/// - Past Executions Section: Clean rounded card list with status badges.
+/// - System Vitals Section: Horizontal scrolling strip with clean metric cards.
 class HomeScreen extends StatefulWidget {
   final TelemetryService service;
   final void Function(ProjectItem project) onOpenProject;
@@ -42,11 +43,12 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
 
-  static const List<Color> _cardTints = [
-    Color(0xFF1A1A1A),
-    Color(0xFF222222),
-    Color(0xFF1E1E1E),
-    Color(0xFF262626),
+  static const List<Color> _projectAccents = [
+    T.accent,       // Indigo
+    T.accentTeal,   // Teal
+    T.accentBlue,   // Royal Blue
+    T.accentPurple, // Violet
+    T.amber,        // Amber
   ];
 
   @override
@@ -74,7 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 1. Top Greeting (no avatar, small hello, front name Aryan, single + button)
+                  // 1. Top Greeting (no avatar, small hello, front name Aryan, no plus button)
                   _buildGreeting(),
 
                   const SizedBox(height: 20),
@@ -84,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 28),
 
-                  // 3. Projects Section (horizontal scroll, distinct tints, no pill buttons)
+                  // 3. Projects Section (horizontal scroll, distinct accents, no pill buttons)
                   _buildProjectsSection(projects),
 
                   const SizedBox(height: 28),
@@ -99,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   const SizedBox(height: 28),
 
-                  // 6. System Vitals Section (2-column hairline grid)
+                  // 6. System Vitals Section (Horizontal scrolling strip)
                   _buildSystemVitalsSection(vitals),
                 ],
               ),
@@ -113,47 +115,25 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- 1. Top Greeting ---
   Widget _buildGreeting() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(T.lg, 28, T.lg, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      padding: const EdgeInsets.fromLTRB(T.lg, 24, T.lg, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('DEVPILOT', style: T.eyebrowWide),
-              const SizedBox(height: 4),
-              Text(
-                'hello,',
-                style: T.displaySm.copyWith(
-                  color: T.onSurfaceVar,
-                  height: 1.05,
-                ),
-              ),
-              Text(
-                'Aryan',
-                style: T.displayMd.copyWith(
-                  height: 1.05,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
+          Text('DEVPILOT', style: T.eyebrowWide),
+          const SizedBox(height: 4),
+          Text(
+            'hello,',
+            style: T.displaySm.copyWith(
+              color: T.onSurfaceVar,
+              height: 1.1,
+            ),
           ),
-          // Single action button — Launch new mission
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              CreateMissionModal.show(context, widget.service);
-            },
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: T.background,
-                border: Border.all(color: T.border),
-              ),
-              child: const Icon(Icons.add, color: T.onSurface, size: 24),
+          Text(
+            'Aryan',
+            style: T.displayMd.copyWith(
+              height: 1.1,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -170,58 +150,82 @@ class _HomeScreenState extends State<HomeScreen> {
           HapticFeedback.lightImpact();
           CreateMissionModal.show(context, widget.service);
         },
-        child: Stack(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(T.lg),
-              decoration: BoxDecoration(
-                color: T.surfaceMuted.withValues(alpha: 0.4),
-                border: Border.all(color: T.border),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: T.surface,
+            borderRadius: T.rLg,
+            border: Border.all(color: T.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('LAUNCH NEW MISSION', style: T.labelUpMd),
-                  const SizedBox(height: 8),
-                  Text('Build something new →', style: T.headlineLg),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Configure agents, set goals, and start\nan autonomous execution.',
-                    style: T.bodySm.copyWith(color: T.onSurfaceVar),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: const BoxDecoration(
-                      color: T.onSurface,
-                      borderRadius: T.zero,
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Watermark Phosphor Icon
+              Positioned(
+                top: -10,
+                right: -10,
+                child: PhosphorIcon(
+                  'rocket-launch',
+                  size: 110,
+                  color: T.accent.withValues(alpha: 0.06),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(T.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: T.accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('LAUNCH NEW MISSION', style: T.labelUpMd.copyWith(color: T.accent)),
+                      ],
                     ),
-                    child: Center(
-                      child: Text(
-                        'START MISSION',
-                        style: T.labelUpSm.copyWith(
-                          color: T.background,
-                          fontWeight: FontWeight.w700,
+                    const SizedBox(height: 10),
+                    Text('Build something new →', style: T.headlineLg),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Configure agents, set goals, and start an autonomous pipeline.',
+                      style: T.bodySm.copyWith(color: T.onSurfaceVar),
+                    ),
+                    const SizedBox(height: 18),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      decoration: BoxDecoration(
+                        color: T.primary,
+                        borderRadius: T.rSm,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'START MISSION',
+                          style: T.labelUpSm.copyWith(
+                            color: T.onPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            // Watermark Icon
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Icon(
-                Icons.rocket_launch_outlined,
-                size: 72,
-                color: T.onSurface.withValues(alpha: 0.06),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -236,22 +240,26 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.symmetric(horizontal: T.lg),
           child: SectionHeader(
             'PROJECTS',
-            trailing: BadgePill('${projects.length} ACTIVE'),
+            trailing: BadgePill(
+              '${projects.length} ACTIVE',
+              bg: T.surfaceMuted,
+              textColor: T.onSurface,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 200,
+          height: 190,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: T.lg),
             itemCount: projects.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (context, i) {
               final project = projects[i];
-              final tint = _cardTints[i % _cardTints.length];
-              return _buildProjectCard(project, tint);
+              final accentColor = _projectAccents[i % _projectAccents.length];
+              return _buildProjectCard(project, accentColor);
             },
           ),
         ),
@@ -259,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProjectCard(ProjectItem p, Color tint) {
+  Widget _buildProjectCard(ProjectItem p, Color accentColor) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -267,40 +275,65 @@ class _HomeScreenState extends State<HomeScreen> {
         widget.onOpenProject(p);
       },
       child: Container(
-        width: 180,
+        width: 195,
         padding: const EdgeInsets.all(T.md),
         decoration: BoxDecoration(
-          color: tint,
-          border: Border.all(color: T.border),
+          color: T.surface,
+          borderRadius: T.rLg,
+          border: Border.all(color: T.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Top: Folder icon + LIVE badge
+            // Top: Folder icon with accent badge
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(
-                  Icons.folder_open_outlined,
-                  size: 20,
-                  color: T.onSurfaceVar,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    borderRadius: T.rSm,
+                  ),
+                  child: PhosphorIcon(
+                    'folder-simple',
+                    size: 18,
+                    color: accentColor,
+                  ),
                 ),
-                if (p.isLive) const BadgePill('LIVE'),
+                if (p.isLive)
+                  BadgePill(
+                    'LIVE',
+                    bg: T.success.withValues(alpha: 0.12),
+                    textColor: T.success,
+                  ),
               ],
             ),
             // Middle: Title
-            Text(
-              p.title,
-              style: T.headlineMd,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // Bottom: Hairline progress bar + subtitle
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                HairlineBar(p.progress),
+                Text(
+                  p.title,
+                  style: T.headlineMd,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            // Bottom: Progress bar + subtitle
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                HairlineBar(p.progress, color: accentColor),
                 const SizedBox(height: 8),
                 Text(
                   p.subtitle,
@@ -335,7 +368,8 @@ class _HomeScreenState extends State<HomeScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(T.md),
               decoration: BoxDecoration(
-                color: T.background,
+                color: T.surface,
+                borderRadius: T.rMd,
                 border: Border.all(color: T.border),
               ),
               child: Text(
@@ -361,13 +395,21 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(T.md),
         decoration: BoxDecoration(
-          color: T.background,
-          border: Border.all(color: T.border),
+          color: T.surface,
+          borderRadius: T.rLg,
+          border: Border.all(color: T.success.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: T.success.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Cute deterministic robot avatar (offline-first)
+            // Modern human avatar (no outer box frame)
             CuteAvatar(name: agent.name, size: 52),
             const SizedBox(width: T.md),
             Expanded(
@@ -378,7 +420,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     agent.team.toUpperCase(),
-                    style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
+                    style: T.labelUpXs.copyWith(color: T.accent),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -398,7 +440,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: T.success.withValues(alpha: 0.12),
-                borderRadius: T.zero,
+                borderRadius: T.rFull,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -445,13 +487,18 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text(
                 'View all →',
-                style: T.labelUpXs.copyWith(color: T.onSurface),
+                style: T.labelUpXs.copyWith(color: T.accent),
               ),
             ),
           ),
           const SizedBox(height: 12),
           Container(
-            decoration: BoxDecoration(border: Border.all(color: T.border)),
+            decoration: BoxDecoration(
+              color: T.surface,
+              borderRadius: T.rLg,
+              border: Border.all(color: T.border),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 for (int i = 0; i < past.length; i++) ...[
@@ -469,8 +516,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 past[i].completedAgo,
-                                style: T.labelUpXs
-                                    .copyWith(color: T.onSurfaceVar),
+                                style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
                               ),
                             ],
                           ),
@@ -478,11 +524,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         BadgePill(
                           past[i].success ? 'DONE' : 'FAILED',
                           bg: past[i].success
-                              ? T.success.withValues(alpha: 0.15)
-                              : T.destructive.withValues(alpha: 0.15),
+                              ? T.success.withValues(alpha: 0.12)
+                              : T.destructive.withValues(alpha: 0.12),
                           textColor: past[i].success
                               ? T.success
-                              : Colors.red.shade300,
+                              : T.destructive,
                         ),
                       ],
                     ),
@@ -496,71 +542,118 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 6. System Vitals Section ---
+  // --- 6. System Vitals Section (HORIZONTAL) ---
   Widget _buildSystemVitalsSection(HardwareVitals v) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: T.lg),
+    final vitals = [
+      _VitalCardData(
+        label: 'CPU LOAD',
+        value: '${v.cpuPercent.toInt()}%',
+        icon: 'cpu',
+        barValue: v.cpuPercent / 100,
+        accentColor: T.accentBlue,
+      ),
+      _VitalCardData(
+        label: 'RAM USAGE',
+        value: '${v.ramPercent.toInt()}%',
+        icon: 'hard-drive',
+        barValue: v.ramPercent / 100,
+        accentColor: T.accentPurple,
+      ),
+      _VitalCardData(
+        label: 'NETWORK',
+        value: '${v.networkMBps.toStringAsFixed(1)} MB/s',
+        icon: 'wifi-high',
+        barValue: (v.networkMBps / 10).clamp(0.0, 1.0),
+        accentColor: T.accentTeal,
+      ),
+      _VitalCardData(
+        label: 'BATTERY',
+        value: '${v.batteryPercent.toInt()}%',
+        icon: 'gauge',
+        barValue: v.batteryPercent / 100,
+        accentColor: T.success,
+      ),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: T.lg),
+          child: SectionHeader('SYSTEM VITALS'),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 128,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: T.lg),
+            child: Row(
+              children: [
+                for (int i = 0; i < vitals.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 12),
+                  _buildHorizontalVitalCard(vitals[i]),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHorizontalVitalCard(_VitalCardData item) {
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(T.md),
+      decoration: BoxDecoration(
+        color: T.surface,
+        borderRadius: T.rMd,
+        border: Border.all(color: T.border),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const SectionHeader('SYSTEM VITALS'),
-          const SizedBox(height: 12),
-          HairlineGrid(
-            crossAxisCount: 2,
-            cells: [
-              _VitalCell(
-                label: 'CPU LOAD',
-                value: '${v.cpuPercent.toInt()}%',
-                barValue: v.cpuPercent / 100,
-              ),
-              _VitalCell(
-                label: 'RAM USAGE',
-                value: '${v.ramPercent.toInt()}%',
-                barValue: v.ramPercent / 100,
-              ),
-              _VitalCell(
-                label: 'NETWORK',
-                value: '${v.networkMBps.toStringAsFixed(1)} MB/s',
-              ),
-              _VitalCell(
-                label: 'BATTERY',
-                value: '${v.batteryPercent.toInt()}%',
-                barValue: v.batteryPercent / 100,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(item.label, style: T.labelUpSm),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: item.accentColor.withValues(alpha: 0.12),
+                  borderRadius: T.rSm,
+                ),
+                child: PhosphorIcon(item.icon, size: 14, color: item.accentColor),
               ),
             ],
           ),
+          Text(item.value, style: T.numeralXl.copyWith(fontSize: 28)),
+          if (item.barValue != null)
+            ClipRRect(
+              borderRadius: T.rFull,
+              child: HairlineBar(item.barValue!, color: item.accentColor),
+            ),
         ],
       ),
     );
   }
 }
 
-class _VitalCell extends StatelessWidget {
+class _VitalCardData {
   final String label;
   final String value;
+  final String icon;
   final double? barValue;
+  final Color accentColor;
 
-  const _VitalCell({
+  const _VitalCardData({
     required this.label,
     required this.value,
+    required this.icon,
     this.barValue,
+    required this.accentColor,
   });
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(T.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(label, style: T.labelUpSm),
-            const SizedBox(height: 6),
-            Text(value, style: T.numeralXl),
-            if (barValue != null) ...[
-              const SizedBox(height: 8),
-              HairlineBar(barValue!),
-            ],
-          ],
-        ),
-      );
 }

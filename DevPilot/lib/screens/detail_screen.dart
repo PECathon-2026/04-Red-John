@@ -5,20 +5,21 @@ import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/dicebear_avatar.dart';
+import '../widgets/phosphor_icon.dart';
 import '../widgets/primitives.dart';
 import 'artifact_list_screen.dart';
 import 'diff_screen.dart';
 import 'full_terminal_screen.dart';
 
-/// Redesigned Monochrome Editorial Project Detail Screen.
+/// Redesigned Modern Light Project Detail Screen.
 ///
 /// Features:
-/// - Top bar: Back button + Title + Overflow menu (View Diff, Share, Stop). No timer in header.
+/// - Top bar: Back button + Title + Difference Review button + Overflow menu. No timer in header.
 /// - Live Execution Pill: Shows under project only when an agent is running; ONLY place with elapsed timer.
 /// - Goals Preview: 4 goals (1 old completed, 1 current, 2 future). Tapping opens all goals with assigned agent & cute avatar.
-/// - Team Section: 3-column hairline card grid with cute avatars. Tapping opens member dossier bottom sheet.
+/// - Team Section: 3-column clean card grid with cute human avatars (no box frame behind avatar). Tapping opens member dossier.
 /// - Terminal Console: Formatted log lines with LIVE status. Tapping opens full-screen terminal.
-/// - Artifacts Row: Max 4 type-colored cards. "View all →" opens 2-column ArtifactListScreen.
+/// - Artifacts Row: Max 4 type-colored cards with rounded corners. "View all →" opens 2-column ArtifactListScreen.
 class DetailScreen extends StatefulWidget {
   final TelemetryService service;
   final ProjectItem project;
@@ -57,7 +58,7 @@ class _DetailScreenState extends State<DetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Host link copied to clipboard: devpilot.lan'),
-        backgroundColor: Color(0xFF1E1E1E),
+        backgroundColor: T.onSurface,
       ),
     );
   }
@@ -66,17 +67,17 @@ class _DetailScreenState extends State<DetailScreen> {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: T.background,
+      backgroundColor: T.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: T.border)),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.difference_outlined, color: T.onSurface),
+              leading: const PhosphorIcon('git-diff', size: 22, color: T.onSurface),
               title: Text('View Diff / File Review', style: T.headlineSm),
               onTap: () {
                 Navigator.pop(ctx);
@@ -97,16 +98,16 @@ class _DetailScreenState extends State<DetailScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.stop_circle_outlined, color: Colors.red),
+              leading: const Icon(Icons.stop_circle_outlined, color: T.destructive),
               title: Text('Stop / Kill Mission',
-                  style: T.headlineSm.copyWith(color: Colors.red.shade400)),
+                  style: T.headlineSm.copyWith(color: T.destructive)),
               onTap: () {
                 Navigator.pop(ctx);
                 widget.service.stopActiveMission();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Mission execution halted by operator.'),
-                    backgroundColor: Color(0xFF1E1E1E),
+                    backgroundColor: T.onSurface,
                   ),
                 );
               },
@@ -148,22 +149,22 @@ class _DetailScreenState extends State<DetailScreen> {
                         // Conditional Live Execution Pill (Timer is ONLY here!)
                         _buildExecutionPill(),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
 
                         // Goals Preview (4 goals: 1 old, 1 current, 2 future)
                         _buildGoalsPreview(goals),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
 
                         // Team 3-Column Grid with Cute Avatars
                         _buildTeamGrid(agents),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
 
                         // Live Terminal Console (Tap to expand into full terminal screen)
                         _buildTerminalSection(logs),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
 
                         // Artifacts Row (Max 4, type-colored, expand to 2-col list)
                         _buildArtifactSection(artifacts),
@@ -186,7 +187,7 @@ class _DetailScreenState extends State<DetailScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(T.lg, 12, T.lg, 12),
       decoration: const BoxDecoration(
-        color: T.background,
+        color: T.surface,
         border: Border(bottom: BorderSide(color: T.border)),
       ),
       child: Row(
@@ -198,10 +199,11 @@ class _DetailScreenState extends State<DetailScreen> {
               widget.onBack();
             },
             child: Container(
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: T.background,
+                color: T.surfaceMuted,
+                borderRadius: T.rSm,
                 border: Border.all(color: T.border),
               ),
               child: const Icon(Icons.arrow_back, color: T.onSurface, size: 20),
@@ -224,12 +226,12 @@ class _DetailScreenState extends State<DetailScreen> {
                   widget.project.subtitle.isNotEmpty
                       ? widget.project.subtitle
                       : 'AUTONOMOUS MISSION',
-                  style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
+                  style: T.labelUpXs.copyWith(color: T.accent),
                 ),
               ],
             ),
           ),
-          // Difference Button
+          // Difference Review Button
           GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -241,11 +243,12 @@ class _DetailScreenState extends State<DetailScreen> {
               );
             },
             child: Container(
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: T.background,
+                color: T.surfaceMuted,
+                borderRadius: T.rSm,
                 border: Border.all(color: T.border),
               ),
               child: const Icon(Icons.difference_outlined,
@@ -256,10 +259,11 @@ class _DetailScreenState extends State<DetailScreen> {
           GestureDetector(
             onTap: _showOverflowMenu,
             child: Container(
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
-                color: T.background,
+                color: T.surfaceMuted,
+                borderRadius: T.rSm,
                 border: Border.all(color: T.border),
               ),
               child: const Icon(Icons.more_horiz, color: T.onSurface, size: 20),
@@ -293,8 +297,16 @@ class _DetailScreenState extends State<DetailScreen> {
           Container(
             padding: const EdgeInsets.all(T.md),
             decoration: BoxDecoration(
-              color: T.surfaceMuted.withValues(alpha: 0.3),
-              border: Border.all(color: T.success.withValues(alpha: 0.4)),
+              color: T.surface,
+              borderRadius: T.rLg,
+              border: Border.all(color: T.success.withValues(alpha: 0.35)),
+              boxShadow: [
+                BoxShadow(
+                  color: T.success.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -322,10 +334,10 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
                 // Elapsed Timer — Appears ONLY HERE
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1C),
+                    color: T.surfaceMuted,
+                    borderRadius: T.rFull,
                     border: Border.all(color: T.border),
                   ),
                   child: Text(
@@ -372,13 +384,18 @@ class _DetailScreenState extends State<DetailScreen> {
               onTap: () => _showAllGoals(goals),
               child: Text(
                 'View all (${goals.length}) →',
-                style: T.labelUpXs.copyWith(color: T.onSurface),
+                style: T.labelUpXs.copyWith(color: T.accent),
               ),
             ),
           ),
           const SizedBox(height: 12),
           Container(
-            decoration: BoxDecoration(border: Border.all(color: T.border)),
+            decoration: BoxDecoration(
+              color: T.surface,
+              borderRadius: T.rLg,
+              border: Border.all(color: T.border),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: Column(
               children: [
                 for (int i = 0; i < preview.length; i++) ...[
@@ -402,7 +419,10 @@ class _DetailScreenState extends State<DetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: T.background,
+      backgroundColor: T.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.88,
         minChildSize: 0.5,
@@ -416,7 +436,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('PIPELINE GOALS', style: T.headlineLg),
-                  BadgePill('${goals.length} TOTAL'),
+                  BadgePill('${goals.length} TOTAL', bg: T.surfaceMuted, textColor: T.onSurface),
                 ],
               ),
             ),
@@ -438,13 +458,13 @@ class _DetailScreenState extends State<DetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('STEP ${goal.stepNumber} • ${goal.category.toUpperCase()}',
-                              style: T.labelUpXs),
+                              style: T.labelUpXs.copyWith(color: T.accent)),
                           BadgePill(
                             goal.status.label.toUpperCase(),
                             bg: goal.status == GoalStatus.completed
                                 ? T.surfaceMuted
                                 : goal.status == GoalStatus.inProgress
-                                    ? T.success.withValues(alpha: 0.2)
+                                    ? T.success.withValues(alpha: 0.15)
                                     : T.surfaceAlt,
                             textColor: goal.status == GoalStatus.inProgress
                                 ? T.success
@@ -494,7 +514,7 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // --- Team Section: 3-Column Hairline Grid ---
+  // --- Team Section: 3-Column Clean Grid ---
   Widget _buildTeamGrid(List<AgentItem> agents) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: T.lg),
@@ -503,11 +523,16 @@ class _DetailScreenState extends State<DetailScreen> {
         children: [
           SectionHeader(
             'TEAM MEMBERS',
-            trailing: BadgePill('${agents.length} AGENTS'),
+            trailing: BadgePill('${agents.length} AGENTS', bg: T.surfaceMuted, textColor: T.onSurface),
           ),
           const SizedBox(height: 12),
           Container(
-            decoration: BoxDecoration(border: Border.all(color: T.border)),
+            decoration: BoxDecoration(
+              color: T.surface,
+              borderRadius: T.rLg,
+              border: Border.all(color: T.border),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: Wrap(
               children: [
                 for (int i = 0; i < agents.length; i++)
@@ -542,7 +567,7 @@ class _DetailScreenState extends State<DetailScreen> {
           child: Container(
             width: w,
             decoration: BoxDecoration(
-              color: T.background,
+              color: T.surface,
               border: Border(
                 right: hasRightBorder
                     ? const BorderSide(color: T.border)
@@ -556,12 +581,12 @@ class _DetailScreenState extends State<DetailScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Cute offline vector avatar
+                // Clean circular avatar without outer box frame
                 CuteAvatar(name: agent.name, size: 48),
                 const SizedBox(height: 8),
                 Text(
                   agent.name,
-                  style: T.headlineSm,
+                  style: T.headlineSm.copyWith(fontSize: 13),
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -569,7 +594,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 const SizedBox(height: 2),
                 Text(
                   agent.team.toUpperCase(),
-                  style: T.labelUpXs.copyWith(fontSize: 8.5),
+                  style: T.labelUpXs.copyWith(fontSize: 8.5, color: T.onSurfaceVar),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
@@ -593,10 +618,10 @@ class _DetailScreenState extends State<DetailScreen> {
             : T.onSurfaceMuted;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
-        borderRadius: T.zero,
+        borderRadius: T.rFull,
       ),
       child: Text(
         phase.toUpperCase(),
@@ -610,7 +635,10 @@ class _DetailScreenState extends State<DetailScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: T.background,
+      backgroundColor: T.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.85,
         maxChildSize: 0.95,
@@ -638,7 +666,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             const SizedBox(width: T.sm),
                             BadgePill(
                               agent.clearance,
-                              bg: agent.clearanceColor.withValues(alpha: 0.2),
+                              bg: agent.clearanceColor.withValues(alpha: 0.15),
                               textColor: agent.clearanceColor,
                             ),
                           ],
@@ -655,7 +683,11 @@ class _DetailScreenState extends State<DetailScreen> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(border: Border.all(color: T.border)),
+                decoration: BoxDecoration(
+                  color: T.surfaceMuted,
+                  borderRadius: T.rSm,
+                  border: Border.all(color: T.border),
+                ),
                 child: Center(
                   child: Text(
                     'PHASE: ${agent.phase.toUpperCase()}',
@@ -690,9 +722,12 @@ class _DetailScreenState extends State<DetailScreen> {
                   children: agent.assignedTools
                       .map((t) => Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration:
-                                BoxDecoration(border: Border.all(color: T.border)),
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: T.surfaceMuted,
+                              borderRadius: T.rSm,
+                              border: Border.all(color: T.border),
+                            ),
                             child: Text(t, style: T.labelUpXs),
                           ))
                       .toList(),
@@ -709,7 +744,7 @@ class _DetailScreenState extends State<DetailScreen> {
                     child: Row(
                       children: [
                         const Icon(Icons.check_circle_outline,
-                            size: 16, color: T.onSurfaceVar),
+                            size: 16, color: T.accent),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(item, style: T.bodySm),
@@ -746,7 +781,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 );
               },
               child: Text('Fullscreen ↗',
-                  style: T.labelUpXs.copyWith(color: T.onSurface)),
+                  style: T.labelUpXs.copyWith(color: T.accent)),
             ),
           ),
           const SizedBox(height: 12),
@@ -763,8 +798,16 @@ class _DetailScreenState extends State<DetailScreen> {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF0A0A0A),
+                color: const Color(0xFF0F172A), // Dark slate developer terminal
+                borderRadius: T.rLg,
                 border: Border.all(color: T.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               padding: const EdgeInsets.all(T.md),
               child: Column(
@@ -774,8 +817,8 @@ class _DetailScreenState extends State<DetailScreen> {
                   Row(
                     children: [
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: 7,
+                        height: 7,
                         margin: const EdgeInsets.only(right: 6),
                         decoration: const BoxDecoration(
                           color: T.success,
@@ -789,25 +832,25 @@ class _DetailScreenState extends State<DetailScreen> {
                         logs.isNotEmpty
                             ? logs.last.formattedTimestamp
                             : '--:--:--',
-                        style: T.labelUpXs,
+                        style: T.labelUpXs.copyWith(color: const Color(0xFF94A3B8)),
                       ),
                     ],
                   ),
                   Container(
                     height: 1,
-                    color: T.border,
+                    color: const Color(0xFF1E293B),
                     margin: const EdgeInsets.symmetric(vertical: 8),
                   ),
                   // Last 6 log lines
                   if (logs.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         '> awaiting execution pipeline telemetry...',
                         style: TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 11,
-                          color: T.onSurfaceMuted,
+                          color: Color(0xFF94A3B8),
                         ),
                       ),
                     )
@@ -829,12 +872,13 @@ class _DetailScreenState extends State<DetailScreen> {
                         )),
                   Container(
                     height: 1,
-                    color: T.border,
+                    color: const Color(0xFF1E293B),
                     margin: const EdgeInsets.only(top: 8, bottom: 4),
                   ),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: Text('Tap to expand console ↗', style: T.labelUpXs),
+                    child: Text('Tap to expand console ↗',
+                        style: T.labelUpXs.copyWith(color: const Color(0xFF94A3B8))),
                   ),
                 ],
               ),
@@ -882,7 +926,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 );
               },
               child: Text('View all (${artifacts.length}) →',
-                  style: T.labelUpXs.copyWith(color: T.onSurface)),
+                  style: T.labelUpXs.copyWith(color: T.accent)),
             ),
           ),
           const SizedBox(height: 12),
@@ -892,7 +936,7 @@ class _DetailScreenState extends State<DetailScreen> {
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               itemCount: preview.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
               itemBuilder: (_, i) {
                 final a = preview[i];
                 final color = ArtifactListScreen.artifactColor(a.type);
@@ -912,9 +956,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     );
                   },
                   child: Container(
-                    width: 100,
+                    width: 110,
                     decoration: BoxDecoration(
-                      color: T.background,
+                      color: T.surface,
+                      borderRadius: T.rMd,
                       border: Border.all(color: T.border),
                     ),
                     padding: const EdgeInsets.all(T.sm),
@@ -941,10 +986,10 @@ class _DetailScreenState extends State<DetailScreen> {
                             const SizedBox(height: 4),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 2),
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: color.withValues(alpha: 0.12),
-                                borderRadius: T.zero,
+                                borderRadius: T.rFull,
                               ),
                               child: Text(
                                 a.typeLabel,
@@ -986,7 +1031,7 @@ class _GoalRow extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: T.background,
+        color: T.surface,
         padding: const EdgeInsets.all(T.md),
         child: Row(
           children: [
@@ -995,13 +1040,18 @@ class _GoalRow extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: T.surfaceMuted,
-                border: Border.all(color: T.border),
+                color: isInProgress ? T.accent.withValues(alpha: 0.12) : T.surfaceMuted,
+                borderRadius: T.rSm,
+                border: Border.all(
+                  color: isInProgress ? T.accent : T.border,
+                ),
               ),
               child: Center(
                 child: Text(
                   '${goal.stepNumber}',
-                  style: T.labelUpSm.copyWith(color: T.onSurfaceVar),
+                  style: T.labelUpSm.copyWith(
+                    color: isInProgress ? T.accent : T.onSurfaceVar,
+                  ),
                 ),
               ),
             ),
@@ -1010,7 +1060,8 @@ class _GoalRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(goal.category.toUpperCase(), style: T.labelUpXs),
+                  Text(goal.category.toUpperCase(),
+                      style: T.labelUpXs.copyWith(color: isInProgress ? T.accent : T.onSurfaceVar)),
                   const SizedBox(height: 2),
                   Text(
                     goal.title,
@@ -1033,9 +1084,9 @@ class _GoalRow extends StatelessWidget {
                 textColor: T.success,
               )
             else if (isCompleted)
-              const BadgePill(
+              BadgePill(
                 'DONE',
-                bg: Color(0xFF1E1E1E),
+                bg: T.surfaceMuted,
                 textColor: T.onSurfaceMuted,
               )
             else

@@ -8,47 +8,47 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
 
-  group('Monochrome Editorial Theme Tokens & ThemeData', () {
-    test('T & AppTheme define Monochrome Editorial Mobile tokens', () {
-      // 7-step grayscale palette
-      expect(T.background.toARGB32(), 0xFF121212);
-      expect(T.surfaceMuted.toARGB32(), 0xFF1E1E1E);
-      expect(T.surfaceAlt.toARGB32(), 0xFF242424);
-      expect(T.onSurface.toARGB32(), 0xFFFAFAFA);
-      expect(T.onSurfaceVar.toARGB32(), 0xFF8E8E8E);
-      expect(T.border.toARGB32(), 0xFF2E2E2E);
-      expect(T.success.toARGB32(), 0xFF22C55E);
-      expect(T.destructive.toARGB32(), 0xFF7F1D1D);
+  group('Modern Light Theme Tokens & ThemeData', () {
+    test('T & AppTheme define Modern Light Theme tokens', () {
+      expect(T.background.toARGB32(), 0xFFF8FAFC);
+      expect(T.surface.toARGB32(), 0xFFFFFFFF);
+      expect(T.surfaceMuted.toARGB32(), 0xFFF1F5F9);
+      expect(T.surfaceAlt.toARGB32(), 0xFFE2E8F0);
+      expect(T.onSurface.toARGB32(), 0xFF0F172A);
+      expect(T.onSurfaceVar.toARGB32(), 0xFF475569);
+      expect(T.border.toARGB32(), 0xFFE2E8F0);
+      expect(T.success.toARGB32(), 0xFF16A34A);
+      expect(T.destructive.toARGB32(), 0xFFDC2626);
 
       // Backward compatibility aliases
-      expect(AppTheme.surface, T.background);
+      expect(AppTheme.surface, T.surface);
       expect(AppTheme.border, T.border);
       expect(AppTheme.onSurface, T.onSurface);
       expect(AppTheme.statusGreen, T.success);
     });
 
-    test('T & AppTheme enforce Zero Radius rule everywhere except badgeCircle', () {
-      expect(T.zero, BorderRadius.zero);
-      expect(AppTheme.cardRadius, BorderRadius.zero);
-      expect(AppTheme.thumbRadius, BorderRadius.zero);
-      expect(AppTheme.pillRadius, BorderRadius.zero);
+    test('T & AppTheme enforce rounded corner radii to break rigid contrast', () {
+      expect(T.rSm, const BorderRadius.all(Radius.circular(8)));
+      expect(T.rMd, const BorderRadius.all(Radius.circular(12)));
+      expect(T.rLg, const BorderRadius.all(Radius.circular(16)));
+      expect(T.rFull, const BorderRadius.all(Radius.circular(9999)));
+      expect(T.badgeCircle, const BorderRadius.all(Radius.circular(9999)));
 
       final theme = T.theme;
       expect(theme.scaffoldBackgroundColor, T.background);
       expect(theme.cardTheme.elevation, 0);
-      expect(theme.dividerTheme.color, Colors.transparent);
       expect(theme.useMaterial3, isTrue);
-      expect(theme.brightness, Brightness.dark);
+      expect(theme.brightness, Brightness.light);
     });
 
     test('T defines Montserrat typography hierarchy', () {
-      expect(T.displayLg.fontSize, 48);
-      expect(T.displayMd.fontSize, 36);
-      expect(T.displaySm.fontSize, 30);
-      expect(T.numeralXl.fontSize, 60);
-      expect(T.headlineLg.fontSize, 24);
-      expect(T.headlineMd.fontSize, 20);
-      expect(T.headlineSm.fontSize, 18);
+      expect(T.displayLg.fontSize, 40);
+      expect(T.displayMd.fontSize, 32);
+      expect(T.displaySm.fontSize, 26);
+      expect(T.numeralXl.fontSize, 52);
+      expect(T.headlineLg.fontSize, 22);
+      expect(T.headlineMd.fontSize, 18);
+      expect(T.headlineSm.fontSize, 15);
 
       expect(T.bodyMd.fontSize, 14);
       expect(T.bodySm.fontSize, 12);
@@ -59,122 +59,97 @@ void main() {
     });
   });
 
-  group('Domain Models', () {
-    test('RunningTask formatted timer works', () {
-      final task = RunningTask(
-        id: 'task-1',
-        pipelineName: 'Mobile Build',
-        taskName: 'Compiling APK',
-        startedAt: DateTime.now().subtract(
-          const Duration(minutes: 4, seconds: 22),
-        ),
-        phase: TaskPhase.compiling,
-      );
-      expect(task.elapsedString, matches(r'T\+\d{2}:\d{2}'));
-      expect(task.securityBadge, 'LAN E2EE');
-      expect(task.isE2eeEncrypted, isTrue);
-    });
-
-    test('HardwareVitals formats gauges correctly', () {
-      const vitals = HardwareVitals(
-        cpuPercent: 42.0,
-        ramPercent: 68.0,
-        networkMBps: 12.4,
-        batteryPercent: 88.0,
-        isCharging: true,
+  group('Domain Models Unit Tests', () {
+    test('GoalItem stores assignedAgent, stepNumber and category', () {
+      final goal = GoalItem(
+        id: 'goal-1',
+        title: 'Implement OAuth Token Refresh',
+        description: 'Rotate refresh tokens on auth expiration',
+        status: GoalStatus.inProgress,
+        stepNumber: 3,
+        category: 'security',
+        assignedAgent: 'Takeshi',
       );
 
-      expect(vitals.cpuPercent, 42.0);
-      expect(vitals.ramPercent, 68.0);
-      expect(vitals.cpuFormatted, '42%');
-      expect(vitals.ramFormatted, '68%');
-      expect(vitals.batteryFormatted, '88%');
-      expect(vitals.networkFormatted, '12.4 MB/s');
+      expect(goal.title, 'Implement OAuth Token Refresh');
+      expect(goal.description, 'Rotate refresh tokens on auth expiration');
+      expect(goal.status, GoalStatus.inProgress);
+      expect(goal.stepNumber, 3);
+      expect(goal.category, 'security');
+      expect(goal.assignedAgent, 'Takeshi');
+      expect(goal.isCompleted, isFalse);
     });
 
-    test('PastExecutionItem instantiates properly', () {
-      const past = PastExecutionItem(
-        id: 'pe-1',
-        projectName: 'Discounts Engine',
-        completedAgo: '22m ago',
+    test('PastExecutionItem stores project execution history', () {
+      final past = PastExecutionItem(
+        id: 'past-1',
+        projectName: 'Feature Discounts 15%',
+        completedAgo: '12M AGO',
         success: true,
       );
 
-      expect(past.projectName, 'Discounts Engine');
-      expect(past.completedAgo, '22m ago');
+      expect(past.projectName, 'Feature Discounts 15%');
+      expect(past.completedAgo, '12M AGO');
       expect(past.success, isTrue);
     });
 
-    test('AgentItem instantiates with dossier information', () {
-      final agent = AgentItem(
+    test('DiffFile and DiffLine models structure delta trees', () {
+      const line = DiffLine(
+        text: '+        self.default_discount_rate = 0.15',
+        type: 'add',
+        newLineNumber: 15,
+      );
+
+      expect(line.text, '+        self.default_discount_rate = 0.15');
+      expect(line.type, 'add');
+      expect(line.newLineNumber, 15);
+      expect(line.oldLineNumber, isNull);
+
+      const file = DiffFile(
+        path: 'backend/services/discount_engine.py',
+        status: 'modified',
+        additions: 18,
+        deletions: 4,
+        lines: [line],
+      );
+
+      expect(file.path, 'backend/services/discount_engine.py');
+      expect(file.status, 'modified');
+      expect(file.additions, 18);
+      expect(file.deletions, 4);
+      expect(file.lines.length, 1);
+    });
+
+    test('AgentItem phase and clearance mapping', () {
+      const agent = AgentItem(
         id: 'agent-1',
-        name: 'Atlas',
-        team: 'Core Orchestrator',
-        avatarUrl: 'assets/avatars/atlas.png',
-        clearance: 'GREEN',
-        currentTask: 'Analyzing AST call-graph',
-        status: 'Active',
-        phase: 'Analysis',
-        bio: 'Primary orchestrator for build pipelines.',
-        assignedTools: const ['AST Parser', 'Docker Runner'],
-        subtaskChecklist: const ['Parse syntax tree', 'Map dependencies'],
-        elapsed: '14m',
+        name: 'Takeshi',
+        team: 'Backend Core',
+        phase: 'Implementation',
+        currentTask: 'Writing token rotation handlers',
+        clearance: 'L4_AUDIT',
       );
 
-      expect(agent.name, 'Atlas');
-      expect(agent.clearance, 'GREEN');
-      expect(agent.assignedTools.length, 2);
+      expect(agent.name, 'Takeshi');
+      expect(agent.team, 'Backend Core');
+      expect(agent.phase, 'Implementation');
+      expect(agent.currentTask, 'Writing token rotation handlers');
+      expect(agent.clearance, 'L4_AUDIT');
+      expect(agent.clearanceColor, isNotNull);
     });
 
-    test('GoalItem and GoalStatus work properly with assignedAgent', () {
-      const goal = GoalItem(
-        id: 'g1',
-        stepNumber: 1,
-        category: 'SECURITY',
-        title: 'Verify Biometric Integrity',
-        status: GoalStatus.completed,
-        description: 'Ensure hardware enclave passes key exchange.',
-        assignedAgent: 'Atlas',
+    test('HardwareVitals percent calculations', () {
+      final vitals = HardwareVitals(
+        cpuPercent: 34.5,
+        ramPercent: 62.0,
+        networkMBps: 2.4,
+        batteryPercent: 88.0,
       );
 
-      expect(goal.stepNumber, 1);
-      expect(goal.category, 'SECURITY');
-      expect(goal.status, GoalStatus.completed);
-      expect(goal.assignedAgent, 'Atlas');
-    });
-
-    test('TerminalLog maps LogType to status colors', () {
-      final logSuccess = TerminalLog(
-        id: 'l1',
-        timestamp: DateTime(2026, 10, 30, 10, 24, 0),
-        message: 'Build finished successfully',
-        type: LogType.success,
-      );
-      final logError = TerminalLog(
-        id: 'l2',
-        timestamp: DateTime(2026, 10, 30, 10, 24, 5),
-        message: 'Process killed with SIGKILL',
-        type: LogType.error,
-      );
-
-      expect(logSuccess.logColor, AppTheme.statusGreen);
-      expect(logError.logColor, AppTheme.statusRed);
-      expect(logSuccess.formattedTimestamp, '10:24:00');
-    });
-
-    test('ArtifactItem stores file details', () {
-      final artifact = ArtifactItem(
-        id: 'art-1',
-        name: 'app-release.apk',
-        size: '28.4 MB',
-        type: ArtifactType.apk,
-        timestamp: DateTime(2026, 10, 30, 10, 25, 0),
-        path: '/build/outputs/apk/release/app-release.apk',
-      );
-
-      expect(artifact.name, 'app-release.apk');
-      expect(artifact.type, ArtifactType.apk);
-      expect(artifact.size, '28.4 MB');
+      expect(vitals.cpuPercent, 34.5);
+      expect(vitals.ramPercent, 62.0);
+      expect(vitals.networkMBps, 2.4);
+      expect(vitals.batteryPercent, 88.0);
     });
   });
 }

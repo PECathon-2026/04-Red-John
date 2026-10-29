@@ -67,7 +67,7 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: const Color(0xFF0F172A),
       body: SafeArea(
         child: Column(
           children: [
@@ -133,7 +133,7 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        color: T.background,
+        color: T.surface,
         border: Border(bottom: BorderSide(color: T.border)),
       ),
       child: Row(
@@ -148,11 +148,12 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
               }
             },
             child: Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 border: Border.all(color: T.border),
-                color: T.background,
+                color: T.surfaceMuted,
+                borderRadius: T.rSm,
               ),
               child: const Icon(Icons.arrow_back, color: T.onSurface, size: 20),
             ),
@@ -192,8 +193,12 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
             },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(border: Border.all(color: T.border)),
-              child: Text('CLEAR', style: T.labelUpXs),
+              decoration: BoxDecoration(
+                border: Border.all(color: T.border),
+                borderRadius: T.rSm,
+                color: T.surfaceMuted,
+              ),
+              child: Text('CLEAR', style: T.labelUpXs.copyWith(color: T.onSurface)),
             ),
           ),
         ],
@@ -206,8 +211,8 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
-        color: Color(0xFF141414),
-        border: Border(bottom: BorderSide(color: T.border)),
+        color: Color(0xFF1E293B),
+        border: Border(bottom: BorderSide(color: Color(0xFF334155))),
       ),
       child: Row(
         children: [
@@ -217,23 +222,29 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: _filter == f ? T.onSurface : Colors.transparent,
+                  color: _filter == f
+                      ? T.accent
+                      : Colors.transparent,
                   border: Border.all(
-                    color: _filter == f ? T.onSurface : T.border,
+                    color: _filter == f ? T.accent : const Color(0xFF475569),
                   ),
+                  borderRadius: T.rFull,
                 ),
                 child: Text(
                   f,
                   style: T.labelUpXs.copyWith(
-                    color: _filter == f ? T.background : T.onSurfaceVar,
+                    color: _filter == f
+                        ? Colors.white
+                        : const Color(0xFF94A3B8),
                   ),
                 ),
               ),
             ),
           ],
           const Spacer(),
+          // Auto-scroll toggle
           GestureDetector(
             onTap: () => setState(() => _autoScroll = !_autoScroll),
             child: Row(
@@ -243,10 +254,10 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
                       ? Icons.check_box_outlined
                       : Icons.check_box_outline_blank,
                   size: 16,
-                  color: _autoScroll ? T.success : T.onSurfaceVar,
+                  color: const Color(0xFF94A3B8),
                 ),
                 const SizedBox(width: 4),
-                Text('AUTOSCROLL', style: T.labelUpXs),
+                Text('AUTOSCROLL', style: T.labelUpXs.copyWith(color: const Color(0xFF94A3B8))),
               ],
             ),
           ),
@@ -257,22 +268,15 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
 
   Widget _buildCommandBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
       decoration: const BoxDecoration(
-        color: T.background,
+        color: T.surface,
         border: Border(top: BorderSide(color: T.border)),
       ),
       child: Row(
         children: [
-          Text(
-            '> ',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 16,
-              color: T.success,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('>', style: T.labelUpMd.copyWith(color: T.accent, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _cmdController,
@@ -283,24 +287,32 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
                 color: T.onSurface,
               ),
               decoration: InputDecoration(
-                hintText: 'Enter command (e.g. pytest, build, sync)...',
+                hintText: 'Enter command (e.g. status, agents, run)...',
                 hintStyle: TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 12,
                   color: T.onSurfaceMuted,
                 ),
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 10),
                 border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
               ),
               onSubmitted: (_) => _handleSendCommand(),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.arrow_upward_rounded,
-                color: T.onSurface, size: 20),
-            onPressed: _handleSendCommand,
+          GestureDetector(
+            onTap: _handleSendCommand,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: T.primary,
+                borderRadius: T.rSm,
+              ),
+              child: Text(
+                'RUN',
+                style: T.labelUpXs.copyWith(color: T.onPrimary, fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
         ],
       ),
@@ -308,16 +320,14 @@ class _FullTerminalScreenState extends State<FullTerminalScreen> {
   }
 
   String _formatLog(TerminalLog log) {
-    final ts =
-        '${log.timestamp.hour.toString().padLeft(2, '0')}:${log.timestamp.minute.toString().padLeft(2, '0')}:${log.timestamp.second.toString().padLeft(2, '0')}';
     final prefix = switch (log.type) {
-      LogType.success => 'OK ',
-      LogType.error => 'ERR',
-      LogType.warning => '!! ',
-      LogType.command => '>> ',
-      LogType.stderr => 'ERR',
-      _ => '>  ',
+      LogType.success => '✔ ',
+      LogType.error => '✖ ',
+      LogType.warning => '▲ ',
+      LogType.command => r'$ ',
+      LogType.stderr => '! ',
+      _ => '• ',
     };
-    return '$ts  $prefix  ${log.message}';
+    return '${log.formattedTimestamp} $prefix ${log.message}';
   }
 }

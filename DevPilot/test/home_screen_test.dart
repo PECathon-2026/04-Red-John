@@ -33,7 +33,7 @@ void main() {
         expect(find.text('DEVPILOT'), findsOneWidget);
         expect(find.text('hello,'), findsOneWidget);
         expect(find.text('Aryan'), findsOneWidget);
-        expect(find.byIcon(Icons.add), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsNothing);
         // Ensure avatar is NOT present
         expect(find.byKey(const Key('header_avatar')), findsNothing);
 

@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Hairline border box (the universal editorial card).
+/// Clean card container with subtle border and optional rounded corners.
 class HBox extends StatelessWidget {
   final Widget child;
   final Color bg;
   final EdgeInsets padding;
   final double? width;
   final double? height;
+  final BorderRadius? borderRadius;
+  final Color? borderColor;
 
   const HBox({
     super.key,
     required this.child,
-    this.bg = T.background,
+    this.bg = T.surface,
     this.padding = const EdgeInsets.all(T.lg),
     this.width,
     this.height,
+    this.borderRadius,
+    this.borderColor,
   });
 
   @override
@@ -24,7 +28,8 @@ class HBox extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: bg,
-          border: Border.all(color: T.border, width: 1),
+          border: Border.all(color: borderColor ?? T.border, width: 1),
+          borderRadius: borderRadius ?? T.rMd,
         ),
         padding: padding,
         child: child,
@@ -35,64 +40,74 @@ class HBox extends StatelessWidget {
 class HairlineGrid extends StatelessWidget {
   final List<Widget> cells;
   final int crossAxisCount;
+  final BorderRadius? borderRadius;
 
   const HairlineGrid({
     super.key,
     required this.cells,
     this.crossAxisCount = 2,
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalWidth = constraints.maxWidth;
-        final cellWidth =
-            (totalWidth - (crossAxisCount - 1)) / crossAxisCount;
+    return ClipRRect(
+      borderRadius: borderRadius ?? T.rMd,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalWidth = constraints.maxWidth;
+          final cellWidth =
+              (totalWidth - (crossAxisCount - 1)) / crossAxisCount;
 
-        return Container(
-          decoration: BoxDecoration(
-            color: T.border,
-            border: Border.all(color: T.border, width: 1),
-          ),
-          child: Wrap(
-            spacing: 1,
-            runSpacing: 1,
-            children: cells.map((cell) {
-              return SizedBox(
-                width: cellWidth,
-                child: ColoredBox(
-                  color: T.background,
-                  child: cell,
-                ),
-              );
-            }).toList(),
-          ),
-        );
-      },
+          return Container(
+            decoration: BoxDecoration(
+              color: T.border,
+              border: Border.all(color: T.border, width: 1),
+            ),
+            child: Wrap(
+              spacing: 1,
+              runSpacing: 1,
+              children: cells.map((cell) {
+                return SizedBox(
+                  width: cellWidth,
+                  child: ColoredBox(
+                    color: T.surface,
+                    child: cell,
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-/// Badge pill (solid fill, high contrast text, zero radius).
+/// Badge pill with rounded corners and high contrast text.
 class BadgePill extends StatelessWidget {
   final String label;
   final Color bg;
   final Color textColor;
   final EdgeInsets padding;
+  final BorderRadius? borderRadius;
 
   const BadgePill(
     this.label, {
     super.key,
-    this.bg = T.onSurface,
-    this.textColor = T.background,
-    this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    this.bg = T.surfaceMuted,
+    this.textColor = T.onSurface,
+    this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) => Container(
         padding: padding,
-        decoration: BoxDecoration(color: bg, borderRadius: T.zero),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: borderRadius ?? T.rFull,
+        ),
         child: Text(
           label,
           style: T.labelUpXs.copyWith(
@@ -103,7 +118,7 @@ class BadgePill extends StatelessWidget {
       );
 }
 
-/// 2px tall progress indicator with zero radius.
+/// Progress indicator with soft rounded ends.
 class HairlineBar extends StatelessWidget {
   final double value; // 0.0 – 1.0
   final Color? color;
@@ -120,12 +135,14 @@ class HairlineBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final clamped = value.clamp(0.0, 1.0);
     return SizedBox(
-      height: 2,
-      child: LinearProgressIndicator(
-        value: clamped,
-        backgroundColor: backgroundColor ?? T.surfaceMuted,
-        valueColor: AlwaysStoppedAnimation(color ?? T.onSurface),
-        borderRadius: T.zero,
+      height: 3,
+      child: ClipRRect(
+        borderRadius: T.rFull,
+        child: LinearProgressIndicator(
+          value: clamped,
+          backgroundColor: backgroundColor ?? T.surfaceMuted,
+          valueColor: AlwaysStoppedAnimation(color ?? T.primary),
+        ),
       ),
     );
   }
@@ -149,17 +166,23 @@ class SectionHeader extends StatelessWidget {
       );
 }
 
-/// Primary action button (inverted high contrast, zero radius).
+/// Primary action button (clean, rounded, high contrast).
 class ButtonPrimary extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Widget? icon;
+  final Color? bg;
+  final Color? textColor;
+  final BorderRadius? borderRadius;
 
   const ButtonPrimary({
     super.key,
     required this.label,
     required this.onTap,
     this.icon,
+    this.bg,
+    this.textColor,
+    this.borderRadius,
   });
 
   @override
@@ -167,9 +190,9 @@ class ButtonPrimary extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: const BoxDecoration(
-            color: T.onSurface,
-            borderRadius: T.zero,
+          decoration: BoxDecoration(
+            color: bg ?? T.onSurface,
+            borderRadius: borderRadius ?? T.rSm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -182,7 +205,7 @@ class ButtonPrimary extends StatelessWidget {
               Text(
                 label,
                 style: T.labelUpSm.copyWith(
-                  color: T.background,
+                  color: textColor ?? T.surface,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -192,17 +215,23 @@ class ButtonPrimary extends StatelessWidget {
       );
 }
 
-/// Secondary action button (hairline border, ghost).
+/// Secondary action button (clean border, rounded, ghost).
 class ButtonSecondary extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final Widget? icon;
+  final Color? bg;
+  final Color? textColor;
+  final BorderRadius? borderRadius;
 
   const ButtonSecondary({
     super.key,
     required this.label,
     required this.onTap,
     this.icon,
+    this.bg,
+    this.textColor,
+    this.borderRadius,
   });
 
   @override
@@ -211,9 +240,9 @@ class ButtonSecondary extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: T.background,
+            color: bg ?? T.surface,
             border: Border.all(color: T.border),
-            borderRadius: T.zero,
+            borderRadius: borderRadius ?? T.rSm,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -226,7 +255,7 @@ class ButtonSecondary extends StatelessWidget {
               Text(
                 label,
                 style: T.labelUpSm.copyWith(
-                  color: T.onSurface,
+                  color: textColor ?? T.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
