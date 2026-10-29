@@ -4,18 +4,17 @@ import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/agent_card.dart';
 import '../widgets/running_task_card.dart';
 
-/// Full implementation of Image 1 Home Screen.
+/// Full implementation of the Paper & Lime editorial HomeScreen.
 ///
 /// Features:
-/// - Top Image 1 header with 4-dot matrix grid icon `::`, avatar, and greeting.
-/// - Giant bold typography: "Your Projects (N)".
-/// - Side-by-side / horizontally scrollable pastel workflow cards (Peach, Mint, Lavender).
-/// - Current Running Task Card directly below projects (live timer, vitals bar, macro deck).
-/// - Active Agent Roster section showing current personnel operations.
-/// - Tactile 4-tab bottom navigation bar (Projects, Terminal, Agents, Settings).
+/// - Screen-based navigation (no bottom tabs).
+/// - Top editorial app bar with user avatar, 'DEV PILOT' kicker, greeting, and ember alert dot.
+/// - Metric strip displaying live performance stats with Space Grotesk tabular numerals.
+/// - 'Your Projects (N)' carousel with paper-alt 24px cards, duration pills, and ↗ icons.
+/// - Current Running Project Card directly below projects (live timer, lime pill, LAN E2EE).
+/// - Floating quick utility bar for CLI and Settings access.
 class HomeScreen extends StatefulWidget {
   final TelemetryService service;
   final void Function(ProjectItem project) onOpenProject;
@@ -40,8 +39,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _rosterSectionKey = GlobalKey();
-  int _selectedTabIndex = 0;
 
   @override
   void dispose() {
@@ -49,57 +46,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _scrollToRoster() {
-    final context = _rosterSectionKey.currentContext;
-    if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeInOutCubic,
-      );
-    } else {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeInOutCubic,
-      );
-    }
-  }
-
-  void _handleTabSelected(int index) {
-    HapticFeedback.selectionClick();
-    setState(() => _selectedTabIndex = index);
-
-    switch (index) {
-      case 0:
-        // Projects - scroll to top
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            0,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeOut,
-          );
-        }
-        break;
-      case 1:
-        // Terminal drawer / screen
-        widget.onOpenTerminal?.call();
-        break;
-      case 2:
-        // Agents section
-        _scrollToRoster();
-        break;
-      case 3:
-        // Settings sheet / modal
-        widget.onOpenSettings?.call();
-        break;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.bgMain,
+      backgroundColor: AppTheme.surface,
       body: SafeArea(
         bottom: false,
         child: ListenableBuilder(
@@ -108,60 +58,74 @@ class _HomeScreenState extends State<HomeScreen> {
             final projects = widget.service.projects;
             final runningTask = widget.service.currentTask;
             final vitals = widget.service.vitals;
-            final agents = widget.service.agents;
 
-            return Column(
+            return Stack(
               children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // --- Image 1 Top Header ---
-                        _buildHeader(projects.length),
+                SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- Top App Bar ---
+                      _buildTopAppBar(),
 
-                        const SizedBox(height: 18),
+                      const SizedBox(height: 20),
 
-                        // --- Image 1 Side-by-Side Pastel Workflow Cards ---
-                        _buildProjectsCarousel(projects),
+                      // --- Hero Metric Data Strip ---
+                      _buildMetricStrip(vitals),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        // --- Running Task Card (Under Square Workflow Boxes) ---
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                          child: RunningTaskCard(
-                            task: runningTask,
-                            vitals: vitals,
-                            onMacroAction: (action) {
-                              widget.service.triggerAction(action);
-                              if (action == 'Kill All' ||
-                                  action.toLowerCase().contains('kill')) {
-                                widget.onKillTriggered?.call();
-                              }
-                            },
-                            onTap: () {
-                              if (projects.isNotEmpty) {
-                                widget.onOpenProject(projects.first);
-                              }
-                            },
-                          ),
+                      // --- Projects Section ---
+                      _buildProjectsSection(projects),
+
+                      const SizedBox(height: 24),
+
+                      // --- Active Running Task Card ---
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'CURRENT EXECUTION',
+                              style: AppTheme.labelUppercase,
+                            ),
+                            const SizedBox(height: 10),
+                            RunningTaskCard(
+                              task: runningTask,
+                              vitals: vitals,
+                              onMacroAction: (action) {
+                                widget.service.triggerAction(action);
+                                if (action == 'Kill All' ||
+                                    action.toLowerCase().contains('kill')) {
+                                  widget.onKillTriggered?.call();
+                                }
+                              },
+                              onTap: () {
+                                if (projects.isNotEmpty) {
+                                  widget.onOpenProject(projects.first);
+                                }
+                              },
+                            ),
+                          ],
                         ),
-
-                        const SizedBox(height: 28),
-
-                        // --- Active Agent Roster Section ---
-                        _buildAgentRoster(agents),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
-                // --- Bottom Navigation Bar ---
-                _buildBottomNavigationBar(),
+                // --- Floating Bottom Quick Action Pill ---
+                Positioned(
+                  bottom: 24,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: _buildFloatingQuickBar(),
+                  ),
+                ),
               ],
             );
           },
@@ -170,487 +134,440 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Section 1: Header ---
-  Widget _buildHeader(int projectCount) {
+  // --- Top App Bar ---
+  Widget _buildTopAppBar() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Top Action Row: 4-dot matrix grid icon and avatar
+          // Left: Avatar + Two-line greeting
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 4-Dot Matrix Grid Icon (::)
-              _buildFourDotGridIcon(),
-
-              // User Avatar Circle
-              _buildAvatar(),
-            ],
-          ),
-
-          const SizedBox(height: 22),
-
-          // Subtitle Greeting
-          const Text(
-            'Hello, Aryan',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary,
-              letterSpacing: 0.2,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Giant Bold Title
-          Text('Your Projects ($projectCount)', style: AppTheme.displayLarge),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFourDotGridIcon() {
-    return Container(
-      key: const Key('header_grid_icon'),
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Center(
-        child: SizedBox(
-          width: 15,
-          height: 15,
-          child: Wrap(
-            spacing: 3.5,
-            runSpacing: 3.5,
-            children: List.generate(
-              4,
-              (index) => Container(
-                width: 5,
-                height: 5,
+              Container(
+                key: const Key('header_avatar'),
+                width: 44,
+                height: 44,
                 decoration: const BoxDecoration(
-                  color: AppTheme.textDark,
+                  color: AppTheme.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAvatar() {
-    return Container(
-      key: const Key('header_avatar'),
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: AppTheme.cardPeach,
-        shape: BoxShape.circle,
-        border: Border.all(color: AppTheme.borderMedium, width: 1.5),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: const Center(
-        child: Text(
-          'A',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textDark,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // --- Section 2: Side-by-Side Pastel Workflow Cards ---
-  Widget _buildProjectsCarousel(List<ProjectItem> projects) {
-    if (projects.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox(
-      height: 245,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: projects.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 16),
-        itemBuilder: (context, index) {
-          final project = projects[index];
-          return _WorkflowCard(
-            project: project,
-            onTap: () => widget.onOpenProject(project),
-          );
-        },
-      ),
-    );
-  }
-
-  // --- Section 3: Active Agent Roster ---
-  Widget _buildAgentRoster(List<AgentItem> agents) {
-    return Padding(
-      key: _rosterSectionKey,
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with count badge
-          Row(
-            children: [
-              const Text('Active Agent Roster', style: AppTheme.titleLarge),
-              const SizedBox(width: 8),
-              Container(
-                key: const Key('active_agent_roster_section'),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.darkPill,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${agents.length}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                child: const Center(
+                  child: Text(
+                    'A',
+                    style: TextStyle(
+                      fontFamily: 'Space Grotesk',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.onSurface,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('DEV PILOT', style: AppTheme.labelUppercase),
+                  const SizedBox(height: 2),
+                  Text('Hello, Aryan', style: AppTheme.headlineMd),
+                ],
+              ),
             ],
           ),
 
-          const SizedBox(height: 14),
-
-          // Agent Cards list
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: agents.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final agent = agents[index];
-              return AgentCard(
-                agent: agent,
-                onTap: () => widget.onOpenAgent?.call(agent),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- Section 4: Bottom Navigation Bar ---
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        border: const Border(
-          top: BorderSide(color: AppTheme.borderSubtle, width: 1),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            offset: const Offset(0, -4),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          // Right: Utility icon buttons
+          Row(
             children: [
-              _buildNavTab(
-                index: 0,
-                icon: Icons.dashboard_rounded,
-                label: 'Projects',
+              // Settings / Quick Action Button
+              GestureDetector(
+                key: const Key('header_grid_icon'),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  widget.onOpenSettings?.call();
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfaceAlt,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.tune_rounded,
+                      size: 18,
+                      color: AppTheme.onSurface,
+                    ),
+                  ),
+                ),
               ),
-              _buildNavTab(
-                index: 1,
-                icon: Icons.terminal_rounded,
-                label: 'Terminal',
-              ),
-              _buildNavTab(
-                index: 2,
-                icon: Icons.group_rounded,
-                label: 'Agents',
-              ),
-              _buildNavTab(
-                index: 3,
-                icon: Icons.tune_rounded,
-                label: 'Settings',
+              const SizedBox(width: 10),
+
+              // Notification icon button with Ember Alert Dot
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  widget.onOpenTerminal?.call();
+                },
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.surfaceAlt,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.notifications_none_rounded,
+                          size: 18,
+                          color: AppTheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 9,
+                      right: 9,
+                      child: Container(
+                        key: const Key('ember_alert_dot'),
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.accent, // Ember orange #FF5A1F
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildNavTab({
-    required int index,
-    required IconData icon,
-    required String label,
-  }) {
-    final isSelected = _selectedTabIndex == index;
-
-    return InkWell(
-      onTap: () => _handleTabSelected(index),
-      borderRadius: BorderRadius.circular(14),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+  // --- Hero Metric Data Strip ---
+  Widget _buildMetricStrip(HardwareVitals vitals) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.darkPill : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          color: AppTheme.surfaceAlt,
+          borderRadius: AppTheme.cardRadius,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? Colors.white : AppTheme.textSecondary,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('SYSTEM VITALS', style: AppTheme.labelUppercase),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '${vitals.cpuPercent.toInt()}%',
+                      style: AppTheme.displayMd.copyWith(color: AppTheme.onSurface),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'CPU LOAD',
+                      style: AppTheme.caption.copyWith(color: AppTheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                color: isSelected ? Colors.white : AppTheme.textSecondary,
-                letterSpacing: 0.1,
-              ),
+            Container(
+              width: 1,
+              height: 36,
+              color: AppTheme.border,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('PIPELINE HEALTH', style: AppTheme.labelUppercase),
+                const SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      '99.8',
+                      style: AppTheme.displayMd.copyWith(color: AppTheme.onSurface),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '% OK',
+                      style: AppTheme.caption.copyWith(color: AppTheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
+
+  // --- Projects Section ---
+  Widget _buildProjectsSection(List<ProjectItem> projects) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ACTIVE WORKSPACE', style: AppTheme.labelUppercase),
+                  const SizedBox(height: 4),
+                  Text('Your Projects (${projects.length})', style: AppTheme.headlineSm),
+                ],
+              ),
+              const Icon(
+                Icons.arrow_forward_rounded,
+                size: 16,
+                color: AppTheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 235,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: projects.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            itemBuilder: (context, index) {
+              final project = projects[index];
+              return _WorkflowCard(
+                project: project,
+                onTap: () => widget.onOpenProject(project),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- Floating Quick Bar ---
+  Widget _buildFloatingQuickBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceInverse,
+        borderRadius: AppTheme.pillRadius,
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(14, 15, 12, 0.28),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Launch Project Button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              if (widget.service.projects.isNotEmpty) {
+                widget.onOpenProject(widget.service.projects.first);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.primary, // Electric Lime
+                borderRadius: AppTheme.pillRadius,
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.dashboard_rounded, size: 16, color: AppTheme.onPrimary),
+                  SizedBox(width: 6),
+                  Text(
+                    'Active Project',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 6),
+
+          // CLI Terminal Button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              widget.onOpenTerminal?.call();
+            },
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.terminal_rounded,
+                  size: 16,
+                  color: AppTheme.onInverse,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 6),
+
+          // Parameters / Settings Button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              widget.onOpenSettings?.call();
+            },
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.tune_rounded,
+                  size: 16,
+                  color: AppTheme.onInverse,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// Image 1 Pastel Workflow Card
+/// Paper & Lime 24px Project Workflow Card.
 class _WorkflowCard extends StatelessWidget {
   final ProjectItem project;
   final VoidCallback onTap;
 
-  const _WorkflowCard({required this.project, required this.onTap});
+  const _WorkflowCard({
+    required this.project,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = project.backgroundColor;
-    final fgColor = project.textColor;
-
-    return Container(
-      width: 250,
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: AppTheme.cardRadius,
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: AppTheme.cardRadius,
-        child: InkWell(
-          onTap: onTap,
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        width: 175,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceAlt,
           borderRadius: AppTheme.cardRadius,
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Top Row: Category icon circle + Corner arrow icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Top Row: Category icon badge & Arrow button (↗)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Icon Badge (shopping bag, credit card, etc.)
-                    _buildIconBadge(project),
-
-                    // Top-right circular arrow button (↗)
-                    _buildArrowButton(),
-                  ],
-                ),
-
-                const Spacer(),
-
-                // Title & Subtitle
-                Text(
-                  project.title,
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: fgColor,
-                    letterSpacing: -0.3,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfaceRaised,
+                    shape: BoxShape.circle,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (project.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    project.subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: fgColor.withValues(alpha: 0.7),
+                  child: const Center(
+                    child: Icon(
+                      Icons.folder_outlined,
+                      size: 18,
+                      color: AppTheme.onSurface,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-
-                const SizedBox(height: 16),
-
-                // Avatar Stack + Duration Pill Row
-                Row(
-                  children: [
-                    _buildAvatarStack(project),
-                    const Spacer(),
-                    _buildDurationPill(project.duration),
-                  ],
                 ),
-
-                const SizedBox(height: 12),
-
-                // Mini Progress Bar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: LinearProgressIndicator(
-                    value: project.progress.clamp(0.0, 1.0),
-                    minHeight: 4,
-                    backgroundColor: Colors.black.withValues(alpha: 0.08),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      fgColor.withValues(alpha: 0.85),
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.surfaceRaised,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.arrow_outward_rounded,
+                      size: 16,
+                      color: AppTheme.onSurface,
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildIconBadge(ProjectItem project) {
-    IconData icon;
-    final lowerTitle = project.title.toLowerCase();
-    if (lowerTitle.contains('admin') || lowerTitle.contains('dashboard')) {
-      icon = Icons.shopping_bag_outlined;
-    } else if (lowerTitle.contains('wallet')) {
-      icon = Icons.credit_card_rounded;
-    } else {
-      icon = Icons.folder_open_rounded;
-    }
+            // Middle: Project Title
+            Text(
+              project.title,
+              style: AppTheme.cardTitle.copyWith(
+                fontSize: 17,
+                height: 1.2,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
 
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.9),
-          width: 1.5,
-        ),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Icon(icon, size: 20, color: AppTheme.textDark),
-    );
-  }
-
-  Widget _buildArrowButton() {
-    return Container(
-      width: 38,
-      height: 38,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        shape: BoxShape.circle,
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: const Icon(
-        Icons.arrow_outward_rounded,
-        size: 18,
-        color: AppTheme.textDark,
-      ),
-    );
-  }
-
-  Widget _buildAvatarStack(ProjectItem project) {
-    final initialsList = ['AT', 'DE', 'NI'];
-    return SizedBox(
-      height: 26,
-      width: 58,
-      child: Stack(
-        children: [
-          for (int i = 0; i < 3; i++)
-            Positioned(
-              left: i * 16.0,
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _avatarBg(i),
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-                child: Center(
-                  child: Text(
-                    initialsList[i],
-                    style: const TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
+            // Bottom: Duration Pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceRaised,
+                borderRadius: AppTheme.pillRadius,
+              ),
+              child: Text(
+                project.duration,
+                style: const TextStyle(
+                  fontFamily: 'Space Grotesk',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.onSurface,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-
-  Color _avatarBg(int index) {
-    switch (index) {
-      case 0:
-        return const Color(0xFFFFD700);
-      case 1:
-        return const Color(0xFFAAEBFD);
-      case 2:
-      default:
-        return const Color(0xFFE3C1C8);
-    }
-  }
-
-  Widget _buildDurationPill(String duration) {
-    if (duration.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white, width: 1),
-      ),
-      child: Text(
-        duration,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.textDark,
+          ],
         ),
       ),
     );
