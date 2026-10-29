@@ -1,33 +1,82 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:devpilot/theme/app_theme.dart';
 import 'package:devpilot/models/models.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  GoogleFonts.config.allowRuntimeFetching = false;
+
   group('AppTheme Tokens & ThemeData', () {
-    test('AppTheme defines required color tokens', () {
-      expect(AppTheme.bgMain.toARGB32(), 0xFFFAF8F5);
-      expect(AppTheme.bgWarm.toARGB32(), 0xFFF6ECD9);
-      expect(AppTheme.cardPeach.toARGB32(), 0xFFFCEAD2);
-      expect(AppTheme.cardMint.toARGB32(), 0xFFD8EFE9);
-      expect(AppTheme.cardLavender.toARGB32(), 0xFFE8E0F2);
-      expect(AppTheme.darkPill.toARGB32(), 0xFF161618);
-      expect(AppTheme.surfaceCard.toARGB32(), 0xFFFFFFFF);
-      expect(AppTheme.accentOrange.toARGB32(), 0xFFE07A4C);
-      expect(AppTheme.statusGreen.toARGB32(), 0xFF34C759);
-      expect(AppTheme.statusAmber.toARGB32(), 0xFFFFB300);
-      expect(AppTheme.statusRed.toARGB32(), 0xFFFF3B30);
+    test('AppTheme defines Paper & Lime color tokens and aliases', () {
+      // Paper & Lime Core Tokens
+      expect(AppTheme.surface.toARGB32(), 0xFFF4F2EC);
+      expect(AppTheme.surfaceAlt.toARGB32(), 0xFFEBE8E0);
+      expect(AppTheme.surfaceRaised.toARGB32(), 0xFFFFFFFF);
+      expect(AppTheme.surfaceInverse.toARGB32(), 0xFF0E0F0C);
+      expect(AppTheme.primary.toARGB32(), 0xFFD7FE47);
+      expect(AppTheme.primaryDeep.toARGB32(), 0xFFC8F02A);
+      expect(AppTheme.onPrimary.toARGB32(), 0xFF0E0F0C);
+      expect(AppTheme.accent.toARGB32(), 0xFFFF5A1F);
+      expect(AppTheme.onSurface.toARGB32(), 0xFF0E0F0C);
+      expect(AppTheme.onSurfaceVariant.toARGB32(), 0xFF8A8A82);
+      expect(AppTheme.onInverse.toARGB32(), 0xFFF4F2EC);
+      expect(AppTheme.border.toARGB32(), 0xFFE3E0D7);
+      expect(AppTheme.borderStrong.toARGB32(), 0xFFDDDAD1);
+      expect(AppTheme.neutralSoft.toARGB32(), 0xFFC8C5BA);
+
+      // Backward compatibility aliases
+      expect(AppTheme.bgMain, AppTheme.surface);
+      expect(AppTheme.surfaceCard, AppTheme.surfaceRaised);
+      expect(AppTheme.darkPill, AppTheme.surfaceInverse);
+      expect(AppTheme.statusGreen, AppTheme.primaryDeep);
+      expect(AppTheme.accentOrange, AppTheme.accent);
     });
 
-    test('AppTheme defines shapes and ThemeData', () {
-      expect(AppTheme.cardRadius, BorderRadius.circular(28));
-      expect(AppTheme.sheetRadius, BorderRadius.circular(32));
-      expect(AppTheme.pillRadius, BorderRadius.circular(999));
+    test('AppTheme defines Paper & Lime shapes and ThemeData', () {
+      expect(AppTheme.cardRadius, BorderRadius.circular(24));
+      expect(AppTheme.thumbRadius, BorderRadius.circular(18));
+      expect(AppTheme.pillRadius, BorderRadius.circular(9999));
 
-      final theme = AppTheme.lightTheme;
-      expect(theme.scaffoldBackgroundColor, AppTheme.bgMain);
-      expect(theme.cardColor, AppTheme.surfaceCard);
+      final theme = AppTheme.themeData;
+      expect(theme.scaffoldBackgroundColor, AppTheme.surface);
+      expect(theme.cardTheme.elevation, 0);
+      expect(theme.dividerTheme.color, Colors.transparent);
       expect(theme.useMaterial3, isTrue);
+    });
+
+    test('AppTheme defines Space Grotesk and Inter typography hierarchy', () {
+      // Space Grotesk (Display & Numerals)
+      expect(AppTheme.displayXl.fontSize, 84);
+      expect(AppTheme.displayXl.fontWeight, FontWeight.w700);
+
+      expect(AppTheme.displayMd.fontSize, 34);
+      expect(AppTheme.displayMd.fontWeight, FontWeight.w700);
+
+      expect(AppTheme.numeralMd.fontSize, 26);
+      expect(AppTheme.numeralMd.fontWeight, FontWeight.w700);
+
+      expect(AppTheme.numeralSm.fontSize, 22);
+      expect(AppTheme.numeralSm.fontWeight, FontWeight.w700);
+
+      expect(AppTheme.headlineMd.fontSize, 17);
+      expect(AppTheme.headlineMd.fontWeight, FontWeight.w600);
+
+      expect(AppTheme.headlineSm.fontSize, 15);
+      expect(AppTheme.headlineSm.fontWeight, FontWeight.w600);
+
+      expect(AppTheme.cardTitle.fontSize, 16);
+      expect(AppTheme.cardTitle.fontWeight, FontWeight.w600);
+
+      // Inter (Body, Labels, Uppercase kickers)
+      expect(AppTheme.bodyMd.fontSize, 13);
+      expect(AppTheme.bodySm.fontSize, 12);
+      expect(AppTheme.labelMd.fontSize, 12);
+      expect(AppTheme.labelSm.fontSize, 11);
+      expect(AppTheme.labelUppercase.fontSize, 10);
+      expect(AppTheme.labelUppercase.letterSpacing, 1.8);
+      expect(AppTheme.caption.fontSize, 9);
     });
   });
 
