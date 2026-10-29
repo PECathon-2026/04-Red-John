@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../models/models.dart';
 import '../../services/telemetry_service.dart';
 import '../../theme/app_theme.dart';
@@ -12,11 +13,7 @@ class CliSheet extends StatefulWidget {
   final TelemetryService service;
   final VoidCallback? onClose;
 
-  const CliSheet({
-    super.key,
-    required this.service,
-    this.onClose,
-  });
+  const CliSheet({super.key, required this.service, this.onClose});
 
   /// Static helper to display the CLI sheet as a modal bottom sheet.
   static Future<void> show(BuildContext context, TelemetryService service) {
@@ -25,9 +22,7 @@ class CliSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: CliSheet(
           service: service,
           onClose: () => Navigator.of(ctx).pop(),
@@ -134,7 +129,10 @@ class _CliSheetState extends State<CliSheet> {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
@@ -151,8 +149,13 @@ class _CliSheetState extends State<CliSheet> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 22),
-                  onPressed: widget.onClose ?? () => Navigator.of(context).maybePop(),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    color: Colors.white70,
+                    size: 22,
+                  ),
+                  onPressed:
+                      widget.onClose ?? () => Navigator.of(context).maybePop(),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -169,7 +172,10 @@ class _CliSheetState extends State<CliSheet> {
                 final logs = widget.service.logs;
                 return ListView.builder(
                   controller: _terminalScrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   itemCount: logs.length,
                   itemBuilder: (context, index) {
                     final log = logs[index];
@@ -191,7 +197,9 @@ class _CliSheetState extends State<CliSheet> {
                               style: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 12.5,
-                                fontWeight: log.type == LogType.command ? FontWeight.w700 : FontWeight.w400,
+                                fontWeight: log.type == LogType.command
+                                    ? FontWeight.w700
+                                    : FontWeight.w400,
                                 color: log.type.logColor,
                                 height: 1.35,
                               ),
@@ -220,7 +228,10 @@ class _CliSheetState extends State<CliSheet> {
                       onTap: () => _submitCommand(cmd),
                       borderRadius: BorderRadius.circular(14),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E1E28),
                           borderRadius: BorderRadius.circular(14),
@@ -306,10 +317,17 @@ class _CliSheetState extends State<CliSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     onPressed: () => _submitCommand(),
                     visualDensity: VisualDensity.compact,
-                    constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
                   ),
                 ),
               ],

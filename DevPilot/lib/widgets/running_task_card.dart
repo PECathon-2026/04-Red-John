@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import 'macro_deck.dart';
@@ -27,10 +28,7 @@ class RunningTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard,
         borderRadius: AppTheme.cardRadius,
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Material(
@@ -79,10 +77,7 @@ class RunningTaskCard extends StatelessWidget {
     return Row(
       children: [
         // Pulsing Phase Indicator Chip
-        _PulsingStatusChip(
-          label: task.phaseLabel,
-          color: task.statusColor,
-        ),
+        _PulsingStatusChip(label: task.phaseLabel, color: task.statusColor),
 
         const Spacer(),
 
@@ -113,10 +108,7 @@ class RunningTaskCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppTheme.bgWarm,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppTheme.borderSubtle,
-              width: 1,
-            ),
+            border: Border.all(color: AppTheme.borderSubtle, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -206,7 +198,9 @@ class RunningTaskCard extends StatelessWidget {
             value: task.progress.clamp(0.0, 1.0),
             minHeight: 5,
             backgroundColor: AppTheme.bgWarm,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentOrange),
+            valueColor: const AlwaysStoppedAnimation<Color>(
+              AppTheme.accentOrange,
+            ),
           ),
         ),
       ],
@@ -218,10 +212,7 @@ class _PulsingStatusChip extends StatefulWidget {
   final String label;
   final Color color;
 
-  const _PulsingStatusChip({
-    required this.label,
-    required this.color,
-  });
+  const _PulsingStatusChip({required this.label, required this.color});
 
   @override
   State<_PulsingStatusChip> createState() => _PulsingStatusChipState();
@@ -240,9 +231,9 @@ class _PulsingStatusChipState extends State<_PulsingStatusChip>
     );
 
     // Only repeat animation in non-test runtime to allow pumpAndSettle in test suites
-    final isTest = WidgetsBinding.instance.runtimeType
-        .toString()
-        .contains('TestWidgetsFlutterBinding');
+    final isTest = WidgetsBinding.instance.runtimeType.toString().contains(
+      'TestWidgetsFlutterBinding',
+    );
     if (!isTest) {
       _controller.repeat(reverse: true);
     } else {

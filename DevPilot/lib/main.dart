@@ -80,7 +80,8 @@ class _DevPilotAppState extends State<DevPilotApp> {
     _isApprovalDialogOpen = true;
 
     final title = _service.pendingActionTitle ?? 'Kill All Processes';
-    final details = _service.pendingActionDetails ??
+    final details =
+        _service.pendingActionDetails ??
         'Terminates all active worker threads, agent sandboxes, and build pipelines immediately. Requires biometric verification.';
 
     try {

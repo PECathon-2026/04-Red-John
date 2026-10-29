@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 /// Card pastel color types matching Image 1 aesthetics.
@@ -210,13 +211,13 @@ class ProjectItem {
         orElse: () => CardColorType.peach,
       ),
       progress: (json['progress'] as num?)?.toDouble() ?? 0.0,
-      memberAvatars: (json['memberAvatars'] as List<dynamic>?)
+      memberAvatars:
+          (json['memberAvatars'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      tags: (json['tags'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           const [],
       isLive: json['isLive'] as bool? ?? true,
     );
@@ -307,8 +308,9 @@ class RunningTask {
       customElapsed ?? DateTime.now().difference(startedAt);
 
   String get elapsedString {
-    final duration =
-        elapsedDuration.isNegative ? Duration.zero : elapsedDuration;
+    final duration = elapsedDuration.isNegative
+        ? Duration.zero
+        : elapsedDuration;
     if (duration.inHours > 0) {
       final hours = duration.inHours.toString().padLeft(2, '0');
       final minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
@@ -474,11 +476,13 @@ class AgentItem {
       status: json['status'] as String? ?? 'Active',
       phase: json['phase'] as String? ?? 'Running',
       bio: json['bio'] as String? ?? '',
-      assignedTools: (json['assignedTools'] as List<dynamic>?)
+      assignedTools:
+          (json['assignedTools'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
-      subtaskChecklist: (json['subtaskChecklist'] as List<dynamic>?)
+      subtaskChecklist:
+          (json['subtaskChecklist'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],

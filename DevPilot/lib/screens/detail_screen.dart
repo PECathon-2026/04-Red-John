@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
@@ -158,7 +159,11 @@ class _DetailScreenState extends State<DetailScreen> {
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppTheme.textDark, size: 22),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: AppTheme.textDark,
+                size: 22,
+              ),
               onPressed: () {
                 HapticFeedback.lightImpact();
                 widget.onBack();
@@ -253,7 +258,10 @@ class _DetailScreenState extends State<DetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
@@ -308,10 +316,7 @@ class _DetailScreenState extends State<DetailScreen> {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.75),
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: AppTheme.borderSubtle,
-                  width: 1.2,
-                ),
+                border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
                 boxShadow: AppTheme.softShadow,
               ),
               child: Column(
@@ -349,7 +354,10 @@ class _DetailScreenState extends State<DetailScreen> {
                       onTap: _handleShareLink,
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
@@ -360,7 +368,11 @@ class _DetailScreenState extends State<DetailScreen> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.link_rounded, size: 15, color: AppTheme.textDark),
+                            Icon(
+                              Icons.link_rounded,
+                              size: 15,
+                              color: AppTheme.textDark,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               'Share link',
@@ -414,7 +426,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppTheme.borderSubtle, width: 1),
                 ),
-                child: const Icon(Icons.add, size: 18, color: AppTheme.textDark),
+                child: const Icon(
+                  Icons.add,
+                  size: 18,
+                  color: AppTheme.textDark,
+                ),
               ),
             ],
           ),
@@ -429,13 +445,13 @@ class _DetailScreenState extends State<DetailScreen> {
               onTap: _handleSendReminder,
               borderRadius: BorderRadius.circular(20),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppTheme.borderSubtle,
-                    width: 1.2,
-                  ),
+                  border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
                 ),
                 child: Row(
                   children: [
@@ -550,10 +566,7 @@ class _DetailScreenState extends State<DetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Goals (${goals.length})',
-                style: AppTheme.titleLarge,
-              ),
+              Text('Goals (${goals.length})', style: AppTheme.titleLarge),
               Container(
                 width: 32,
                 height: 32,
@@ -562,7 +575,11 @@ class _DetailScreenState extends State<DetailScreen> {
                   shape: BoxShape.circle,
                   border: Border.all(color: AppTheme.borderSubtle, width: 1),
                 ),
-                child: const Icon(Icons.add, size: 18, color: AppTheme.textDark),
+                child: const Icon(
+                  Icons.add,
+                  size: 18,
+                  color: AppTheme.textDark,
+                ),
               ),
             ],
           ),
@@ -587,10 +604,7 @@ class _DetailScreenState extends State<DetailScreen> {
           const SizedBox(height: 28),
 
           // Embedded Live Monospace Terminal Feed
-          TerminalFeed(
-            logs: logs,
-            onClear: () => widget.service.clearLogs(),
-          ),
+          TerminalFeed(logs: logs, onClear: () => widget.service.clearLogs()),
 
           const SizedBox(height: 26),
 
@@ -620,7 +634,11 @@ class _DetailScreenState extends State<DetailScreen> {
                 HapticFeedback.selectionClick();
                 widget.onOpenCli?.call();
               },
-              icon: const Icon(Icons.terminal_rounded, size: 20, color: Colors.white),
+              icon: const Icon(
+                Icons.terminal_rounded,
+                size: 20,
+                color: Colors.white,
+              ),
               label: const Text(
                 'Open CLI Terminal',
                 style: TextStyle(
@@ -664,10 +682,7 @@ class _GoalStepTile extends StatelessWidget {
   final GoalItem goal;
   final Color pastelColor;
 
-  const _GoalStepTile({
-    required this.goal,
-    required this.pastelColor,
-  });
+  const _GoalStepTile({required this.goal, required this.pastelColor});
 
   @override
   Widget build(BuildContext context) {
@@ -676,10 +691,7 @@ class _GoalStepTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.bgMain,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -772,7 +784,11 @@ class _GoalStepTile extends StatelessWidget {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle_rounded, size: 14, color: AppTheme.statusGreen),
+              Icon(
+                Icons.check_circle_rounded,
+                size: 14,
+                color: AppTheme.statusGreen,
+              ),
               SizedBox(width: 4),
               Text(
                 'Completed',
@@ -801,13 +817,15 @@ class _GoalStepTile extends StatelessWidget {
                 height: 11,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  value: WidgetsBinding.instance.runtimeType
-                          .toString()
-                          .contains('TestWidgetsFlutterBinding')
+                  value:
+                      WidgetsBinding.instance.runtimeType.toString().contains(
+                        'TestWidgetsFlutterBinding',
+                      )
                       ? 0.75
                       : null,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(AppTheme.accentOrange),
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppTheme.accentOrange,
+                  ),
                 ),
               ),
               const SizedBox(width: 6),
@@ -834,7 +852,11 @@ class _GoalStepTile extends StatelessWidget {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, size: 14, color: AppTheme.statusRed),
+              Icon(
+                Icons.error_outline_rounded,
+                size: 14,
+                color: AppTheme.statusRed,
+              ),
               SizedBox(width: 4),
               Text(
                 'Blocked',

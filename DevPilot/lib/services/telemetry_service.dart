@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/models.dart';
 
 /// Telemetry and real-time simulation service for DevPilot mobile frontend.
@@ -62,7 +64,9 @@ class TelemetryService extends ChangeNotifier {
       id: 'task-live-1',
       pipelineName: 'DevPilot Core Engine',
       taskName: 'Compiling Shaders & AST',
-      startedAt: DateTime.now().subtract(const Duration(minutes: 4, seconds: 22)),
+      startedAt: DateTime.now().subtract(
+        const Duration(minutes: 4, seconds: 22),
+      ),
       phase: TaskPhase.running,
       progress: 0.68,
       securityBadge: 'LAN E2EE',
@@ -85,7 +89,11 @@ class TelemetryService extends ChangeNotifier {
         duration: '45 hours',
         colorType: CardColorType.peach,
         progress: 0.72,
-        memberAvatars: ['assets/avatars/atlas.png', 'assets/avatars/dev.png', 'assets/avatars/nisha.png'],
+        memberAvatars: [
+          'assets/avatars/atlas.png',
+          'assets/avatars/dev.png',
+          'assets/avatars/nisha.png',
+        ],
         tags: ['PROD', 'LAN-1'],
         isLive: true,
       ),
@@ -124,7 +132,12 @@ class TelemetryService extends ChangeNotifier {
         phase: 'Analysis',
         bio: 'The organizational brain. Interprets mission briefs, builds research plans, monitors progress, and commissions the final architecture.',
         assignedTools: ['AST Parser', 'Docker Runner', 'Architecture Graph'],
-        subtaskChecklist: ['Parse syntax tree', 'Map dependencies', 'Audit circular calls', 'Verify type safety'],
+        subtaskChecklist: [
+          'Parse syntax tree',
+          'Map dependencies',
+          'Audit circular calls',
+          'Verify type safety',
+        ],
         elapsed: '14m 22s',
       ),
       const AgentItem(
@@ -137,7 +150,11 @@ class TelemetryService extends ChangeNotifier {
         phase: 'Compiling',
         bio: 'Computes total landed cost, freight, insurance, duties, handling, and switching cost for every supplier lane.',
         assignedTools: ['Cost Engine', 'Supplier Lane DB', 'FX Matrix'],
-        subtaskChecklist: ['Import freight rates', 'Calculate tariff surcharge', 'Evaluate backup lanes'],
+        subtaskChecklist: [
+          'Import freight rates',
+          'Calculate tariff surcharge',
+          'Evaluate backup lanes',
+        ],
         elapsed: '08m 45s',
       ),
       const AgentItem(
@@ -150,7 +167,11 @@ class TelemetryService extends ChangeNotifier {
         phase: 'Review',
         bio: 'Operations strategist. Challenges unrealistic lead times, warehouse limitations, and operational complexity.',
         assignedTools: ['SimGrid', 'Warehouse Capacity Model'],
-        subtaskChecklist: ['Audit warehouse throughput', 'Flag 3PL bottlenecks', 'Review pick & pack limits'],
+        subtaskChecklist: [
+          'Audit warehouse throughput',
+          'Flag 3PL bottlenecks',
+          'Review pick & pack limits',
+        ],
         elapsed: '21m 10s',
       ),
       const AgentItem(
@@ -163,7 +184,11 @@ class TelemetryService extends ChangeNotifier {
         phase: 'Routing',
         bio: 'Plans transport modes, route selection, shipping times, warehouse placement, and last-mile considerations.',
         assignedTools: ['Route Optimizer', 'Port Congestion Feed'],
-        subtaskChecklist: ['Check ocean freight choke points', 'Optimize air/rail split', 'Calculate ETA variance'],
+        subtaskChecklist: [
+          'Check ocean freight choke points',
+          'Optimize air/rail split',
+          'Calculate ETA variance',
+        ],
         elapsed: '05m 19s',
       ),
       const AgentItem(
@@ -242,7 +267,8 @@ class TelemetryService extends ChangeNotifier {
       TerminalLog(
         id: 'log-1',
         timestamp: now.subtract(const Duration(minutes: 4, seconds: 15)),
-        message: '[BOOT] DevPilot Agent Daemon v2.4 initialized on devpilot.lan',
+        message:
+            '[BOOT] DevPilot Agent Daemon v2.4 initialized on devpilot.lan',
         type: LogType.info,
       ),
       TerminalLog(
@@ -344,17 +370,22 @@ class TelemetryService extends ChangeNotifier {
 
     // 1. Natural hardware vitals fluctuation (CPU 28-65%, RAM 62-70%, network, battery 88-89%)
     final cpuBase = 42.0;
-    final cpuJitter = sin(_tickCount * 0.15) * 14.0 + (_random.nextDouble() * 8.0 - 4.0);
+    final cpuJitter =
+        sin(_tickCount * 0.15) * 14.0 + (_random.nextDouble() * 8.0 - 4.0);
     final nextCpu = (cpuBase + cpuJitter).clamp(28.0, 65.0);
 
     final ramBase = 65.0;
-    final ramJitter = cos(_tickCount * 0.08) * 3.0 + (_random.nextDouble() * 2.0 - 1.0);
+    final ramJitter =
+        cos(_tickCount * 0.08) * 3.0 + (_random.nextDouble() * 2.0 - 1.0);
     final nextRam = (ramBase + ramJitter).clamp(62.0, 70.0);
 
-    final netJitter = 12.0 + sin(_tickCount * 0.3) * 8.0 + _random.nextDouble() * 6.0;
+    final netJitter =
+        12.0 + sin(_tickCount * 0.3) * 8.0 + _random.nextDouble() * 6.0;
     final nextNet = max(1.2, netJitter);
 
-    final nextBattery = _tickCount % 60 == 0 ? max(85.0, _vitals.batteryPercent - 0.1) : _vitals.batteryPercent;
+    final nextBattery = _tickCount % 60 == 0
+        ? max(85.0, _vitals.batteryPercent - 0.1)
+        : _vitals.batteryPercent;
 
     _vitals = _vitals.copyWith(
       cpuPercent: nextCpu,
@@ -364,7 +395,8 @@ class TelemetryService extends ChangeNotifier {
     );
 
     // 2. Incremental progress on running task
-    if (_currentTask.phase == TaskPhase.running && _currentTask.progress < 0.96) {
+    if (_currentTask.phase == TaskPhase.running &&
+        _currentTask.progress < 0.96) {
       _currentTask = _currentTask.copyWith(
         progress: min(0.96, _currentTask.progress + 0.003),
       );
@@ -430,60 +462,77 @@ class TelemetryService extends ChangeNotifier {
     // 2. Simulate outputs for known and ad-hoc commands
     final lower = trimmed.toLowerCase();
     if (lower == 'flutter doctor') {
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-1',
-        timestamp: now,
-        message: '[✓] Flutter (Channel stable, 3.47.8, on macOS 15.1 darwin-arm64)',
-        type: LogType.stdout,
-      ));
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-2',
-        timestamp: now,
-        message: '[✓] Android toolchain - develop for Android devices (SDK 34.0.0)',
-        type: LogType.stdout,
-      ));
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-3',
-        timestamp: now,
-        message: '[✓] Xcode - develop for iOS and macOS (Xcode 16.1)',
-        type: LogType.stdout,
-      ));
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-4',
-        timestamp: now,
-        message: '[✓] Connected device (1 physical mobile target available)',
-        type: LogType.stdout,
-      ));
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-5',
-        timestamp: now,
-        message: '• Doctor summary: No issues found! All checks passed.',
-        type: LogType.success,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-1',
+          timestamp: now,
+          message: '[✓] Flutter (Channel stable, 3.47.8, on macOS 15.1 darwin-arm64)',
+          type: LogType.stdout,
+        ),
+      );
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-2',
+          timestamp: now,
+          message: '[✓] Android toolchain - develop for Android devices (SDK 34.0.0)',
+          type: LogType.stdout,
+        ),
+      );
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-3',
+          timestamp: now,
+          message: '[✓] Xcode - develop for iOS and macOS (Xcode 16.1)',
+          type: LogType.stdout,
+        ),
+      );
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-4',
+          timestamp: now,
+          message: '[✓] Connected device (1 physical mobile target available)',
+          type: LogType.stdout,
+        ),
+      );
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-5',
+          timestamp: now,
+          message: '• Doctor summary: No issues found! All checks passed.',
+          type: LogType.success,
+        ),
+      );
     } else if (lower == 'git status') {
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-1',
-        timestamp: now,
-        message: 'On branch main\nYour branch is up to date with \'origin/main\'.\nnothing to commit, working tree clean',
-        type: LogType.stdout,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-1',
+          timestamp: now,
+          message: 'On branch main\nYour branch is up to date with \'origin/main\'.\nnothing to commit, working tree clean',
+          type: LogType.stdout,
+        ),
+      );
     } else if (lower == 'docker ps') {
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-1',
-        timestamp: now,
-        message: 'CONTAINER ID   IMAGE                 STATUS         PORTS\na8f10b2c3d4e   devpilot-telemetry    Up 4 hours     0.0.0.0:8000->8000/tcp\nb9d31e4f5a6b   mycel-ast-parser      Up 4 hours     0.0.0.0:9090->9090/tcp',
-        type: LogType.stdout,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-1',
+          timestamp: now,
+          message: 'CONTAINER ID   IMAGE                 STATUS         PORTS\na8f10b2c3d4e   devpilot-telemetry    Up 4 hours     0.0.0.0:8000->8000/tcp\nb9d31e4f5a6b   mycel-ast-parser      Up 4 hours     0.0.0.0:9090->9090/tcp',
+          type: LogType.stdout,
+        ),
+      );
     } else if (lower == 'kill all' || lower.startsWith('kill')) {
       triggerAction('Kill All');
       return;
     } else {
-      _logs.add(TerminalLog(
-        id: 'out-${now.millisecondsSinceEpoch}-1',
-        timestamp: now,
-        message: '[EXEC] devpilot-operator: executed \'$trimmed\' successfully (exit code 0)',
-        type: LogType.stdout,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'out-${now.millisecondsSinceEpoch}-1',
+          timestamp: now,
+          message:
+              '[EXEC] devpilot-operator: executed \'$trimmed\' successfully (exit code 0)',
+          type: LogType.stdout,
+        ),
+      );
     }
 
     notifyListeners();
@@ -493,46 +542,59 @@ class TelemetryService extends ChangeNotifier {
   void triggerAction(String actionName) {
     final now = DateTime.now();
 
-    if (actionName.toLowerCase().contains('kill') || actionName.toLowerCase().contains('destructive')) {
+    if (actionName.toLowerCase().contains('kill') ||
+        actionName.toLowerCase().contains('destructive')) {
       _isPendingApproval = true;
       _pendingActionTitle = 'Kill All Processes';
       _pendingActionDetails = 'Terminates all active worker threads, agent sandboxes, and build pipelines immediately. Requires biometric verification.';
 
-      _logs.add(TerminalLog(
-        id: 'act-${now.millisecondsSinceEpoch}',
-        timestamp: now,
-        message: '[SECURITY GATE] AMBER alert: Approval requested for \'$actionName\'',
-        type: LogType.warning,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'act-${now.millisecondsSinceEpoch}',
+          timestamp: now,
+          message:
+              '[SECURITY GATE] AMBER alert: Approval requested for \'$actionName\'',
+          type: LogType.warning,
+        ),
+      );
     } else {
-      _logs.add(TerminalLog(
-        id: 'act-${now.millisecondsSinceEpoch}',
-        timestamp: now,
-        message: '[MACRO] Triggered action: \'$actionName\'',
-        type: LogType.info,
-      ));
+      _logs.add(
+        TerminalLog(
+          id: 'act-${now.millisecondsSinceEpoch}',
+          timestamp: now,
+          message: '[MACRO] Triggered action: \'$actionName\'',
+          type: LogType.info,
+        ),
+      );
 
       if (actionName == 'Run Tests') {
-        _logs.add(TerminalLog(
-          id: 'act-detail-${now.millisecondsSinceEpoch}',
-          timestamp: now,
-          message: '[RUNNER] Initiating parallel test matrix on $_workerThreads worker threads...',
-          type: LogType.stdout,
-        ));
+        _logs.add(
+          TerminalLog(
+            id: 'act-detail-${now.millisecondsSinceEpoch}',
+            timestamp: now,
+            message:
+                '[RUNNER] Initiating parallel test matrix on $_workerThreads worker threads...',
+            type: LogType.stdout,
+          ),
+        );
       } else if (actionName == 'Deploy App') {
-        _logs.add(TerminalLog(
-          id: 'act-detail-${now.millisecondsSinceEpoch}',
-          timestamp: now,
-          message: '[DEPLOY] Staging signed artifact release to distribution bucket...',
-          type: LogType.stdout,
-        ));
+        _logs.add(
+          TerminalLog(
+            id: 'act-detail-${now.millisecondsSinceEpoch}',
+            timestamp: now,
+            message: '[DEPLOY] Staging signed artifact release to distribution bucket...',
+            type: LogType.stdout,
+          ),
+        );
       } else if (actionName == 'Restart Docker') {
-        _logs.add(TerminalLog(
-          id: 'act-detail-${now.millisecondsSinceEpoch}',
-          timestamp: now,
-          message: '[DOCKER] Sending SIGTERM to container cluster... restarted successfully',
-          type: LogType.stdout,
-        ));
+        _logs.add(
+          TerminalLog(
+            id: 'act-detail-${now.millisecondsSinceEpoch}',
+            timestamp: now,
+            message: '[DOCKER] Sending SIGTERM to container cluster... restarted successfully',
+            type: LogType.stdout,
+          ),
+        );
       }
     }
 
@@ -546,24 +608,25 @@ class TelemetryService extends ChangeNotifier {
     _pendingActionTitle = null;
     _pendingActionDetails = null;
 
-    _logs.add(TerminalLog(
-      id: 'gate-${now.millisecondsSinceEpoch}-1',
-      timestamp: now,
-      message: '[SECURITY GATE] APPROVED: Action executed by operator with biometric auth.',
-      type: LogType.warning,
-    ));
-
-    _logs.add(TerminalLog(
-      id: 'gate-${now.millisecondsSinceEpoch}-2',
-      timestamp: now,
-      message: '[SYSTEM] SIGKILL dispatched to worker processes (PID: 48921, 48922, 48925)',
-      type: LogType.error,
-    ));
-
-    _currentTask = _currentTask.copyWith(
-      phase: TaskPhase.idle,
-      progress: 0.0,
+    _logs.add(
+      TerminalLog(
+        id: 'gate-${now.millisecondsSinceEpoch}-1',
+        timestamp: now,
+        message: '[SECURITY GATE] APPROVED: Action executed by operator with biometric auth.',
+        type: LogType.warning,
+      ),
     );
+
+    _logs.add(
+      TerminalLog(
+        id: 'gate-${now.millisecondsSinceEpoch}-2',
+        timestamp: now,
+        message: '[SYSTEM] SIGKILL dispatched to worker processes (PID: 48921, 48922, 48925)',
+        type: LogType.error,
+      ),
+    );
+
+    _currentTask = _currentTask.copyWith(phase: TaskPhase.idle, progress: 0.0);
 
     notifyListeners();
   }
@@ -575,12 +638,14 @@ class TelemetryService extends ChangeNotifier {
     _pendingActionTitle = null;
     _pendingActionDetails = null;
 
-    _logs.add(TerminalLog(
-      id: 'gate-${now.millisecondsSinceEpoch}',
-      timestamp: now,
-      message: '[SECURITY GATE] DENIED: Action cancelled by operator.',
-      type: LogType.info,
-    ));
+    _logs.add(
+      TerminalLog(
+        id: 'gate-${now.millisecondsSinceEpoch}',
+        timestamp: now,
+        message: '[SECURITY GATE] DENIED: Action cancelled by operator.',
+        type: LogType.info,
+      ),
+    );
 
     notifyListeners();
   }

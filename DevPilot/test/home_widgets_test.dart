@@ -9,7 +9,9 @@ import 'package:devpilot/widgets/agent_card.dart';
 
 void main() {
   group('VitalsBar Widget', () {
-    testWidgets('renders CPU, RAM, NET and Battery with charging indicator', (tester) async {
+    testWidgets('renders CPU, RAM, NET and Battery with charging indicator', (
+      tester,
+    ) async {
       const vitals = HardwareVitals(
         cpuPercent: 42,
         ramPercent: 68,
@@ -20,9 +22,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: VitalsBar(vitals: vitals),
-          ),
+          home: Scaffold(body: VitalsBar(vitals: vitals)),
         ),
       );
 
@@ -33,31 +33,34 @@ void main() {
       expect(find.byIcon(Icons.bolt_rounded), findsOneWidget);
     });
 
-    testWidgets('renders battery without bolt when not charging and warning when low', (tester) async {
-      const vitals = HardwareVitals(
-        cpuPercent: 90,
-        ramPercent: 75,
-        networkMBps: 2.0,
-        batteryPercent: 14,
-        isCharging: false,
-      );
+    testWidgets(
+      'renders battery without bolt when not charging and warning when low',
+      (tester) async {
+        const vitals = HardwareVitals(
+          cpuPercent: 90,
+          ramPercent: 75,
+          networkMBps: 2.0,
+          batteryPercent: 14,
+          isCharging: false,
+        );
 
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: VitalsBar(vitals: vitals, compact: true),
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(body: VitalsBar(vitals: vitals, compact: true)),
           ),
-        ),
-      );
+        );
 
-      expect(find.textContaining('14%'), findsOneWidget);
-      expect(find.byIcon(Icons.bolt_rounded), findsNothing);
-      expect(find.byIcon(Icons.battery_alert_rounded), findsOneWidget);
-    });
+        expect(find.textContaining('14%'), findsOneWidget);
+        expect(find.byIcon(Icons.bolt_rounded), findsNothing);
+        expect(find.byIcon(Icons.battery_alert_rounded), findsOneWidget);
+      },
+    );
   });
 
   group('MacroDeck Widget', () {
-    testWidgets('renders all 4 action pills and triggers callback on tap', (tester) async {
+    testWidgets('renders all 4 action pills and triggers callback on tap', (
+      tester,
+    ) async {
       String? clickedAction;
 
       await tester.pumpWidget(
@@ -94,12 +97,12 @@ void main() {
       expect(clickedAction, equals('Kill All'));
     });
 
-    testWidgets('Kill All is styled with destructive indicator', (tester) async {
+    testWidgets('Kill All is styled with destructive indicator', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: MacroDeck(onActionTriggered: (_) {}),
-          ),
+          home: Scaffold(body: MacroDeck(onActionTriggered: (_) {})),
         ),
       );
 
@@ -109,100 +112,110 @@ void main() {
   });
 
   group('RunningTaskCard Widget', () {
-    testWidgets('renders pipeline title, task name, status chip, elapsed timer and badges', (tester) async {
-      final task = RunningTask(
-        id: 'task-101',
-        pipelineName: 'DevPilot Mobile Release Build',
-        taskName: 'Compiling Native APK & Assets',
-        startedAt: DateTime.now().subtract(const Duration(minutes: 5, seconds: 12)),
-        phase: TaskPhase.compiling,
-        progress: 0.55,
-        securityBadge: 'LAN E2EE',
-        customElapsed: const Duration(minutes: 5, seconds: 12),
-      );
+    testWidgets(
+      'renders pipeline title, task name, status chip, elapsed timer and badges',
+      (tester) async {
+        final task = RunningTask(
+          id: 'task-101',
+          pipelineName: 'DevPilot Mobile Release Build',
+          taskName: 'Compiling Native APK & Assets',
+          startedAt: DateTime.now().subtract(
+            const Duration(minutes: 5, seconds: 12),
+          ),
+          phase: TaskPhase.compiling,
+          progress: 0.55,
+          securityBadge: 'LAN E2EE',
+          customElapsed: const Duration(minutes: 5, seconds: 12),
+        );
 
-      const vitals = HardwareVitals(
-        cpuPercent: 78,
-        ramPercent: 82,
-        networkMBps: 24.5,
-        batteryPercent: 92,
-        isCharging: true,
-      );
+        const vitals = HardwareVitals(
+          cpuPercent: 78,
+          ramPercent: 82,
+          networkMBps: 24.5,
+          batteryPercent: 92,
+          isCharging: true,
+        );
 
-      String? triggeredAction;
-      bool cardTapped = false;
+        String? triggeredAction;
+        bool cardTapped = false;
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RunningTaskCard(
-              task: task,
-              vitals: vitals,
-              onMacroAction: (action) {
-                triggeredAction = action;
-              },
-              onTap: () {
-                cardTapped = true;
-              },
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RunningTaskCard(
+                task: task,
+                vitals: vitals,
+                onMacroAction: (action) {
+                  triggeredAction = action;
+                },
+                onTap: () {
+                  cardTapped = true;
+                },
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('DevPilot Mobile Release Build'), findsOneWidget);
-      expect(find.text('Compiling Native APK & Assets'), findsOneWidget);
-      expect(find.text('Compiling'), findsOneWidget);
-      expect(find.text('T+05:12'), findsOneWidget);
-      expect(find.text('LAN E2EE'), findsOneWidget);
-      expect(find.text('55%'), findsOneWidget);
+        expect(find.text('DevPilot Mobile Release Build'), findsOneWidget);
+        expect(find.text('Compiling Native APK & Assets'), findsOneWidget);
+        expect(find.text('Compiling'), findsOneWidget);
+        expect(find.text('T+05:12'), findsOneWidget);
+        expect(find.text('LAN E2EE'), findsOneWidget);
+        expect(find.text('55%'), findsOneWidget);
 
-      // Embedded VitalsBar check
-      expect(find.textContaining('78%'), findsOneWidget);
-      expect(find.textContaining('82%'), findsOneWidget);
+        // Embedded VitalsBar check
+        expect(find.textContaining('78%'), findsOneWidget);
+        expect(find.textContaining('82%'), findsOneWidget);
 
-      // Embedded MacroDeck check
-      expect(find.text('Deploy'), findsOneWidget);
-      await tester.tap(find.text('Deploy'));
-      await tester.pumpAndSettle();
-      expect(triggeredAction, equals('Deploy'));
+        // Embedded MacroDeck check
+        expect(find.text('Deploy'), findsOneWidget);
+        await tester.tap(find.text('Deploy'));
+        await tester.pumpAndSettle();
+        expect(triggeredAction, equals('Deploy'));
 
-      // Card tap check
-      await tester.tap(find.text('DevPilot Mobile Release Build'));
-      await tester.pumpAndSettle();
-      expect(cardTapped, isTrue);
-    });
+        // Card tap check
+        await tester.tap(find.text('DevPilot Mobile Release Build'));
+        await tester.pumpAndSettle();
+        expect(cardTapped, isTrue);
+      },
+    );
 
-    testWidgets('renders different TaskPhases properly (e.g. Success, Deploying)', (tester) async {
-      final task = RunningTask(
-        id: 'task-102',
-        pipelineName: 'Fast Deployment Hook',
-        taskName: 'Deploying Container to Cluster',
-        startedAt: DateTime.now().subtract(const Duration(seconds: 45)),
-        phase: TaskPhase.deploying,
-        progress: 0.90,
-      );
+    testWidgets(
+      'renders different TaskPhases properly (e.g. Success, Deploying)',
+      (tester) async {
+        final task = RunningTask(
+          id: 'task-102',
+          pipelineName: 'Fast Deployment Hook',
+          taskName: 'Deploying Container to Cluster',
+          startedAt: DateTime.now().subtract(const Duration(seconds: 45)),
+          phase: TaskPhase.deploying,
+          progress: 0.90,
+        );
 
-      const vitals = HardwareVitals();
+        const vitals = HardwareVitals();
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RunningTaskCard(
-              task: task,
-              vitals: vitals,
-              onMacroAction: (_) {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: RunningTaskCard(
+                task: task,
+                vitals: vitals,
+                onMacroAction: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('Deploying'), findsOneWidget);
-      expect(find.text('90%'), findsOneWidget);
-    });
+        expect(find.text('Deploying'), findsOneWidget);
+        expect(find.text('90%'), findsOneWidget);
+      },
+    );
   });
 
   group('AgentCard Widget', () {
-    testWidgets('renders agent details, team badge, clearance chip and timer', (tester) async {
+    testWidgets('renders agent details, team badge, clearance chip and timer', (
+      tester,
+    ) async {
       const agent = AgentItem(
         id: 'agent-1',
         name: 'AANYA',
@@ -233,7 +246,10 @@ void main() {
       expect(find.text('Architecture'), findsOneWidget);
       expect(find.text('GREEN'), findsOneWidget);
       expect(find.text('Working'), findsOneWidget);
-      expect(find.text('Analyzing AST call-graph dependencies'), findsOneWidget);
+      expect(
+        find.text('Analyzing AST call-graph dependencies'),
+        findsOneWidget,
+      );
       expect(find.text('T+04:15'), findsOneWidget);
 
       await tester.tap(find.text('AANYA'));
@@ -241,7 +257,9 @@ void main() {
       expect(agentTapped, isTrue);
     });
 
-    testWidgets('renders AMBER clearance and Resilience team badge correctly', (tester) async {
+    testWidgets('renders AMBER clearance and Resilience team badge correctly', (
+      tester,
+    ) async {
       const agent = AgentItem(
         id: 'agent-2',
         name: 'KABIR',
@@ -254,9 +272,7 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: AgentCard(agent: agent),
-          ),
+          home: Scaffold(body: AgentCard(agent: agent)),
         ),
       );
 

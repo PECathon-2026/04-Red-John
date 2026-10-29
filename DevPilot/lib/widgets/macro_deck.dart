@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../theme/app_theme.dart';
 
 /// Tactile Macro Deck providing 4 immediate system operations:
@@ -7,10 +8,7 @@ import '../theme/app_theme.dart';
 class MacroDeck extends StatelessWidget {
   final void Function(String action) onActionTriggered;
 
-  const MacroDeck({
-    super.key,
-    required this.onActionTriggered,
-  });
+  const MacroDeck({super.key, required this.onActionTriggered});
 
   static const List<_MacroConfig> _actions = [
     _MacroConfig(
@@ -72,10 +70,7 @@ class _TactileMacroButton extends StatefulWidget {
   final _MacroConfig config;
   final VoidCallback onPressed;
 
-  const _TactileMacroButton({
-    required this.config,
-    required this.onPressed,
-  });
+  const _TactileMacroButton({required this.config, required this.onPressed});
 
   @override
   State<_TactileMacroButton> createState() => _TactileMacroButtonState();
@@ -143,11 +138,7 @@ class _TactileMacroButtonState extends State<_TactileMacroButton> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              widget.config.icon,
-              size: 14,
-              color: fgColor,
-            ),
+            Icon(widget.config.icon, size: 14, color: fgColor),
             const SizedBox(width: 6),
             Text(
               widget.config.label,

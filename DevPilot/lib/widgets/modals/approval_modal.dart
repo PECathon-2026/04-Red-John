@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../theme/app_theme.dart';
 
 /// Interactive Biometric Approval Gate for AMBER security events.
@@ -124,7 +125,10 @@ class _ApprovalModalState extends State<ApprovalModal> {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: _badgeColor,
                       borderRadius: BorderRadius.circular(6),
@@ -190,13 +194,14 @@ class _ApprovalModalState extends State<ApprovalModal> {
 
                   // Risk details description
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: AppTheme.bgWarm.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.borderSubtle,
-                      ),
+                      border: Border.all(color: AppTheme.borderSubtle),
                     ),
                     child: Text(
                       widget.details,
@@ -215,7 +220,10 @@ class _ApprovalModalState extends State<ApprovalModal> {
                     onTap: _handleApprove,
                     onHorizontalDragUpdate: (details) {
                       setState(() {
-                        _dragExtent = (_dragExtent + details.delta.dx).clamp(0.0, _maxDrag);
+                        _dragExtent = (_dragExtent + details.delta.dx).clamp(
+                          0.0,
+                          _maxDrag,
+                        );
                       });
                     },
                     onHorizontalDragEnd: (details) {
@@ -249,7 +257,9 @@ class _ApprovalModalState extends State<ApprovalModal> {
                             top: 4,
                             bottom: 4,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 18),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                              ),
                               decoration: BoxDecoration(
                                 color: _badgeColor,
                                 borderRadius: AppTheme.pillRadius,

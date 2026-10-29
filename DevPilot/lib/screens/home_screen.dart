@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
@@ -204,10 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 4),
 
           // Giant Bold Title
-          Text(
-            'Your Projects ($projectCount)',
-            style: AppTheme.displayLarge,
-          ),
+          Text('Your Projects ($projectCount)', style: AppTheme.displayLarge),
         ],
       ),
     );
@@ -221,10 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.softShadow,
       ),
       child: Center(
@@ -259,10 +254,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: AppTheme.cardPeach,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: AppTheme.borderMedium,
-          width: 1.5,
-        ),
+        border: Border.all(color: AppTheme.borderMedium, width: 1.5),
         boxShadow: AppTheme.softShadow,
       ),
       child: const Center(
@@ -314,10 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Header with count badge
           Row(
             children: [
-              const Text(
-                'Active Agent Roster',
-                style: AppTheme.titleLarge,
-              ),
+              const Text('Active Agent Roster', style: AppTheme.titleLarge),
               const SizedBox(width: 8),
               Container(
                 key: const Key('active_agent_roster_section'),
@@ -365,10 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard,
         border: const Border(
-          top: BorderSide(
-            color: AppTheme.borderSubtle,
-            width: 1,
-          ),
+          top: BorderSide(color: AppTheme.borderSubtle, width: 1),
         ),
         boxShadow: [
           BoxShadow(
@@ -459,10 +445,7 @@ class _WorkflowCard extends StatelessWidget {
   final ProjectItem project;
   final VoidCallback onTap;
 
-  const _WorkflowCard({
-    required this.project,
-    required this.onTap,
-  });
+  const _WorkflowCard({required this.project, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -474,10 +457,7 @@ class _WorkflowCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: AppTheme.cardRadius,
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Material(
@@ -587,11 +567,7 @@ class _WorkflowCard extends StatelessWidget {
         ),
         boxShadow: AppTheme.softShadow,
       ),
-      child: Icon(
-        icon,
-        size: 20,
-        color: AppTheme.textDark,
-      ),
+      child: Icon(icon, size: 20, color: AppTheme.textDark),
     );
   }
 
@@ -667,10 +643,7 @@ class _WorkflowCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white, width: 1),
       ),
       child: Text(
         duration,

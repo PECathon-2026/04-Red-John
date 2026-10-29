@@ -37,7 +37,9 @@ void main() {
         id: 'task-1',
         pipelineName: 'Mobile Build',
         taskName: 'Compiling APK',
-        startedAt: DateTime.now().subtract(const Duration(minutes: 4, seconds: 22)),
+        startedAt: DateTime.now().subtract(
+          const Duration(minutes: 4, seconds: 22),
+        ),
         phase: TaskPhase.compiling,
       );
       expect(task.elapsedString, matches(r'T\+\d{2}:\d{2}'));

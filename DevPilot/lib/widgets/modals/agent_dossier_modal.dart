@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../models/models.dart';
 import '../../theme/app_theme.dart';
 
@@ -30,9 +31,7 @@ class AgentDossierModal extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: AgentDossierModal(
           agent: agent,
           onClose: () => Navigator.of(ctx).pop(),
@@ -112,7 +111,9 @@ class AgentDossierModal extends StatelessWidget {
                         ),
                         child: Center(
                           child: Text(
-                            agent.name.isNotEmpty ? agent.name[0].toUpperCase() : 'A',
+                            agent.name.isNotEmpty
+                                ? agent.name[0].toUpperCase()
+                                : 'A',
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w800,
@@ -139,7 +140,10 @@ class AgentDossierModal extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.darkPill,
                                     borderRadius: BorderRadius.circular(6),
@@ -163,7 +167,10 @@ class AgentDossierModal extends StatelessWidget {
                               children: [
                                 // Team badge
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.cardPeach,
                                     borderRadius: BorderRadius.circular(8),
@@ -180,12 +187,19 @@ class AgentDossierModal extends StatelessWidget {
 
                                 // Clearance badge
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: _clearanceColor.withValues(alpha: 0.15),
+                                    color: _clearanceColor.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: _clearanceColor.withValues(alpha: 0.6),
+                                      color: _clearanceColor.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       width: 1,
                                     ),
                                   ),
@@ -213,7 +227,10 @@ class AgentDossierModal extends StatelessWidget {
 
                                 // Phase Pill
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.cardMint,
                                     borderRadius: BorderRadius.circular(8),
@@ -235,8 +252,13 @@ class AgentDossierModal extends StatelessWidget {
 
                       // Close button
                       IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 24, color: AppTheme.textDark),
-                        onPressed: onClose ?? () => Navigator.of(context).maybePop(),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 24,
+                          color: AppTheme.textDark,
+                        ),
+                        onPressed:
+                            onClose ?? () => Navigator.of(context).maybePop(),
                       ),
                     ],
                   ),
@@ -295,7 +317,9 @@ class AgentDossierModal extends StatelessWidget {
                               Icon(
                                 Icons.timer_outlined,
                                 size: 14,
-                                color: AppTheme.textSecondary.withValues(alpha: 0.8),
+                                color: AppTheme.textSecondary.withValues(
+                                  alpha: 0.8,
+                                ),
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -340,7 +364,10 @@ class AgentDossierModal extends StatelessWidget {
                     runSpacing: 8,
                     children: tools.map((tool) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: AppTheme.bgMain,
                           borderRadius: BorderRadius.circular(12),
@@ -390,23 +417,36 @@ class AgentDossierModal extends StatelessWidget {
                         border: Border.all(color: AppTheme.borderSubtle),
                       ),
                       child: Column(
-                        children: agent.subtaskChecklist.asMap().entries.map((entry) {
+                        children: agent.subtaskChecklist.asMap().entries.map((
+                          entry,
+                        ) {
                           final idx = entry.key;
                           final subtask = entry.value;
                           final isDone = idx == 0; // Simulated progress
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
                             decoration: BoxDecoration(
                               border: idx < agent.subtaskChecklist.length - 1
-                                  ? const Border(bottom: BorderSide(color: AppTheme.borderSubtle))
+                                  ? const Border(
+                                      bottom: BorderSide(
+                                        color: AppTheme.borderSubtle,
+                                      ),
+                                    )
                                   : null,
                             ),
                             child: Row(
                               children: [
                                 Icon(
-                                  isDone ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
+                                  isDone
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
                                   size: 18,
-                                  color: isDone ? AppTheme.statusGreen : AppTheme.textSecondary,
+                                  color: isDone
+                                      ? AppTheme.statusGreen
+                                      : AppTheme.textSecondary,
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
@@ -415,8 +455,12 @@ class AgentDossierModal extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: isDone ? AppTheme.textSecondary : AppTheme.textDark,
-                                      decoration: isDone ? TextDecoration.lineThrough : null,
+                                      color: isDone
+                                          ? AppTheme.textSecondary
+                                          : AppTheme.textDark,
+                                      decoration: isDone
+                                          ? TextDecoration.lineThrough
+                                          : null,
                                     ),
                                   ),
                                 ),
@@ -447,7 +491,10 @@ class AgentDossierModal extends StatelessWidget {
                       HapticFeedback.lightImpact();
                       onAction?.call('pause');
                     },
-                    icon: const Icon(Icons.pause_circle_outline_rounded, size: 18),
+                    icon: const Icon(
+                      Icons.pause_circle_outline_rounded,
+                      size: 18,
+                    ),
                     label: const Text('Pause Agent'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.textDark,
@@ -466,8 +513,15 @@ class AgentDossierModal extends StatelessWidget {
                       HapticFeedback.lightImpact();
                       onAction?.call('reassign');
                     },
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 18, color: Colors.white),
-                    label: const Text('Reassign Agent', style: TextStyle(color: Colors.white)),
+                    icon: const Icon(
+                      Icons.swap_horiz_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Reassign Agent',
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.darkPill,
                       shape: RoundedRectangleBorder(

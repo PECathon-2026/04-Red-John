@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
@@ -9,11 +10,7 @@ class AgentCard extends StatelessWidget {
   final AgentItem agent;
   final VoidCallback? onTap;
 
-  const AgentCard({
-    super.key,
-    required this.agent,
-    this.onTap,
-  });
+  const AgentCard({super.key, required this.agent, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -21,16 +18,15 @@ class AgentCard extends StatelessWidget {
     final phaseColor = _phaseColor(agent.phase);
     final formattedElapsed = agent.elapsed.isEmpty
         ? 'T+00:00'
-        : (agent.elapsed.startsWith('T+') ? agent.elapsed : 'T+${agent.elapsed}');
+        : (agent.elapsed.startsWith('T+')
+              ? agent.elapsed
+              : 'T+${agent.elapsed}');
 
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.softShadow,
       ),
       child: Material(
@@ -93,7 +89,10 @@ class AgentCard extends StatelessWidget {
 
                     // Elapsed timer pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.darkPill,
                         borderRadius: BorderRadius.circular(10),
@@ -112,7 +111,11 @@ class AgentCard extends StatelessWidget {
                 ),
 
                 const SizedBox(height: 12),
-                const Divider(height: 1, thickness: 1, color: AppTheme.borderSubtle),
+                const Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: AppTheme.borderSubtle,
+                ),
                 const SizedBox(height: 10),
 
                 // Current task assignment
@@ -162,10 +165,7 @@ class AgentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: teamColor.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: teamColor.withValues(alpha: 0.6),
-          width: 1.5,
-        ),
+        border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.5),
       ),
       child: Center(
         child: Text(
@@ -188,10 +188,7 @@ class AgentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: color.withValues(alpha: 0.5),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Text(
         agent.clearance,

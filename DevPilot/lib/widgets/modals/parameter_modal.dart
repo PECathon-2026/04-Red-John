@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../services/telemetry_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -9,11 +10,7 @@ class ParameterModal extends StatefulWidget {
   final TelemetryService service;
   final VoidCallback? onClose;
 
-  const ParameterModal({
-    super.key,
-    required this.service,
-    this.onClose,
-  });
+  const ParameterModal({super.key, required this.service, this.onClose});
 
   /// Static helper to display the Parameter Modal as a bottom sheet.
   static Future<void> show(BuildContext context, TelemetryService service) {
@@ -22,9 +19,7 @@ class ParameterModal extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         child: ParameterModal(
           service: service,
           onClose: () => Navigator.of(ctx).pop(),
@@ -102,8 +97,13 @@ class _ParameterModalState extends State<ParameterModal> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 22, color: AppTheme.textDark),
-                  onPressed: widget.onClose ?? () => Navigator.of(context).maybePop(),
+                  icon: const Icon(
+                    Icons.close_rounded,
+                    size: 22,
+                    color: AppTheme.textDark,
+                  ),
+                  onPressed:
+                      widget.onClose ?? () => Navigator.of(context).maybePop(),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -159,7 +159,10 @@ class _ParameterModalState extends State<ParameterModal> {
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.darkPill,
                                     borderRadius: BorderRadius.circular(8),
@@ -182,7 +185,9 @@ class _ParameterModalState extends State<ParameterModal> {
                                 activeTrackColor: AppTheme.accentOrange,
                                 inactiveTrackColor: AppTheme.borderMedium,
                                 thumbColor: AppTheme.accentOrange,
-                                overlayColor: AppTheme.accentOrange.withValues(alpha: 0.15),
+                                overlayColor: AppTheme.accentOrange.withValues(
+                                  alpha: 0.15,
+                                ),
                                 valueIndicatorColor: AppTheme.darkPill,
                               ),
                               child: Slider(
@@ -200,8 +205,14 @@ class _ParameterModalState extends State<ParameterModal> {
                             const Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('1 (Low power)', style: AppTheme.bodySmall),
-                                Text('16 (Max parallel)', style: AppTheme.bodySmall),
+                                Text(
+                                  '1 (Low power)',
+                                  style: AppTheme.bodySmall,
+                                ),
+                                Text(
+                                  '16 (Max parallel)',
+                                  style: AppTheme.bodySmall,
+                                ),
                               ],
                             ),
                           ],
@@ -243,7 +254,10 @@ class _ParameterModalState extends State<ParameterModal> {
                                   widget.service.toggleVerbose(val);
                                 },
                               ),
-                              const Divider(height: 1, color: AppTheme.borderSubtle),
+                              const Divider(
+                                height: 1,
+                                color: AppTheme.borderSubtle,
+                              ),
 
                               // No-Cache Switch
                               SwitchListTile.adaptive(
@@ -307,9 +321,14 @@ class _ParameterModalState extends State<ParameterModal> {
                                   ],
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isLan ? AppTheme.cardMint : AppTheme.cardPeach,
+                                    color: isLan
+                                        ? AppTheme.cardMint
+                                        : AppTheme.cardPeach,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -317,7 +336,9 @@ class _ParameterModalState extends State<ParameterModal> {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w800,
-                                      color: isLan ? AppTheme.textDark : AppTheme.statusRed,
+                                      color: isLan
+                                          ? AppTheme.textDark
+                                          : AppTheme.statusRed,
                                     ),
                                   ),
                                 ),
@@ -333,21 +354,35 @@ class _ParameterModalState extends State<ParameterModal> {
                                 color: AppTheme.textDark,
                               ),
                               decoration: InputDecoration(
-                                prefixIcon: const Icon(Icons.dns_rounded, size: 18, color: AppTheme.textSecondary),
+                                prefixIcon: const Icon(
+                                  Icons.dns_rounded,
+                                  size: 18,
+                                  color: AppTheme.textSecondary,
+                                ),
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppTheme.borderMedium),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.borderMedium,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppTheme.borderSubtle),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.borderSubtle,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppTheme.accentOrange, width: 1.5),
+                                  borderSide: const BorderSide(
+                                    color: AppTheme.accentOrange,
+                                    width: 1.5,
+                                  ),
                                 ),
                               ),
                             ),

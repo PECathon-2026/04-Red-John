@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
@@ -39,7 +40,9 @@ class _TerminalFeedState extends State<TerminalFeed> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScrollListener);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(animated: false));
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _scrollToBottom(animated: false),
+    );
   }
 
   @override
@@ -47,7 +50,9 @@ class _TerminalFeedState extends State<TerminalFeed> {
     super.didUpdateWidget(oldWidget);
     if (widget.logs.length != oldWidget.logs.length) {
       if (_autoScroll && !_isUserScrolling) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(animated: true));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToBottom(animated: true),
+        );
       }
     }
   }
@@ -133,9 +138,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
         child: Column(
           children: [
             if (widget.showHeader) _buildTerminalHeader(),
-            Expanded(
-              child: _buildLogView(),
-            ),
+            Expanded(child: _buildLogView()),
             if (!_autoScroll) _buildPausedIndicator(),
           ],
         ),
@@ -200,7 +203,11 @@ class _TerminalFeedState extends State<TerminalFeed> {
 
           // Copy button
           IconButton(
-            icon: const Icon(Icons.copy_rounded, size: 15, color: Colors.white70),
+            icon: const Icon(
+              Icons.copy_rounded,
+              size: 15,
+              color: Colors.white70,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             splashRadius: 16,
@@ -211,7 +218,11 @@ class _TerminalFeedState extends State<TerminalFeed> {
 
           // Clear button
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Colors.white70),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              size: 16,
+              color: Colors.white70,
+            ),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             splashRadius: 16,
@@ -295,7 +306,11 @@ class _TerminalFeedState extends State<TerminalFeed> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.pause_circle_outline, size: 13, color: AppTheme.accentOrange),
+          const Icon(
+            Icons.pause_circle_outline,
+            size: 13,
+            color: AppTheme.accentOrange,
+          ),
           const SizedBox(width: 6),
           const Text(
             'Auto-scroll paused (reading history)',

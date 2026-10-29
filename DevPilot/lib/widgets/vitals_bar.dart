@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
@@ -8,11 +9,7 @@ class VitalsBar extends StatelessWidget {
   final HardwareVitals vitals;
   final bool compact;
 
-  const VitalsBar({
-    super.key,
-    required this.vitals,
-    this.compact = false,
-  });
+  const VitalsBar({super.key, required this.vitals, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +21,7 @@ class VitalsBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.bgMain.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1),
       ),
       child: Row(
         children: [
@@ -69,9 +63,7 @@ class VitalsBar extends StatelessWidget {
           _buildDivider(),
 
           // Battery Metric
-          Expanded(
-            child: _buildBatteryTile(),
-          ),
+          Expanded(child: _buildBatteryTile()),
         ],
       ),
     );
@@ -101,11 +93,7 @@ class VitalsBar extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 13,
-              color: AppTheme.textSecondary,
-            ),
+            Icon(icon, size: 13, color: AppTheme.textSecondary),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
@@ -165,8 +153,8 @@ class VitalsBar extends StatelessWidget {
               isCharging
                   ? Icons.battery_charging_full_rounded
                   : (batteryPercent < 20
-                      ? Icons.battery_alert_rounded
-                      : Icons.battery_std_rounded),
+                        ? Icons.battery_alert_rounded
+                        : Icons.battery_std_rounded),
               size: 13,
               color: isCharging ? AppTheme.statusGreen : AppTheme.textSecondary,
             ),

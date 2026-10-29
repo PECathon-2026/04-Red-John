@@ -57,27 +57,15 @@ class AppTheme {
 
   // --- Shadows ---
   static const List<BoxShadow> cardShadow = [
-    BoxShadow(
-      color: Color(0x0A000000),
-      blurRadius: 16,
-      offset: Offset(0, 4),
-    ),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 16, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> softShadow = [
-    BoxShadow(
-      color: Color(0x08000000),
-      blurRadius: 8,
-      offset: Offset(0, 2),
-    ),
+    BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 2)),
   ];
 
   static const List<BoxShadow> floatingShadow = [
-    BoxShadow(
-      color: Color(0x18000000),
-      blurRadius: 24,
-      offset: Offset(0, 8),
-    ),
+    BoxShadow(color: Color(0x18000000), blurRadius: 24, offset: Offset(0, 8)),
   ];
 
   // --- Typography ---

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
@@ -43,7 +44,10 @@ class ArtifactStream extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.bgWarm,
                     borderRadius: BorderRadius.circular(10),
@@ -87,10 +91,7 @@ class _ArtifactCard extends StatelessWidget {
   final ArtifactItem artifact;
   final VoidCallback onTap;
 
-  const _ArtifactCard({
-    required this.artifact,
-    required this.onTap,
-  });
+  const _ArtifactCard({required this.artifact, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -101,10 +102,7 @@ class _ArtifactCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surfaceCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppTheme.borderSubtle,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
         boxShadow: AppTheme.softShadow,
       ),
       child: Material(
@@ -130,14 +128,13 @@ class _ArtifactCard extends StatelessWidget {
                         color: meta.bgColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        meta.icon,
-                        size: 20,
-                        color: meta.fgColor,
-                      ),
+                      child: Icon(meta.icon, size: 20, color: meta.fgColor),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.bgMain,
                         borderRadius: BorderRadius.circular(12),

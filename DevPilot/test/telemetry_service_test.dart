@@ -30,17 +30,20 @@ void main() {
       expect(service.logs.last.message, contains('Doctor summary'));
     });
 
-    test('sendCliCommand handles git status, docker ps, and arbitrary commands', () {
-      final service = TelemetryService(autoStart: false);
-      service.sendCliCommand('git status');
-      expect(service.logs.last.message, contains('On branch main'));
+    test(
+      'sendCliCommand handles git status, docker ps, and arbitrary commands',
+      () {
+        final service = TelemetryService(autoStart: false);
+        service.sendCliCommand('git status');
+        expect(service.logs.last.message, contains('On branch main'));
 
-      service.sendCliCommand('docker ps');
-      expect(service.logs.last.message, contains('devpilot-telemetry'));
+        service.sendCliCommand('docker ps');
+        expect(service.logs.last.message, contains('devpilot-telemetry'));
 
-      service.sendCliCommand('whoami');
-      expect(service.logs.last.message, contains('devpilot-operator'));
-    });
+        service.sendCliCommand('whoami');
+        expect(service.logs.last.message, contains('devpilot-operator'));
+      },
+    );
 
     test('clearLogs empties terminal log feed', () {
       final service = TelemetryService(autoStart: false);
@@ -97,23 +100,26 @@ void main() {
   });
 
   group('Parameters and Toggles', () {
-    test('updateThreads and toggleVerbose update state and notify listeners', () {
-      final service = TelemetryService(autoStart: false);
-      var notifyCount = 0;
-      service.addListener(() => notifyCount++);
+    test(
+      'updateThreads and toggleVerbose update state and notify listeners',
+      () {
+        final service = TelemetryService(autoStart: false);
+        var notifyCount = 0;
+        service.addListener(() => notifyCount++);
 
-      service.updateThreads(12);
-      expect(service.workerThreads, 12);
-      expect(notifyCount, 1);
+        service.updateThreads(12);
+        expect(service.workerThreads, 12);
+        expect(notifyCount, 1);
 
-      service.toggleVerbose(true);
-      expect(service.isVerbose, true);
-      expect(notifyCount, 2);
+        service.toggleVerbose(true);
+        expect(service.isVerbose, true);
+        expect(notifyCount, 2);
 
-      service.toggleLAN(false);
-      expect(service.isLANConnected, false);
-      expect(notifyCount, 3);
-    });
+        service.toggleLAN(false);
+        expect(service.isLANConnected, false);
+        expect(notifyCount, 3);
+      },
+    );
   });
 
   group('Simulation & Timer lifecycle', () {
