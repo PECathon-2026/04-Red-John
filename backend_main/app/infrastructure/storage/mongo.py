@@ -19,6 +19,7 @@ from pymongo.errors import DuplicateKeyError
 from app.domain.events import EventEnvelope
 from app.domain.governance import Approval, ApprovalStatus, AuditEntry
 from app.domain.mission import AgentMessage, Evidence, Mission, MissionStatus
+from app.domain.users import User
 from app.infrastructure.storage.base import ConcurrencyConflict
 
 log = logging.getLogger(__name__)
@@ -203,6 +204,38 @@ class MongoMessageRepository:
         return [AgentMessage.model_validate(doc) async for doc in cursor]
 
 
+class MongoUserRepository:
+    def __init__(self, conn: _Db) -> None:
+        self._conn = conn
+
+    async def ensure_indexes(self) -> None:
+        await self._conn.db.users.create_index("user_id", unique=True)
+        await self._conn.db.users.create_index("username", unique=True)
+
+    async def create(self, user: User) -> User:
+        try:
+            await self._conn.db.users.insert_one(user.model_dump(mode="json"))
+        except DuplicateKeyError:
+            raise ConcurrencyConflict(f"user {user.username} already exists") from None
+        return user
+
+    async def get(self, user_id: str) -> User | None:
+        doc = await self._conn.db.users.find_one({"user_id": user_id}, {"_id": 0})
+        return User.model_validate(doc) if doc else None
+
+    async def get_by_username(self, username: str) -> User | None:
+        doc = await self._conn.db.users.find_one({"username": username}, {"_id": 0})
+        return User.model_validate(doc) if doc else None
+
+    async def update(self, user: User) -> User:
+        await self._conn.db.users.replace_one({"user_id": user.user_id}, user.model_dump(mode="json"))
+        return user
+
+    async def list(self) -> list[User]:
+        cursor = self._conn.db.users.find({}, {"_id": 0}).sort("created_at", ASCENDING)
+        return [User.model_validate(doc) async for doc in cursor]
+
+
 class MongoStorage:
     def __init__(self, url: str, database: str) -> None:
         self._conn = _Db(url, database)
@@ -212,11 +245,12 @@ class MongoStorage:
         self.missions = MongoMissionRepository(self._conn)
         self.evidence = MongoEvidenceRepository(self._conn)
         self.messages = MongoMessageRepository(self._conn)
+        self.users = MongoUserRepository(self._conn)
 
     async def start(self) -> None:
         self._conn.client = AsyncIOMotorClient(self._conn.url, serverSelectionTimeoutMS=5000, tz_aware=True)
         await self._conn.client.admin.command("ping")
-        for repo in (self.events, self.approvals, self.audit, self.missions, self.evidence, self.messages):
+        for repo in (self.events, self.approvals, self.audit, self.missions, self.evidence, self.messages, self.users):
             await repo.ensure_indexes()
         log.info("mongo storage connected (db=%s)", self._conn.name)
 

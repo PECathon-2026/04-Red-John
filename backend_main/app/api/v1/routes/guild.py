@@ -7,7 +7,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.agents.guild import clearance
-from app.api.deps import ContainerDep
+from app.api.deps import ContainerDep, OperatorDep, ViewerDep
 from app.core.errors import NotFoundError, ValidationFailed
 
 router = APIRouter(tags=["guild"])
@@ -19,11 +19,11 @@ class HireBody(BaseModel):
 
 
 class ReleaseBody(BaseModel):
-    reason: str = Field(default="released by operator", max_length=500)
+    reason: str = Field(default="released", max_length=500)
 
 
 @router.get("/agents")
-async def roster(container: ContainerDep) -> dict[str, Any]:
+async def roster(_: ViewerDep, container: ContainerDep) -> dict[str, Any]:
     return {"agents": [
         {"agent_id": d.agent_id, "name": d.name, "team": d.team, "role": d.role, "skills": d.skills,
          "tools": d.tools, "badge": d.badge, "char_idx": d.char_idx, "always_on": d.always_on,
@@ -33,17 +33,17 @@ async def roster(container: ContainerDep) -> dict[str, Any]:
 
 
 @router.get("/missions/{mission_id}/hires")
-async def mission_hires(mission_id: str, container: ContainerDep) -> dict[str, Any]:
+async def mission_hires(mission_id: str, _: ViewerDep, container: ContainerDep) -> dict[str, Any]:
     mission = await container.board.get(mission_id)
     return {"mission_id": mission_id, "active": mission.hired_agents,
             "hires": [h.model_dump(mode="json") for h in mission.hires]}
 
 
 @router.post("/missions/{mission_id}/hires")
-async def hire(mission_id: str, body: HireBody, container: ContainerDep) -> dict[str, Any]:
+async def hire(mission_id: str, body: HireBody, user: OperatorDep, container: ContainerDep) -> dict[str, Any]:
     """Ask Maya for a specialist (an operator override; Atlas does this on its own during a mission)."""
     try:
-        records = await container.hiring.hire_for_skills(mission_id, body.skills, body.reason)
+        records = await container.hiring.hire_for_skills(mission_id, body.skills, f"{body.reason} (requested by {user.username})")
     except ValueError as exc:
         raise ValidationFailed(str(exc)) from None
     if not records:
@@ -52,6 +52,6 @@ async def hire(mission_id: str, body: HireBody, container: ContainerDep) -> dict
 
 
 @router.post("/missions/{mission_id}/hires/{agent}/release")
-async def release(mission_id: str, agent: str, body: ReleaseBody, container: ContainerDep) -> dict[str, Any]:
-    record = await container.hiring.release(mission_id, agent, body.reason)
+async def release(mission_id: str, agent: str, body: ReleaseBody, user: OperatorDep, container: ContainerDep) -> dict[str, Any]:
+    record = await container.hiring.release(mission_id, agent, f"{body.reason} by {user.username}")
     return {"released": record.model_dump(mode="json")}

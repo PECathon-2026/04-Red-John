@@ -497,7 +497,11 @@ Base path `/api/v1`. Interactive docs at `/docs` (disabled in production).
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health/live`, `/health/ready` | Liveness; readiness (storage, bus, LLM configured) |
+| GET | `/health/live`, `/health/ready` | Liveness; readiness (storage, bus, LLM configured) — public |
+| GET | `/metrics` | Prometheus metrics — public; expose to the scraper only |
+| POST | `/auth/login` (JSON), `/auth/token` (form, for Swagger) | Sign in → bearer token |
+| GET | `/auth/me` | The signed-in user |
+| GET / POST | `/auth/users`; POST `/auth/users/{username}/state` | List / create users; disable or re-enable (admin) |
 | GET | `/tools` | Tool catalogue with risk and category |
 | GET | `/agents` | The guild roster |
 | POST | `/missions` | Create a mission (`request`, `repo_path`, optional `title`, `start`) |
@@ -518,7 +522,9 @@ Base path `/api/v1`. Interactive docs at `/docs` (disabled in production).
 | GET | `/realtime/missions/{id}/events` | Stored events after a sequence number |
 | WS | `/realtime/missions/{id}` | Replay + live event stream |
 
-Errors share one shape: `{"error": {"code", "message", "details"}}` with `not_found` (404), `validation_failed` (422), `conflict` (409), `policy_violation` (403), `upstream_error` (502). Every response carries an `x-request-id`.
+Every route except health and metrics requires a bearer token; the minimum role per route is: **viewer** for reading (missions, snapshot, events, messages, evidence, approvals, audit, patch, roster, tools), **operator** for creating, running and stopping missions, answering questions, hiring/releasing and requesting apply, **approver** for approval decisions, **admin** for users. The WebSocket takes the token as `?token=` or a Bearer header and closes with code 4401 without one.
+
+Errors share one shape: `{"error": {"code", "message", "details"}}` with `unauthenticated` (401), `forbidden` (403), `not_found` (404), `validation_failed` (422), `conflict` (409), `policy_violation` (403), `rate_limited` (429), `payload_too_large` (413), `upstream_error` (502). Every response carries an `x-request-id`.
 
 ---
 
@@ -534,6 +540,7 @@ All settings live in [config.py](../backend_main/app/core/config.py) and are rea
 | Governance | `APPROVAL_TIMEOUT_S`, `AUTO_APPROVE_CATEGORIES`, `MISSION_MAX_TOOL_CALLS`, `MISSION_MAX_LLM_TOKENS`, `MISSION_MAX_WALL_CLOCK_S`, `MISSION_MAX_IDENTICAL_FAILURES`, `MISSION_MAX_CONSECUTIVE_FAILURES` |
 | Hiring / orchestration | `HIRING_THRESHOLD`, `HIRING_LLM_MANDATES`, `ESCALATE_AFTER_FAILURES`, `ORCHESTRATOR_MAX_PARALLEL`, `ORCHESTRATOR_MAX_ROUNDS`, `REPAIR_MAX_ATTEMPTS`, `LLM_RETRY_BACKOFF_S` |
 | Workers | `WORKER_CONCURRENCY`, `LEASE_TTL_S`, `JOB_CLAIM_AFTER_S`, `WORKER_MAX_DELIVERIES` |
+| Security | `AUTH_ENABLED`, `JWT_SECRET`, `JWT_TTL_MINUTES`, `BOOTSTRAP_ADMIN_USERNAME`, `BOOTSTRAP_ADMIN_PASSWORD`, `RATE_LIMIT_ENABLED`, `RATE_LIMIT_PER_MINUTE`, `LOGIN_RATE_LIMIT_PER_MINUTE`, `MISSION_RATE_LIMIT_PER_MINUTE`, `MAX_REQUEST_BYTES`, `METRICS_ENABLED` |
 | App | `ENVIRONMENT`, `LOG_LEVEL`, `LOG_JSON`, `CORS_ORIGINS`, `API_PREFIX` |
 
 List settings are comma-separated. Python 3.12+.
@@ -573,6 +580,8 @@ Every bug found in a live run has a regression test.
 
 **Threats considered:** a model that is wrong, confused or manipulated by repository content (prompt injection through files), attempting destructive commands, data exfiltration, secret disclosure, escaping the workspace, or claiming success falsely.
 
+**API security:** JWT bearer tokens (HS256, short-lived, carrying only the user id — roles and the disabled flag are read from the user record on every request, so revocation is immediate); scrypt-hashed passwords compared in constant time, with equal timing for unknown users; four ordered roles (viewer < operator < approver < admin); every human action recorded under the user's name; rate limits per client, per login (username + address) and per user for mission creation (in memory, or shared through Redis); request-size cap; security headers (nosniff, frame denial, CSP, HSTS in production); Prometheus metrics for requests, auth failures, rate limiting, tool calls and LLM use. In production the server refuses to start without auth, without a JWT secret, with `*` CORS origins or with auto-approvals.
+
 **Controls:** tool grants per role; the RED/AMBER/GREEN policy; no shell; path jail; secrets scrubbed from command environments and hidden from search; reading secret files needs approval; network tools refused; the real repository changes only through the human-approved apply with conflict detection and backups; budgets and loop guard; evidence-based completion; a complete audit trail.
 
 **Assumptions:**
@@ -586,7 +595,6 @@ Every bug found in a live run has a regression test.
 
 | Limitation | Status / plan |
 |---|---|
-| **No authentication or authorisation on the API**; the human is recorded as "operator" | Phase 10: JWT auth (from Mycel), per-user attribution, rate limits |
 | Frontend still shows Mycel's supply-chain wizard | Mission intake page, task board, answer box and apply button on the existing control room |
 | Process-level sandbox | A container (or VM) per mission for untrusted repositories |
 | Cancellation is cooperative | A running test command finishes first (up to `COMMAND_TIMEOUT_S`) |

@@ -7,6 +7,7 @@ from collections import defaultdict
 from app.domain.events import EventEnvelope
 from app.domain.governance import Approval, ApprovalStatus, AuditEntry
 from app.domain.mission import AgentMessage, Evidence, Mission, MissionStatus
+from app.domain.users import User
 from app.infrastructure.storage.base import ConcurrencyConflict
 
 
@@ -134,6 +135,30 @@ class InMemoryMessageRepository:
         return [m for m in self._items.get(mission_id, []) if (m.seq or 0) > after_seq][:limit]
 
 
+class InMemoryUserRepository:
+    def __init__(self) -> None:
+        self._items: dict[str, User] = {}
+
+    async def create(self, user: User) -> User:
+        if any(u.username == user.username for u in self._items.values()):
+            raise ConcurrencyConflict(f"user {user.username} already exists")
+        self._items[user.user_id] = user
+        return user
+
+    async def get(self, user_id: str) -> User | None:
+        return self._items.get(user_id)
+
+    async def get_by_username(self, username: str) -> User | None:
+        return next((u for u in self._items.values() if u.username == username), None)
+
+    async def update(self, user: User) -> User:
+        self._items[user.user_id] = user
+        return user
+
+    async def list(self) -> list[User]:
+        return sorted(self._items.values(), key=lambda u: u.created_at)
+
+
 class InMemoryStorage:
     def __init__(self) -> None:
         self.events = InMemoryEventStore()
@@ -142,6 +167,7 @@ class InMemoryStorage:
         self.missions = InMemoryMissionRepository()
         self.evidence = InMemoryEvidenceRepository()
         self.messages = InMemoryMessageRepository()
+        self.users = InMemoryUserRepository()
 
     async def start(self) -> None:
         return None

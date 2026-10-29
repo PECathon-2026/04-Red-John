@@ -24,6 +24,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.core import metrics
 from app.domain.events import EventKind, LogLevel
 from app.domain.governance import AuditEntry, AuditOutcome, MissionLimits
 from app.infrastructure.storage.base import AuditLog
@@ -241,6 +242,7 @@ class Governor:
             display=result.display,
             duration_s=result.duration_s,
         )
+        metrics.TOOL_CALLS.inc(tool=tool, outcome=str(entry.outcome))
         try:
             await self._audit.append(entry)
         except Exception:

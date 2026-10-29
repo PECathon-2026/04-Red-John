@@ -318,6 +318,7 @@ Full detail: [ARCHITECTURE.md](ARCHITECTURE.md).
 - **Separation of duties:** reviewers and the verifier hold no write tools; authors cannot review or verify their own change.
 - **Human oversight:** approval modal for AMBER actions; clarification questions pause the mission; applying to the real repository always requires approval, writes nothing on conflict, keeps backups, and never commits or pushes.
 - **Bounded autonomy:** tool-call, token and time budgets; loop guard; attempt and repair limits; escalation to a human.
+- **Access control:** sign-in with JWT; roles viewer < operator < approver < admin; every human action recorded under the user's name; rate limits on login and requests.
 - **Transparency:** full event stream, audit trail of every tool call (with who approved it), decisions with reasons, and an evidence report that separates verified results from claims.
 
 ---
@@ -392,6 +393,7 @@ We kept Mycel's organisation and Jarvis's tool discipline, and rebuilt the rest 
 | 7 Atlas | The orchestration loop, feedback loops, gates, evidence report |
 | 8 Scale & apply | Job queue, leases, workers, crash recovery, human-approved apply |
 | 9 Evaluation | Six scenario repos with hidden checks, harness, single-agent baseline |
+| 10 Hardening | JWT auth with roles, per-user attribution, rate limits, security headers, metrics, production guards, submission README |
 
 **Tested against reality, not just mocks.** Every phase has automated tests, and from Phase 5 on we ran real agents on Groq after each change. Live runs exposed problems no scripted test would — and each fix has a regression test:
 
@@ -406,7 +408,7 @@ We kept Mycel's organisation and Jarvis's tool discipline, and rebuilt the rest 
 
 | Result | Detail |
 |---|---|
-| Automated tests | **163** (157 without external servers; MongoDB and Redis backends verified against real servers) |
+| Automated tests | **176** (170 without external servers; MongoDB and Redis backends verified against real servers) |
 | First live end-to-end mission | **Completed in 88 s** — 8 hired specialists plus Atlas and Maya, 58 governed tool calls, all 5 criteria verified with evidence; run log in [`runs/2026-10-30-live-billing-fix/`](runs/2026-10-30-live-billing-fix/report.md) |
 | Production deployment, live | API (queue mode) + separate worker on MongoDB + Redis: **completed in 82 s**, applied to the repository only after human approval |
 | Feedback loops | Demonstrated in automated whole-mission scenarios (failing tests → repair → escalation to the Debugger; review dispute → arbitration; clarification → resume; missing test runner → test author) |
@@ -464,7 +466,7 @@ Model throughput: on Groq's free tier, limits are per account (~8,000 tokens per
 
 ## 15. Status and next steps
 
-**Done:** backend phases 0–9 — the full guild, orchestration, governance, safety, scaling, apply flow and evaluation harness, with live end-to-end missions.
+**Done:** backend phases 0–10 — the full guild, orchestration, governance, safety, scaling, apply flow, evaluation harness, and hardening (JWT auth with roles, rate limits, security headers, metrics, production guards), with live end-to-end missions.
 
 **Next:**
 
@@ -473,11 +475,10 @@ Model throughput: on Groq's free tier, limits are per account (~8,000 tokens per
 | 1 | Run the full live evaluation (6 scenarios × guild and baseline) and publish the comparison |
 | 2 | Frontend: mission intake (repo + request), live pixel office, task board, answer box, approval modal, diff review and "apply" |
 | 3 | Root README for submission (architecture diagram, setup, tools, boundaries, approvals, assumptions, limitations) |
-| 4 | Authentication (JWT from Mycel) and per-user attribution |
 | 5 | Guild → team → agent layering for tools and skill packs, guided by evaluation results |
 | 6 | Bonus features: persistent memory across missions; on-demand tool loading to save tokens |
 
-**Known limitations:** no API authentication yet; frontend not yet adapted; process-level sandbox (not a container per mission); stopping is cooperative (a running test finishes first); workers need each project's toolchain; Gemini fallback not verified live.
+**Known limitations:** frontend not yet adapted; process-level sandbox (not a container per mission); stopping is cooperative (a running test finishes first); workers need each project's toolchain; Gemini fallback not verified live.
 
 ---
 
