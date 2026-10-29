@@ -60,10 +60,9 @@ class _ParameterModalState extends State<ParameterModal> {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
         maxWidth: 500,
       ),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: AppTheme.floatingShadow,
+      decoration: const BoxDecoration(
+        color: T.surface,
+        border: Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -74,10 +73,10 @@ class _ParameterModalState extends State<ParameterModal> {
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 4),
               width: 44,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+              height: 4,
+              decoration: const BoxDecoration(
+                color: T.border,
+                borderRadius: T.badgeCircle,
               ),
             ),
           ),
@@ -87,25 +86,29 @@ class _ParameterModalState extends State<ParameterModal> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: Row(
               children: [
-                const Icon(
-                  Icons.tune_rounded,
-                  size: 22,
-                  color: AppTheme.accentOrange,
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
+                  ),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    size: 20,
+                    color: T.onSurface,
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Text(
                   'Runtime Parameters',
-                  style: AppTheme.displayMedium.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: T.headlineSm,
                 ),
                 const Spacer(),
                 IconButton(
                   icon: const Icon(
                     Icons.close_rounded,
                     size: 22,
-                    color: AppTheme.textDark,
+                    color: T.onSurfaceVar,
                   ),
                   onPressed:
                       widget.onClose ?? () => Navigator.of(context).maybePop(),
@@ -115,7 +118,7 @@ class _ParameterModalState extends State<ParameterModal> {
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.borderSubtle),
+          const Divider(height: 1, color: T.border),
 
           // Body controls
           Flexible(
@@ -419,9 +422,11 @@ class _ParameterModalState extends State<ParameterModal> {
                       : Navigator.of(context).maybePop();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.darkPill,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: AppTheme.pillRadius,
+                  backgroundColor: T.primary,
+                  foregroundColor: T.onPrimary,
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: T.zero,
                   ),
                 ),
                 child: const Text(
@@ -429,7 +434,7 @@ class _ParameterModalState extends State<ParameterModal> {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                    color: T.onPrimary,
                   ),
                 ),
               ),

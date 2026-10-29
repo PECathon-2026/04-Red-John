@@ -3,20 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:devpilot/main.dart';
 import 'package:devpilot/screens/home_screen.dart';
 import 'package:devpilot/screens/detail_screen.dart';
+import 'package:devpilot/screens/full_terminal_screen.dart';
+import 'package:devpilot/screens/artifact_list_screen.dart';
 import 'package:devpilot/services/telemetry_service.dart';
-import 'package:devpilot/widgets/running_task_card.dart';
-import 'package:devpilot/widgets/agent_card.dart';
-import 'package:devpilot/widgets/terminal_feed.dart';
-import 'package:devpilot/widgets/artifact_stream.dart';
-import 'package:devpilot/widgets/modals/approval_modal.dart';
-import 'package:devpilot/widgets/modals/cli_sheet.dart';
+import 'package:devpilot/widgets/bottom_nav.dart';
 import 'package:devpilot/widgets/modals/parameter_modal.dart';
-import 'package:devpilot/widgets/modals/agent_dossier_modal.dart';
 
 void main() {
-  group('DevPilotApp Root Wiring & Screen Navigation Tests', () {
+  group('DevPilotApp Root Wiring & Navigation Tests', () {
     testWidgets(
-      'DevPilotApp loads, renders greeting, projects, and running task',
+      'DevPilotApp loads with Monochrome Editorial header, launch widget, projects, and bottom nav',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -29,26 +25,31 @@ void main() {
         await tester.pumpWidget(DevPilotApp(service: service));
         await tester.pumpAndSettle();
 
-        // Verify Greeting & Header
-        expect(find.text('Hello, Aryan'), findsOneWidget);
-        expect(find.text('DEV PILOT'), findsOneWidget);
-        expect(find.textContaining('Your Projects'), findsOneWidget);
+        // Verify Greeting & Header (no avatar, small hello, front name Aryan)
+        expect(find.text('DEVPILOT'), findsOneWidget);
+        expect(find.text('hello,'), findsOneWidget);
+        expect(find.text('Aryan'), findsOneWidget);
+        expect(find.byKey(const Key('header_avatar')), findsNothing);
 
-        // Verify Projects
+        // Verify Launch Mission Widget
+        expect(find.text('LAUNCH NEW MISSION'), findsOneWidget);
+
+        // Verify Projects Section
+        expect(find.text('PROJECTS'), findsWidgets);
         expect(find.text('Admin Dashboard'), findsOneWidget);
-        expect(find.text('Wallet Mobile'), findsOneWidget);
 
-        // Verify Running Task
-        expect(find.byType(RunningTaskCard), findsOneWidget);
-        expect(find.text('DevPilot Core Engine'), findsWidgets);
-
-        // Verify absence of bottom navigation tabs
-        expect(find.byType(BottomNavigationBar), findsNothing);
+        // Verify 5-item Bottom Navigation Bar
+        expect(find.byType(AppBottomNav), findsOneWidget);
+        expect(find.text('HOME'), findsOneWidget);
+        expect(find.text('PROJECTS'), findsWidgets);
+        expect(find.text('TERMINAL'), findsOneWidget);
+        expect(find.text('ARTIFACTS'), findsOneWidget);
+        expect(find.text('SETTINGS'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'DevPilotApp navigates to DetailScreen and returns successfully',
+      'DevPilotApp navigates to DetailScreen and returns via back icon',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -68,53 +69,18 @@ void main() {
         // Verify DetailScreen is shown
         expect(find.byType(DetailScreen), findsOneWidget);
         expect(find.text('Admin Dashboard'), findsWidgets);
-        expect(find.text('Done'), findsOneWidget);
 
-        // Verify agents, terminal, and artifacts inside project screen
-        expect(find.byType(AgentCard), findsWidgets);
-        expect(find.byType(TerminalFeed), findsOneWidget);
-        expect(find.byType(ArtifactStream), findsOneWidget);
-
-        // Tap 'Done' to return to HomeScreen
-        await tester.tap(find.text('Done'));
+        // Tap back arrow icon to return to HomeScreen
+        await tester.tap(find.byIcon(Icons.arrow_back));
         await tester.pumpAndSettle();
 
         // Verify back on HomeScreen
         expect(find.byType(HomeScreen), findsOneWidget);
-        expect(find.text('Hello, Aryan'), findsOneWidget);
+        expect(find.text('hello,'), findsOneWidget);
       },
     );
 
-    testWidgets(
-      'DevPilotApp navigates to DetailScreen and returns via back icon',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final service = TelemetryService(autoStart: false);
-        await tester.pumpWidget(DevPilotApp(service: service));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Admin Dashboard'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(DetailScreen), findsOneWidget);
-
-        await tester.tap(find.byIcon(Icons.arrow_back));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(HomeScreen), findsOneWidget);
-        expect(find.text('Hello, Aryan'), findsOneWidget);
-      },
-    );
-
-    testWidgets('DevPilotApp opens CliSheet from quick bar and closes it', (
-      tester,
-    ) async {
+    testWidgets('DevPilotApp switches tabs via AppBottomNav', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -126,148 +92,32 @@ void main() {
       await tester.pumpWidget(DevPilotApp(service: service));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.terminal_rounded));
+      // Tap TERMINAL tab in bottom navigation
+      await tester.tap(find.text('TERMINAL'));
+      await tester.pumpAndSettle();
+      expect(find.byType(FullTerminalScreen), findsOneWidget);
+
+      // Tap ARTIFACTS tab in bottom navigation
+      await tester.tap(find.text('ARTIFACTS'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ArtifactListScreen), findsOneWidget);
+
+      // Tap SETTINGS tab in bottom navigation (opens ParameterModal)
+      await tester.tap(find.text('SETTINGS'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ParameterModal), findsOneWidget);
+
+      // Close modal
+      await tester.tap(find.text('Save & Apply'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(CliSheet), findsOneWidget);
-      expect(find.text('operator@devpilot:~\$ '), findsOneWidget);
-      expect(find.text('flutter doctor'), findsOneWidget);
-
-      // Close sheet
-      await tester.tap(find.byIcon(Icons.close_rounded));
+      // Return to HOME tab
+      await tester.tap(find.text('HOME'));
       await tester.pumpAndSettle();
-
-      expect(find.byType(CliSheet), findsNothing);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets(
-      'DevPilotApp opens ParameterModal from header icon and closes it',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final service = TelemetryService(autoStart: false);
-        await tester.pumpWidget(DevPilotApp(service: service));
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.byKey(const Key('header_grid_icon')));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ParameterModal), findsOneWidget);
-        expect(find.text('Runtime Parameters'), findsOneWidget);
-
-        // Tap Save & Apply
-        await tester.tap(find.text('Save & Apply'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ParameterModal), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'DevPilotApp opens AgentDossierModal from agent card inside DetailScreen',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final service = TelemetryService(autoStart: false);
-        await tester.pumpWidget(DevPilotApp(service: service));
-        await tester.pumpAndSettle();
-
-        // Navigate to DetailScreen where agents live
-        await tester.tap(find.text('Admin Dashboard'));
-        await tester.pumpAndSettle();
-
-        // Ensure visible and tap Atlas AgentCard
-        await tester.ensureVisible(find.byType(AgentCard).first);
-        await tester.tap(find.byType(AgentCard).first);
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AgentDossierModal), findsOneWidget);
-        expect(find.byIcon(Icons.close_rounded), findsOneWidget);
-
-        // Close dossier modal
-        await tester.tap(find.byIcon(Icons.close_rounded));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AgentDossierModal), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'DevPilotApp opens ApprovalModal on Kill All macro action and handles deny & approve',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final service = TelemetryService(autoStart: false);
-        await tester.pumpWidget(DevPilotApp(service: service));
-        await tester.pumpAndSettle();
-
-        // Tap 'Kill All' on HomeScreen
-        await tester.ensureVisible(find.text('Kill All'));
-        await tester.tap(find.text('Kill All'));
-        await tester.pumpAndSettle();
-
-        // ApprovalModal should pop up
-        expect(find.byType(ApprovalModal), findsOneWidget);
-        expect(find.text('SECURITY CLEARANCE GATE'), findsOneWidget);
-        expect(service.isPendingApproval, isTrue);
-
-        // Tap Deny
-        await tester.tap(find.text('Deny'));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(ApprovalModal), findsNothing);
-        expect(service.isPendingApproval, isFalse);
-      },
-    );
-
-    testWidgets('DevPilotApp DetailScreen can trigger CliSheet modal', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final service = TelemetryService(autoStart: false);
-      await tester.pumpWidget(DevPilotApp(service: service));
-      await tester.pumpAndSettle();
-
-      // Navigate to DetailScreen
-      await tester.tap(find.text('Admin Dashboard'));
-      await tester.pumpAndSettle();
-
-      // Tap 'Open CLI Terminal' button
-      await tester.ensureVisible(find.text('Open CLI Terminal'));
-      await tester.tap(find.text('Open CLI Terminal'));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(CliSheet), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.close_rounded));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(CliSheet), findsNothing);
-    });
-
-    testWidgets('DevPilotApp default constructor loads with MyApp alias', (
-      tester,
-    ) async {
+    testWidgets('DevPilotApp default constructor loads with MyApp alias', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -277,9 +127,10 @@ void main() {
 
       // Test MyApp alias and default service instantiation
       await tester.pumpWidget(const MyApp());
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text('Hello, Aryan'), findsOneWidget);
+      expect(find.text('hello,'), findsOneWidget);
+      expect(find.text('Aryan'), findsOneWidget);
     });
   });
 }

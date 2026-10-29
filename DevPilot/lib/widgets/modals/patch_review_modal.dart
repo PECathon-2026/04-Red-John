@@ -98,10 +98,9 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: AppTheme.floatingShadow,
+      decoration: const BoxDecoration(
+        color: T.surface,
+        border: Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -111,10 +110,10 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 6),
               width: 44,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+              height: 4,
+              decoration: const BoxDecoration(
+                color: T.border,
+                borderRadius: T.badgeCircle,
               ),
             ),
           ),
@@ -127,10 +126,10 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentOrange.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
                   ),
-                  child: const Icon(Icons.difference_rounded, size: 20, color: AppTheme.accentOrange),
+                  child: const Icon(Icons.difference_rounded, size: 20, color: T.onSurface),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -139,24 +138,24 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
                     children: [
                       Text(
                         'Unified Git Patch Diff',
-                        style: AppTheme.displayMedium.copyWith(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: T.headlineSm,
                       ),
                       Text(
-                        'Sandboxed changes awaiting human review',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary, fontSize: 11),
+                        'SANDBOXED CHANGES AWAITING HUMAN REVIEW',
+                        style: T.labelUpXs,
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
+                  icon: const Icon(Icons.close_rounded, color: T.onSurfaceVar),
                   onPressed: widget.onClose,
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.borderSubtle),
+          const Divider(height: 1, color: T.border),
 
           if (_successMessage != null)
             Container(
@@ -268,11 +267,11 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
                       );
                     },
                     icon: const Icon(Icons.copy_rounded, size: 16),
-                    label: const Text('Copy Patch'),
+                    label: Text('COPY PATCH', style: T.labelUpXs.copyWith(color: T.onSurface)),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textPrimary,
-                      side: const BorderSide(color: AppTheme.borderSubtle),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      foregroundColor: T.onSurface,
+                      side: const BorderSide(color: T.border),
+                      shape: const RoundedRectangleBorder(borderRadius: T.zero),
                     ),
                   ),
                 ),
@@ -284,14 +283,15 @@ class _PatchReviewModalState extends State<PatchReviewModal> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: T.onPrimary),
                           )
                         : const Icon(Icons.check_circle_outline_rounded, size: 16),
-                    label: Text(_isApplying ? 'Applying...' : 'Apply to Repo'),
+                    label: Text(_isApplying ? 'APPLYING...' : 'Apply to Repo', style: T.labelUpXs.copyWith(color: T.onPrimary, fontWeight: FontWeight.w700)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.statusAmber,
-                      foregroundColor: Colors.black87,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: T.primary,
+                      foregroundColor: T.onPrimary,
+                      elevation: 0,
+                      shape: const RoundedRectangleBorder(borderRadius: T.zero),
                     ),
                   ),
                 ),

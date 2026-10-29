@@ -499,6 +499,7 @@ class GoalItem {
   final String title;
   final GoalStatus status;
   final String description;
+  final String? assignedAgent;
 
   const GoalItem({
     required this.id,
@@ -507,6 +508,7 @@ class GoalItem {
     required this.title,
     required this.status,
     this.description = '',
+    this.assignedAgent,
   });
 
   bool get isCompleted => status == GoalStatus.completed;
@@ -520,6 +522,7 @@ class GoalItem {
     String? title,
     GoalStatus? status,
     String? description,
+    String? assignedAgent,
   }) {
     return GoalItem(
       id: id ?? this.id,
@@ -528,6 +531,7 @@ class GoalItem {
       title: title ?? this.title,
       status: status ?? this.status,
       description: description ?? this.description,
+      assignedAgent: assignedAgent ?? this.assignedAgent,
     );
   }
 
@@ -538,6 +542,7 @@ class GoalItem {
     'title': title,
     'status': status.name,
     'description': description,
+    'assignedAgent': assignedAgent,
   };
 
   factory GoalItem.fromJson(Map<String, dynamic> json) {
@@ -551,8 +556,60 @@ class GoalItem {
         orElse: () => GoalStatus.pending,
       ),
       description: json['description'] as String? ?? '',
+      assignedAgent: json['assignedAgent'] as String?,
     );
   }
+}
+
+/// Record of completed prior executions for the Home screen past execution section.
+class PastExecutionItem {
+  final String id;
+  final String projectName;
+  final String completedAgo;
+  final bool success;
+  final int totalGoals;
+  final int completedGoals;
+
+  const PastExecutionItem({
+    required this.id,
+    required this.projectName,
+    required this.completedAgo,
+    required this.success,
+    this.totalGoals = 4,
+    this.completedGoals = 4,
+  });
+}
+
+/// Diff line entry for the code difference inspection screen.
+class DiffLine {
+  final String text;
+  final String type; // 'add', 'delete', 'context'
+  final int? oldLineNumber;
+  final int? newLineNumber;
+
+  const DiffLine({
+    required this.text,
+    required this.type,
+    this.oldLineNumber,
+    this.newLineNumber,
+  });
+}
+
+/// File diff entry representing changed project tree structure like GitHub.
+class DiffFile {
+  final String path;
+  final String status; // 'modified', 'added', 'deleted'
+  final int additions;
+  final int deletions;
+  final List<DiffLine> lines;
+
+  const DiffFile({
+    required this.path,
+    required this.status,
+    required this.additions,
+    required this.deletions,
+    this.lines = const [],
+  });
 }
 
 /// Live streaming terminal line model with timestamp and color semantics.

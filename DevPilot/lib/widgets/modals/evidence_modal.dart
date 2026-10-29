@@ -44,10 +44,9 @@ class EvidenceModal extends StatelessWidget {
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: AppTheme.floatingShadow,
+      decoration: const BoxDecoration(
+        color: T.surface,
+        border: Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -57,10 +56,10 @@ class EvidenceModal extends StatelessWidget {
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 6),
               width: 44,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+              height: 4,
+              decoration: const BoxDecoration(
+                color: T.border,
+                borderRadius: T.badgeCircle,
               ),
             ),
           ),
@@ -73,8 +72,8 @@ class EvidenceModal extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: passColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
                   ),
                   child: Icon(
                     passed == true ? Icons.verified_rounded : Icons.terminal_rounded,
@@ -89,24 +88,24 @@ class EvidenceModal extends StatelessWidget {
                     children: [
                       Text(
                         'Verifiable Evidence Artifact',
-                        style: AppTheme.displayMedium.copyWith(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: T.headlineSm,
                       ),
                       Text(
-                        'ID: ${evidence.evidenceId} · Agent: ${evidence.agent}',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary, fontSize: 11),
+                        'ID: ${evidence.evidenceId} · AGENT: ${evidence.agent.toUpperCase()}',
+                        style: T.labelUpXs,
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
+                  icon: const Icon(Icons.close_rounded, color: T.onSurfaceVar),
                   onPressed: onClose,
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.borderSubtle),
+          const Divider(height: 1, color: T.border),
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -115,19 +114,19 @@ class EvidenceModal extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: passColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
                   ),
                   child: Text(
                     evidence.kind.toUpperCase(),
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: passColor),
+                    style: T.labelUpXs.copyWith(color: passColor),
                   ),
                 ),
                 const SizedBox(width: 8),
                 if (passed != null)
                   Text(
                     passed ? 'VERDICT: PASS' : 'VERDICT: FAIL',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: passColor),
+                    style: T.labelUpXs.copyWith(color: passColor, fontWeight: FontWeight.w700),
                   ),
               ],
             ),
@@ -139,8 +138,8 @@ class EvidenceModal extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppTheme.terminalBg,
-                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF0A0A0A),
+                border: Border.all(color: T.border),
               ),
               child: SingleChildScrollView(
                 child: Text(
@@ -148,7 +147,7 @@ class EvidenceModal extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 11.5,
-                    color: Colors.white,
+                    color: T.onSurface,
                     height: 1.35,
                   ),
                 ),
@@ -167,11 +166,11 @@ class EvidenceModal extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.copy_rounded, size: 16),
-              label: const Text('Copy Raw Evidence Output'),
+              label: Text('COPY RAW EVIDENCE OUTPUT', style: T.labelUpXs.copyWith(color: T.onSurface)),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.textPrimary,
-                side: const BorderSide(color: AppTheme.borderSubtle),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                foregroundColor: T.onSurface,
+                side: const BorderSide(color: T.border),
+                shape: const RoundedRectangleBorder(borderRadius: T.zero),
               ),
             ),
           ),

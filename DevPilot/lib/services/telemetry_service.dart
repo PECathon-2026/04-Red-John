@@ -36,6 +36,7 @@ class TelemetryService extends ChangeNotifier {
   List<AcceptanceCriterionItem> _criteria = [];
   List<EvidenceRecord> _evidenceRecords = [];
   List<OpenIssueItem> _openIssues = [];
+  List<PastExecutionItem> _pastExecutions = [];
   String? _latestPatch;
 
   // Governance & Security Gate
@@ -76,6 +77,7 @@ class TelemetryService extends ChangeNotifier {
   List<AcceptanceCriterionItem> get criteria => List.unmodifiable(_criteria);
   List<EvidenceRecord> get evidenceRecords => List.unmodifiable(_evidenceRecords);
   List<OpenIssueItem> get openIssues => List.unmodifiable(_openIssues);
+  List<PastExecutionItem> get pastExecutions => List.unmodifiable(_pastExecutions);
   String? get latestPatch => _latestPatch;
 
   bool get isPendingApproval => _isPendingApproval;
@@ -94,6 +96,7 @@ class TelemetryService extends ChangeNotifier {
   // --- Initialization ---
 
   int _tickCount = 0;
+  int get tickCount => _tickCount;
 
   void _initializeDefaultState() {
     // Populate the canonical 16-agent DevPilot Guild + baseline agents
@@ -186,6 +189,7 @@ class TelemetryService extends ChangeNotifier {
         title: 'Parse Blueprint AST & Requirements',
         status: GoalStatus.completed,
         description: 'Extract call graph and identify dependency subtrees across 11,684 symbols.',
+        assignedAgent: 'Atlas',
       ),
       const GoalItem(
         id: 'g2',
@@ -194,6 +198,7 @@ class TelemetryService extends ChangeNotifier {
         title: 'Container Isolation & Sandboxing',
         status: GoalStatus.completed,
         description: 'Spin up deterministic Docker runtime environment with secure LAN proxy.',
+        assignedAgent: 'Takeshi',
       ),
       const GoalItem(
         id: 'g3',
@@ -202,6 +207,7 @@ class TelemetryService extends ChangeNotifier {
         title: 'Compile Native Assets & Shaders',
         status: GoalStatus.inProgress,
         description: 'Ahead-of-time (AOT) compilation with 8 worker threads.',
+        assignedAgent: 'Takeshi',
       ),
       const GoalItem(
         id: 'g4',
@@ -210,6 +216,52 @@ class TelemetryService extends ChangeNotifier {
         title: 'Unit, Integration & E2E Validation',
         status: GoalStatus.pending,
         description: 'Execute automated regression test suite on isolated virtual devices.',
+        assignedAgent: 'Mei',
+      ),
+      const GoalItem(
+        id: 'g5',
+        stepNumber: 5,
+        category: 'SECURITY AUDIT',
+        title: 'Static Analysis & Secret Scanning',
+        status: GoalStatus.pending,
+        description: 'Audit AST for vulnerabilities and credentials leakage.',
+        assignedAgent: 'Kaito',
+      ),
+      const GoalItem(
+        id: 'g6',
+        stepNumber: 6,
+        category: 'REPORTING',
+        title: 'Markdown Evidence Audit Synthesis',
+        status: GoalStatus.pending,
+        description: 'Synthesize verified execution logs and evidence items into final sign-off audit.',
+        assignedAgent: 'Scribe',
+      ),
+    ];
+
+    _pastExecutions = [
+      const PastExecutionItem(
+        id: 'pe-1',
+        projectName: 'Feature Discounts 15%',
+        completedAgo: '22m ago',
+        success: true,
+      ),
+      const PastExecutionItem(
+        id: 'pe-2',
+        projectName: 'Catalog Pagination Fix',
+        completedAgo: '1h 14m ago',
+        success: true,
+      ),
+      const PastExecutionItem(
+        id: 'pe-3',
+        projectName: 'Time Duration Parser Repair',
+        completedAgo: '3h ago',
+        success: true,
+      ),
+      const PastExecutionItem(
+        id: 'pe-4',
+        projectName: 'SQL Injection Remediation',
+        completedAgo: '1d ago',
+        success: false,
       ),
     ];
 
@@ -1019,6 +1071,10 @@ class TelemetryService extends ChangeNotifier {
     _logs.clear();
     notifyListeners();
   }
+
+  void clearTerminalLogs() => clearLogs();
+
+  void executeCliCommand(String command) => sendCliCommand(command);
 
   void updateThreads(int count) {
     _workerThreads = count.clamp(1, 16);

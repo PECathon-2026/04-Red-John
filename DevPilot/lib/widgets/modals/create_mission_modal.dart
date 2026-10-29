@@ -115,10 +115,9 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
         maxHeight: MediaQuery.of(context).size.height * 0.90,
         maxWidth: 550,
       ),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: AppTheme.floatingShadow,
+      decoration: const BoxDecoration(
+        color: T.surface,
+        border: Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -129,10 +128,10 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 6),
               width: 44,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+              height: 4,
+              decoration: const BoxDecoration(
+                color: T.border,
+                borderRadius: T.badgeCircle,
               ),
             ),
           ),
@@ -145,10 +144,10 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary,
-                    borderRadius: BorderRadius.circular(10),
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
                   ),
-                  child: const Icon(Icons.rocket_launch_rounded, size: 20, color: AppTheme.onPrimary),
+                  child: const Icon(Icons.rocket_launch_rounded, size: 20, color: T.onSurface),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -157,11 +156,11 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                     children: [
                       Text(
                         'Launch AI Mission',
-                        style: AppTheme.displayMedium.copyWith(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: T.headlineSm,
                       ),
                       Text(
-                        'Atlas Orchestrator & Multi-Agent Task Force',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary, fontSize: 11),
+                        'ATLAS ORCHESTRATOR & MULTI-AGENT TASK FORCE',
+                        style: T.labelUpXs,
                       ),
                     ],
                   ),
@@ -221,13 +220,11 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                     children: DemoScenario.all.map((scenario) {
                       return InkWell(
                         onTap: _isSubmitting ? null : () => _handleLaunchScenario(scenario),
-                        borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceRaised,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppTheme.borderSubtle),
+                            color: T.surfaceAlt,
+                            border: Border.all(color: T.border),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -235,24 +232,24 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(6),
+                                  color: T.surfaceMuted,
+                                  border: Border.all(color: T.border),
                                 ),
                                 child: Text(
                                   scenario.category,
-                                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppTheme.primaryDark),
+                                  style: T.labelUpXs.copyWith(color: T.onSurface),
                                 ),
                               ),
                               const SizedBox(width: 8),
                               Flexible(
                                 child: Text(
                                   scenario.title,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                                  style: T.bodyMd.copyWith(fontWeight: FontWeight.w600),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.textSecondary),
+                              const Icon(Icons.arrow_forward_rounded, size: 14, color: T.onSurfaceVar),
                             ],
                           ),
                         ),
@@ -261,22 +258,26 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                   ),
 
                   const SizedBox(height: 24),
-                  const Divider(height: 1, color: AppTheme.borderSubtle),
+                  const Divider(height: 1, color: T.border),
                   const SizedBox(height: 20),
 
                   // Custom Mission Section
-                  Text('CUSTOM CODING MISSION', style: AppTheme.labelUppercase),
+                  Text('CUSTOM CODING MISSION', style: T.labelUpXs),
                   const SizedBox(height: 12),
 
                   // Title field
                   TextField(
                     controller: _titleController,
+                    style: T.bodyMd,
                     decoration: InputDecoration(
                       labelText: 'Mission Title (Optional)',
+                      labelStyle: T.labelUpXs,
                       hintText: 'e.g. Fix invoice billing calculator',
+                      hintStyle: T.bodySm,
                       filled: true,
-                      fillColor: AppTheme.surfaceRaised,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      fillColor: T.surfaceAlt,
+                      enabledBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.border)),
+                      focusedBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.onSurface)),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -284,12 +285,16 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                   // Repository Path field
                   TextField(
                     controller: _repoPathController,
+                    style: T.bodyMd,
                     decoration: InputDecoration(
                       labelText: 'Target Repository Path',
+                      labelStyle: T.labelUpXs,
                       hintText: 'missions/01-feature-discounts/repo',
+                      hintStyle: T.bodySm,
                       filled: true,
-                      fillColor: AppTheme.surfaceRaised,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      fillColor: T.surfaceAlt,
+                      enabledBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.border)),
+                      focusedBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.onSurface)),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -298,12 +303,16 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                   TextField(
                     controller: _promptController,
                     maxLines: 4,
+                    style: T.bodyMd,
                     decoration: InputDecoration(
                       labelText: 'Task Prompt / Bug Description',
+                      labelStyle: T.labelUpXs,
                       hintText: 'Describe what should be built or fixed in plain language...',
+                      hintStyle: T.bodySm,
                       filled: true,
-                      fillColor: AppTheme.surfaceRaised,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      fillColor: T.surfaceAlt,
+                      enabledBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.border)),
+                      focusedBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.onSurface)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -318,17 +327,18 @@ class _CreateMissionModalState extends State<CreateMissionModal> {
                           ? const SizedBox(
                               width: 18,
                               height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(strokeWidth: 2, color: T.onPrimary),
                             )
                           : const Icon(Icons.play_arrow_rounded),
                       label: Text(
-                        _isSubmitting ? 'Dispatching Guild...' : 'Launch Mission',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                        _isSubmitting ? 'DISPATCHING GUILD...' : 'LAUNCH MISSION',
+                        style: T.labelUpMd.copyWith(color: T.onPrimary, fontWeight: FontWeight.w700),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: AppTheme.onPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: T.primary,
+                        foregroundColor: T.onPrimary,
+                        elevation: 0,
+                        shape: const RoundedRectangleBorder(borderRadius: T.zero),
                       ),
                     ),
                   ),

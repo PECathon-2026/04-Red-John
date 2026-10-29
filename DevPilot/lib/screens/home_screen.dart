@@ -4,18 +4,19 @@ import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/dicebear_avatar.dart';
 import '../widgets/modals/create_mission_modal.dart';
-import '../widgets/running_task_card.dart';
+import '../widgets/primitives.dart';
 
-/// Full implementation of the Paper & Lime editorial HomeScreen.
+/// Redesigned Monochrome Editorial HomeScreen.
 ///
-/// Features:
-/// - Screen-based navigation (no bottom tabs).
-/// - Top editorial app bar with user avatar, 'DEV PILOT' kicker, greeting, and ember alert dot.
-/// - Metric strip displaying live performance stats with Space Grotesk tabular numerals.
-/// - 'Your Projects (N)' carousel with paper-alt 24px cards, duration pills, and ↗ icons.
-/// - Current Running Project Card directly below projects (live timer, lime pill, LAN E2EE).
-/// - Floating quick utility bar for CLI and Settings access.
+/// Layout:
+/// - Top greeting: "DEVPILOT", small "hello,", under it person's front name "Aryan" (no avatar), single "+" button.
+/// - Launch Mission Widget: Card-like widget with watermark rocket icon.
+/// - Projects Section: Horizontal scroll of cards with distinct monochrome tints. No pill shape buttons.
+/// - Current Execution Section: Running agent only (no system stats).
+/// - Past Executions Section: Hairline-separated rows of completed tasks.
+/// - System Vitals Section: 2x2 Hairline lattice grid.
 class HomeScreen extends StatefulWidget {
   final TelemetryService service;
   final void Function(ProjectItem project) onOpenProject;
@@ -41,6 +42,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
 
+  static const List<Color> _cardTints = [
+    Color(0xFF1A1A1A),
+    Color(0xFF222222),
+    Color(0xFF1E1E1E),
+    Color(0xFF262626),
+  ];
+
   @override
   void dispose() {
     _scrollController.dispose();
@@ -50,84 +58,51 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: T.background,
       body: SafeArea(
         bottom: false,
         child: ListenableBuilder(
           listenable: widget.service,
           builder: (context, _) {
             final projects = widget.service.projects;
-            final runningTask = widget.service.currentTask;
             final vitals = widget.service.vitals;
 
-            return Stack(
-              children: [
-                SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- Top App Bar ---
-                      _buildTopAppBar(),
+            return SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(0, 0, 0, 110),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. Top Greeting (no avatar, small hello, front name Aryan, single + button)
+                  _buildGreeting(),
 
-                      const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                      // --- Hero Metric Data Strip ---
-                      _buildMetricStrip(vitals),
+                  // 2. Launch Mission Card Widget
+                  _buildLaunchWidget(),
 
-                      const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                      // --- Projects Section ---
-                      _buildProjectsSection(projects),
+                  // 3. Projects Section (horizontal scroll, distinct tints, no pill buttons)
+                  _buildProjectsSection(projects),
 
-                      const SizedBox(height: 24),
+                  const SizedBox(height: 28),
 
-                      // --- Active Running Task Card ---
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'CURRENT EXECUTION',
-                              style: AppTheme.labelUppercase,
-                            ),
-                            const SizedBox(height: 10),
-                            RunningTaskCard(
-                              task: runningTask,
-                              vitals: vitals,
-                              onMacroAction: (action) {
-                                widget.service.triggerAction(action);
-                                if (action == 'Kill All' ||
-                                    action.toLowerCase().contains('kill')) {
-                                  widget.onKillTriggered?.call();
-                                }
-                              },
-                              onTap: () {
-                                if (projects.isNotEmpty) {
-                                  widget.onOpenProject(projects.first);
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  // 4. Current Execution Section (only running agent, no system stats)
+                  _buildCurrentExecutionSection(),
 
-                // --- Floating Bottom Quick Action Pill ---
-                Positioned(
-                  bottom: 24,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: _buildFloatingQuickBar(),
-                  ),
-                ),
-              ],
+                  const SizedBox(height: 28),
+
+                  // 5. Past Executions Section
+                  _buildPastExecutionsSection(),
+
+                  const SizedBox(height: 28),
+
+                  // 6. System Vitals Section (2-column hairline grid)
+                  _buildSystemVitalsSection(vitals),
+                ],
+              ),
             );
           },
         ),
@@ -135,208 +110,203 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Top App Bar ---
-  Widget _buildTopAppBar() {
+  // --- 1. Top Greeting ---
+  Widget _buildGreeting() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+      padding: const EdgeInsets.fromLTRB(T.lg, 28, T.lg, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Left: Avatar + Two-line greeting
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                key: const Key('header_avatar'),
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: AppTheme.surfaceAlt,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text(
-                    'A',
-                    style: TextStyle(
-                      fontFamily: 'Space Grotesk',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.onSurface,
-                    ),
-                  ),
+              Text('DEVPILOT', style: T.eyebrowWide),
+              const SizedBox(height: 4),
+              Text(
+                'hello,',
+                style: T.displaySm.copyWith(
+                  color: T.onSurfaceVar,
+                  height: 1.05,
                 ),
               ),
-              const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('DEV PILOT', style: AppTheme.labelUppercase),
-                  const SizedBox(height: 2),
-                  Text('Hello, Aryan', style: AppTheme.headlineMd),
-                ],
+              Text(
+                'Aryan',
+                style: T.displayMd.copyWith(
+                  height: 1.05,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ],
           ),
-
-          // Right: Utility icon buttons
-          Row(
-            children: [
-              // Launch Mission Button
-              GestureDetector(
-                key: const Key('header_launch_icon'),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  CreateMissionModal.show(context, widget.service);
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.add_rounded,
-                      size: 22,
-                      color: AppTheme.onPrimary,
-                    ),
-                  ),
-                ),
+          // Single action button — Launch new mission
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              CreateMissionModal.show(context, widget.service);
+            },
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: T.background,
+                border: Border.all(color: T.border),
               ),
-              const SizedBox(width: 10),
-
-              // Settings / Quick Action Button
-              GestureDetector(
-                key: const Key('header_grid_icon'),
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  widget.onOpenSettings?.call();
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceAlt,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.tune_rounded,
-                      size: 18,
-                      color: AppTheme.onSurface,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-
-              // Notification icon button with Ember Alert Dot
-              GestureDetector(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  widget.onOpenTerminal?.call();
-                },
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.surfaceAlt,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          size: 18,
-                          color: AppTheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 9,
-                      right: 9,
-                      child: Container(
-                        key: const Key('ember_alert_dot'),
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.accent, // Ember orange #FF5A1F
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              child: const Icon(Icons.add, color: T.onSurface, size: 24),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // --- Hero Metric Data Strip ---
-  Widget _buildMetricStrip(HardwareVitals vitals) {
+  // --- 2. Launch Mission Widget ---
+  Widget _buildLaunchWidget() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceAlt,
-          borderRadius: AppTheme.cardRadius,
+      padding: const EdgeInsets.symmetric(horizontal: T.lg),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          CreateMissionModal.show(context, widget.service);
+        },
+        child: Stack(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(T.lg),
+              decoration: BoxDecoration(
+                color: T.surfaceMuted.withValues(alpha: 0.4),
+                border: Border.all(color: T.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('LAUNCH NEW MISSION', style: T.labelUpMd),
+                  const SizedBox(height: 8),
+                  Text('Build something new →', style: T.headlineLg),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Configure agents, set goals, and start\nan autonomous execution.',
+                    style: T.bodySm.copyWith(color: T.onSurfaceVar),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: const BoxDecoration(
+                      color: T.onSurface,
+                      borderRadius: T.zero,
+                    ),
+                    child: Center(
+                      child: Text(
+                        'START MISSION',
+                        style: T.labelUpSm.copyWith(
+                          color: T.background,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Watermark Icon
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Icon(
+                Icons.rocket_launch_outlined,
+                size: 72,
+                color: T.onSurface.withValues(alpha: 0.06),
+              ),
+            ),
+          ],
         ),
-        child: Row(
+      ),
+    );
+  }
+
+  // --- 3. Projects Section ---
+  Widget _buildProjectsSection(List<ProjectItem> projects) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: T.lg),
+          child: SectionHeader(
+            'PROJECTS',
+            trailing: BadgePill('${projects.length} ACTIVE'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 200,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: T.lg),
+            itemCount: projects.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final project = projects[i];
+              final tint = _cardTints[i % _cardTints.length];
+              return _buildProjectCard(project, tint);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProjectCard(ProjectItem p, Color tint) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        widget.service.selectMission(p.id);
+        widget.onOpenProject(p);
+      },
+      child: Container(
+        width: 180,
+        padding: const EdgeInsets.all(T.md),
+        decoration: BoxDecoration(
+          color: tint,
+          border: Border.all(color: T.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Top: Folder icon + LIVE badge
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('SYSTEM VITALS', style: AppTheme.labelUppercase),
-                const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '${vitals.cpuPercent.toInt()}%',
-                      style: AppTheme.displayMd.copyWith(color: AppTheme.onSurface),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'CPU LOAD',
-                      style: AppTheme.caption.copyWith(color: AppTheme.onSurfaceVariant),
-                    ),
-                  ],
+                const Icon(
+                  Icons.folder_open_outlined,
+                  size: 20,
+                  color: T.onSurfaceVar,
                 ),
+                if (p.isLive) const BadgePill('LIVE'),
               ],
             ),
-            Container(
-              width: 1,
-              height: 36,
-              color: AppTheme.border,
+            // Middle: Title
+            Text(
+              p.title,
+              style: T.headlineMd,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
+            // Bottom: Hairline progress bar + subtitle
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('PIPELINE HEALTH', style: AppTheme.labelUppercase),
-                const SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      '99.8',
-                      style: AppTheme.displayMd.copyWith(color: AppTheme.onSurface),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '% OK',
-                      style: AppTheme.caption.copyWith(color: AppTheme.onSurfaceVariant),
-                    ),
-                  ],
+                HairlineBar(p.progress),
+                const SizedBox(height: 8),
+                Text(
+                  p.subtitle,
+                  style: T.bodySm,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -346,193 +316,218 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- Projects Section ---
-  Widget _buildProjectsSection(List<ProjectItem> projects) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('ACTIVE WORKSPACE', style: AppTheme.labelUppercase),
-                  const SizedBox(height: 4),
-                  Text('Your Projects (${projects.length})', style: AppTheme.headlineSm),
-                ],
+  // --- 4. Current Execution Section ---
+  Widget _buildCurrentExecutionSection() {
+    final runningAgents = widget.service.agents.where((a) {
+      final p = a.phase.toLowerCase();
+      return p == 'running' || p == 'working' || p == 'implementation';
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: T.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader('CURRENT EXECUTION'),
+          const SizedBox(height: 12),
+          if (runningAgents.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(T.md),
+              decoration: BoxDecoration(
+                color: T.background,
+                border: Border.all(color: T.border),
               ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: AppTheme.onSurface),
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  CreateMissionModal.show(context, widget.service);
-                },
+              child: Text(
+                'No active execution running.',
+                style: T.bodySm.copyWith(color: T.onSurfaceVar),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        if (projects.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                CreateMissionModal.show(context, widget.service);
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
-                  borderRadius: AppTheme.cardRadius,
-                  border: Border.all(color: AppTheme.borderSubtle),
-                ),
-                child: Column(
-                  children: [
-                    const Icon(Icons.rocket_launch_outlined, size: 36, color: AppTheme.primaryDark),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'No Active Missions Yet',
-                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Tap to launch a new mission or benchmark scenario',
-                      style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        else
-          SizedBox(
-            height: 235,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: projects.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 14),
-              itemBuilder: (context, index) {
-                final project = projects[index];
-                return _WorkflowCard(
-                  project: project,
-                  onTap: () {
-                    widget.service.selectMission(project.id);
-                    widget.onOpenProject(project);
-                  },
-                );
-              },
-            ),
-          ),
-      ],
+            )
+          else
+            _buildRunningAgentCard(runningAgents.first),
+        ],
+      ),
     );
   }
 
-  // --- Floating Quick Bar ---
-  Widget _buildFloatingQuickBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceInverse,
-        borderRadius: AppTheme.pillRadius,
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(14, 15, 12, 0.28),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Launch Project Button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              if (widget.service.projects.isNotEmpty) {
-                widget.onOpenProject(widget.service.projects.first);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppTheme.primary, // Electric Lime
-                borderRadius: AppTheme.pillRadius,
-              ),
-              child: const Row(
+  Widget _buildRunningAgentCard(AgentItem agent) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        if (widget.service.projects.isNotEmpty) {
+          widget.onOpenProject(widget.service.projects.first);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(T.md),
+        decoration: BoxDecoration(
+          color: T.background,
+          border: Border.all(color: T.border),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Cute deterministic robot avatar (offline-first)
+            CuteAvatar(name: agent.name, size: 52),
+            const SizedBox(width: T.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.dashboard_rounded, size: 16, color: AppTheme.onPrimary),
-                  SizedBox(width: 6),
+                  Text(agent.name, style: T.headlineSm),
+                  const SizedBox(height: 2),
                   Text(
-                    'Active Project',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.onPrimary,
-                    ),
+                    agent.team.toUpperCase(),
+                    style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    agent.currentTask.isNotEmpty
+                        ? agent.currentTask
+                        : 'Executing task pipeline',
+                    style: T.bodySm,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-          ),
-
-          const SizedBox(width: 6),
-
-          // CLI Terminal Button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onOpenTerminal?.call();
-            },
-            child: Container(
-              width: 38,
-              height: 38,
+            const SizedBox(width: 8),
+            // Running Badge with green success dot
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+                color: T.success.withValues(alpha: 0.12),
+                borderRadius: T.zero,
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.terminal_rounded,
-                  size: 16,
-                  color: AppTheme.onInverse,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: T.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'RUNNING',
+                    style: T.labelUpXs.copyWith(color: T.success),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- 5. Past Executions Section ---
+  Widget _buildPastExecutionsSection() {
+    final past = widget.service.pastExecutions.take(3).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: T.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            'PAST EXECUTIONS',
+            trailing: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (widget.service.projects.isNotEmpty) {
+                  widget.onOpenProject(widget.service.projects.first);
+                }
+              },
+              child: Text(
+                'View all →',
+                style: T.labelUpXs.copyWith(color: T.onSurface),
               ),
             ),
           ),
-
-          const SizedBox(width: 6),
-
-          // Parameters / Settings Button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              widget.onOpenSettings?.call();
-            },
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.tune_rounded,
-                  size: 16,
-                  color: AppTheme.onInverse,
-                ),
-              ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(border: Border.all(color: T.border)),
+            child: Column(
+              children: [
+                for (int i = 0; i < past.length; i++) ...[
+                  if (i > 0) Container(height: 1, color: T.border),
+                  Padding(
+                    padding: const EdgeInsets.all(T.md),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(past[i].projectName, style: T.headlineSm),
+                              const SizedBox(height: 2),
+                              Text(
+                                past[i].completedAgo,
+                                style: T.labelUpXs
+                                    .copyWith(color: T.onSurfaceVar),
+                              ),
+                            ],
+                          ),
+                        ),
+                        BadgePill(
+                          past[i].success ? 'DONE' : 'FAILED',
+                          bg: past[i].success
+                              ? T.success.withValues(alpha: 0.15)
+                              : T.destructive.withValues(alpha: 0.15),
+                          textColor: past[i].success
+                              ? T.success
+                              : Colors.red.shade300,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- 6. System Vitals Section ---
+  Widget _buildSystemVitalsSection(HardwareVitals v) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: T.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader('SYSTEM VITALS'),
+          const SizedBox(height: 12),
+          HairlineGrid(
+            crossAxisCount: 2,
+            cells: [
+              _VitalCell(
+                label: 'CPU LOAD',
+                value: '${v.cpuPercent.toInt()}%',
+                barValue: v.cpuPercent / 100,
+              ),
+              _VitalCell(
+                label: 'RAM USAGE',
+                value: '${v.ramPercent.toInt()}%',
+                barValue: v.ramPercent / 100,
+              ),
+              _VitalCell(
+                label: 'NETWORK',
+                value: '${v.networkMBps.toStringAsFixed(1)} MB/s',
+              ),
+              _VitalCell(
+                label: 'BATTERY',
+                value: '${v.batteryPercent.toInt()}%',
+                barValue: v.batteryPercent / 100,
+              ),
+            ],
           ),
         ],
       ),
@@ -540,103 +535,32 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Paper & Lime 24px Project Workflow Card.
-class _WorkflowCard extends StatelessWidget {
-  final ProjectItem project;
-  final VoidCallback onTap;
+class _VitalCell extends StatelessWidget {
+  final String label;
+  final String value;
+  final double? barValue;
 
-  const _WorkflowCard({
-    required this.project,
-    required this.onTap,
+  const _VitalCell({
+    required this.label,
+    required this.value,
+    this.barValue,
   });
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        width: 175,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceAlt,
-          borderRadius: AppTheme.cardRadius,
-        ),
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.all(T.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Top Row: Category icon circle + Corner arrow icon
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceRaised,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.folder_outlined,
-                      size: 18,
-                      color: AppTheme.onSurface,
-                    ),
-                  ),
-                ),
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceRaised,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.arrow_outward_rounded,
-                      size: 16,
-                      color: AppTheme.onSurface,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // Middle: Project Title
-            Text(
-              project.title,
-              style: AppTheme.cardTitle.copyWith(
-                fontSize: 17,
-                height: 1.2,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            // Bottom: Duration Pill
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceRaised,
-                borderRadius: AppTheme.pillRadius,
-              ),
-              child: Text(
-                project.duration,
-                style: const TextStyle(
-                  fontFamily: 'Space Grotesk',
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.onSurface,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                ),
-              ),
-            ),
+            Text(label, style: T.labelUpSm),
+            const SizedBox(height: 6),
+            Text(value, style: T.numeralXl),
+            if (barValue != null) ...[
+              const SizedBox(height: 8),
+              HairlineBar(barValue!),
+            ],
           ],
         ),
-      ),
-    );
-  }
+      );
 }

@@ -8,75 +8,54 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = true;
 
-  group('AppTheme Tokens & ThemeData', () {
-    test('AppTheme defines Paper & Lime color tokens and aliases', () {
-      // Paper & Lime Core Tokens
-      expect(AppTheme.surface.toARGB32(), 0xFFF4F2EC);
-      expect(AppTheme.surfaceAlt.toARGB32(), 0xFFEBE8E0);
-      expect(AppTheme.surfaceRaised.toARGB32(), 0xFFFFFFFF);
-      expect(AppTheme.surfaceInverse.toARGB32(), 0xFF0E0F0C);
-      expect(AppTheme.primary.toARGB32(), 0xFFD7FE47);
-      expect(AppTheme.primaryDeep.toARGB32(), 0xFFC8F02A);
-      expect(AppTheme.onPrimary.toARGB32(), 0xFF0E0F0C);
-      expect(AppTheme.accent.toARGB32(), 0xFFFF5A1F);
-      expect(AppTheme.onSurface.toARGB32(), 0xFF0E0F0C);
-      expect(AppTheme.onSurfaceVariant.toARGB32(), 0xFF8A8A82);
-      expect(AppTheme.onInverse.toARGB32(), 0xFFF4F2EC);
-      expect(AppTheme.border.toARGB32(), 0xFFE3E0D7);
-      expect(AppTheme.borderStrong.toARGB32(), 0xFFDDDAD1);
-      expect(AppTheme.neutralSoft.toARGB32(), 0xFFC8C5BA);
+  group('Monochrome Editorial Theme Tokens & ThemeData', () {
+    test('T & AppTheme define Monochrome Editorial Mobile tokens', () {
+      // 7-step grayscale palette
+      expect(T.background.toARGB32(), 0xFF121212);
+      expect(T.surfaceMuted.toARGB32(), 0xFF1E1E1E);
+      expect(T.surfaceAlt.toARGB32(), 0xFF242424);
+      expect(T.onSurface.toARGB32(), 0xFFFAFAFA);
+      expect(T.onSurfaceVar.toARGB32(), 0xFF8E8E8E);
+      expect(T.border.toARGB32(), 0xFF2E2E2E);
+      expect(T.success.toARGB32(), 0xFF22C55E);
+      expect(T.destructive.toARGB32(), 0xFF7F1D1D);
 
       // Backward compatibility aliases
-      expect(AppTheme.bgMain, AppTheme.surface);
-      expect(AppTheme.surfaceCard, AppTheme.surfaceRaised);
-      expect(AppTheme.darkPill, AppTheme.surfaceInverse);
-      expect(AppTheme.statusGreen, AppTheme.primaryDeep);
-      expect(AppTheme.accentOrange, AppTheme.accent);
+      expect(AppTheme.surface, T.background);
+      expect(AppTheme.border, T.border);
+      expect(AppTheme.onSurface, T.onSurface);
+      expect(AppTheme.statusGreen, T.success);
     });
 
-    test('AppTheme defines Paper & Lime shapes and ThemeData', () {
-      expect(AppTheme.cardRadius, BorderRadius.circular(24));
-      expect(AppTheme.thumbRadius, BorderRadius.circular(18));
-      expect(AppTheme.pillRadius, BorderRadius.circular(9999));
+    test('T & AppTheme enforce Zero Radius rule everywhere except badgeCircle', () {
+      expect(T.zero, BorderRadius.zero);
+      expect(AppTheme.cardRadius, BorderRadius.zero);
+      expect(AppTheme.thumbRadius, BorderRadius.zero);
+      expect(AppTheme.pillRadius, BorderRadius.zero);
 
-      final theme = AppTheme.themeData;
-      expect(theme.scaffoldBackgroundColor, AppTheme.surface);
+      final theme = T.theme;
+      expect(theme.scaffoldBackgroundColor, T.background);
       expect(theme.cardTheme.elevation, 0);
       expect(theme.dividerTheme.color, Colors.transparent);
       expect(theme.useMaterial3, isTrue);
+      expect(theme.brightness, Brightness.dark);
     });
 
-    test('AppTheme defines Space Grotesk and Inter typography hierarchy', () {
-      // Space Grotesk (Display & Numerals)
-      expect(AppTheme.displayXl.fontSize, 84);
-      expect(AppTheme.displayXl.fontWeight, FontWeight.w700);
+    test('T defines Montserrat typography hierarchy', () {
+      expect(T.displayLg.fontSize, 48);
+      expect(T.displayMd.fontSize, 36);
+      expect(T.displaySm.fontSize, 30);
+      expect(T.numeralXl.fontSize, 60);
+      expect(T.headlineLg.fontSize, 24);
+      expect(T.headlineMd.fontSize, 20);
+      expect(T.headlineSm.fontSize, 18);
 
-      expect(AppTheme.displayMd.fontSize, 34);
-      expect(AppTheme.displayMd.fontWeight, FontWeight.w700);
-
-      expect(AppTheme.numeralMd.fontSize, 26);
-      expect(AppTheme.numeralMd.fontWeight, FontWeight.w700);
-
-      expect(AppTheme.numeralSm.fontSize, 22);
-      expect(AppTheme.numeralSm.fontWeight, FontWeight.w700);
-
-      expect(AppTheme.headlineMd.fontSize, 17);
-      expect(AppTheme.headlineMd.fontWeight, FontWeight.w600);
-
-      expect(AppTheme.headlineSm.fontSize, 15);
-      expect(AppTheme.headlineSm.fontWeight, FontWeight.w600);
-
-      expect(AppTheme.cardTitle.fontSize, 16);
-      expect(AppTheme.cardTitle.fontWeight, FontWeight.w600);
-
-      // Inter (Body, Labels, Uppercase kickers)
-      expect(AppTheme.bodyMd.fontSize, 13);
-      expect(AppTheme.bodySm.fontSize, 12);
-      expect(AppTheme.labelMd.fontSize, 12);
-      expect(AppTheme.labelSm.fontSize, 11);
-      expect(AppTheme.labelUppercase.fontSize, 10);
-      expect(AppTheme.labelUppercase.letterSpacing, 1.8);
-      expect(AppTheme.caption.fontSize, 9);
+      expect(T.bodyMd.fontSize, 14);
+      expect(T.bodySm.fontSize, 12);
+      expect(T.labelUpMd.fontSize, 11);
+      expect(T.labelUpSm.fontSize, 10);
+      expect(T.labelUpXs.fontSize, 9);
+      expect(T.eyebrowWide.fontSize, 10);
     });
   });
 
@@ -113,19 +92,17 @@ void main() {
       expect(vitals.networkFormatted, '12.4 MB/s');
     });
 
-    test('ProjectItem and CardColorType resolve colors', () {
-      final project = ProjectItem(
-        id: 'p1',
-        title: 'Planning',
-        subtitle: 'November 18th, 2026',
-        duration: '45 hours',
-        colorType: CardColorType.peach,
+    test('PastExecutionItem instantiates properly', () {
+      const past = PastExecutionItem(
+        id: 'pe-1',
+        projectName: 'Discounts Engine',
+        completedAgo: '22m ago',
+        success: true,
       );
 
-      expect(project.title, 'Planning');
-      expect(project.duration, '45 hours');
-      expect(project.colorType, CardColorType.peach);
-      expect(project.backgroundColor, AppTheme.cardPeach);
+      expect(past.projectName, 'Discounts Engine');
+      expect(past.completedAgo, '22m ago');
+      expect(past.success, isTrue);
     });
 
     test('AgentItem instantiates with dossier information', () {
@@ -149,7 +126,7 @@ void main() {
       expect(agent.assignedTools.length, 2);
     });
 
-    test('GoalItem and GoalStatus work properly', () {
+    test('GoalItem and GoalStatus work properly with assignedAgent', () {
       const goal = GoalItem(
         id: 'g1',
         stepNumber: 1,
@@ -157,11 +134,13 @@ void main() {
         title: 'Verify Biometric Integrity',
         status: GoalStatus.completed,
         description: 'Ensure hardware enclave passes key exchange.',
+        assignedAgent: 'Atlas',
       );
 
       expect(goal.stepNumber, 1);
       expect(goal.category, 'SECURITY');
       expect(goal.status, GoalStatus.completed);
+      expect(goal.assignedAgent, 'Atlas');
     });
 
     test('TerminalLog maps LogType to status colors', () {
@@ -177,23 +156,9 @@ void main() {
         message: 'Process killed with SIGKILL',
         type: LogType.error,
       );
-      final logWarning = TerminalLog(
-        id: 'l3',
-        timestamp: DateTime(2026, 10, 30, 10, 24, 10),
-        message: 'Memory threshold reached 85%',
-        type: LogType.warning,
-      );
-      final logCommand = TerminalLog(
-        id: 'l4',
-        timestamp: DateTime(2026, 10, 30, 10, 24, 15),
-        message: 'flutter test',
-        type: LogType.command,
-      );
 
       expect(logSuccess.logColor, AppTheme.statusGreen);
       expect(logError.logColor, AppTheme.statusRed);
-      expect(logWarning.logColor, AppTheme.statusAmber);
-      expect(logCommand.logColor, AppTheme.accentOrange);
       expect(logSuccess.formattedTimestamp, '10:24:00');
     });
 

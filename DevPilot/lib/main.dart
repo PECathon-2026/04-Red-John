@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'models/models.dart';
+import 'screens/artifact_list_screen.dart';
 import 'screens/detail_screen.dart';
+import 'screens/full_terminal_screen.dart';
 import 'screens/home_screen.dart';
 import 'services/telemetry_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/bottom_nav.dart';
 import 'widgets/modals/agent_dossier_modal.dart';
 import 'widgets/modals/approval_modal.dart';
 import 'widgets/modals/cli_sheet.dart';
@@ -16,7 +19,7 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
     ),
   );
 
@@ -123,16 +126,101 @@ class _DevPilotAppState extends State<DevPilotApp> {
       title: 'DevPilot',
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.themeData,
-      home: Builder(
-        builder: (context) => HomeScreen(
-          service: _service,
-          onOpenProject: (project) => _navigateToDetail(context, project),
-          onOpenAgent: (agent) => AgentDossierModal.show(context, agent: agent),
-          onOpenTerminal: () => CliSheet.show(context, _service),
-          onOpenSettings: () => ParameterModal.show(context, _service),
-          onKillTriggered: () => _handleApprovalGate(context),
-        ),
+      theme: T.theme,
+      home: _MainShell(
+        service: _service,
+        onOpenProject: (project) {
+          final ctx = _navigatorKey.currentContext ?? context;
+          _navigateToDetail(ctx, project);
+        },
+        onOpenAgent: (agent) {
+          final ctx = _navigatorKey.currentContext ?? context;
+          AgentDossierModal.show(ctx, agent: agent);
+        },
+        onKillTriggered: () {
+          final ctx = _navigatorKey.currentContext ?? context;
+          _handleApprovalGate(ctx);
+        },
+      ),
+    );
+  }
+}
+
+/// Architectural container hosting the 5-item bottom navigation bar and primary screens.
+class _MainShell extends StatefulWidget {
+  final TelemetryService service;
+  final void Function(ProjectItem) onOpenProject;
+  final void Function(AgentItem) onOpenAgent;
+  final VoidCallback onKillTriggered;
+
+  const _MainShell({
+    required this.service,
+    required this.onOpenProject,
+    required this.onOpenAgent,
+    required this.onKillTriggered,
+  });
+
+  @override
+  State<_MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<_MainShell> {
+  int _currentTabIndex = 0;
+
+  void _onTabSelected(int index) {
+    if (index == 4) {
+      // SETTINGS tab opens ParameterModal bottom sheet
+      ParameterModal.show(context, widget.service);
+      return;
+    }
+    setState(() => _currentTabIndex = index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: T.background,
+      body: IndexedStack(
+        index: _currentTabIndex,
+        children: [
+          // Tab 0: Home Screen
+          HomeScreen(
+            service: widget.service,
+            onOpenProject: widget.onOpenProject,
+            onOpenAgent: widget.onOpenAgent,
+            onOpenTerminal: () => setState(() => _currentTabIndex = 2),
+            onOpenSettings: () => ParameterModal.show(context, widget.service),
+            onKillTriggered: widget.onKillTriggered,
+          ),
+          // Tab 1: Projects Overview
+          widget.service.projects.isNotEmpty
+              ? DetailScreen(
+                  service: widget.service,
+                  project: widget.service.projects.first,
+                  onBack: () => setState(() => _currentTabIndex = 0),
+                  onOpenCli: () => setState(() => _currentTabIndex = 2),
+                  onOpenSettings: () => ParameterModal.show(context, widget.service),
+                  onOpenAgent: widget.onOpenAgent,
+                )
+              : const Center(
+                  child: Text('No active projects', style: TextStyle(color: T.onSurface)),
+                ),
+          // Tab 2: Terminal Screen
+          FullTerminalScreen(
+            service: widget.service,
+            onBack: () => setState(() => _currentTabIndex = 0),
+          ),
+          // Tab 3: Artifacts Screen
+          ArtifactListScreen(
+            artifacts: widget.service.artifacts,
+            service: widget.service,
+            onBack: () => setState(() => _currentTabIndex = 0),
+          ),
+        ],
+      ),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: _currentTabIndex,
+        onTap: _onTabSelected,
       ),
     );
   }

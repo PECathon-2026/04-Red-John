@@ -88,10 +88,9 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
         maxHeight: MediaQuery.of(context).size.height * 0.80,
         maxWidth: 500,
       ),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: AppTheme.floatingShadow,
+      decoration: const BoxDecoration(
+        color: T.surface,
+        border: Border(top: BorderSide(color: T.border, width: 1)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -102,10 +101,10 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
             child: Container(
               margin: const EdgeInsets.only(top: 12, bottom: 6),
               width: 44,
-              height: 4.5,
-              decoration: BoxDecoration(
-                color: AppTheme.textSecondary.withValues(alpha: 0.25),
-                borderRadius: BorderRadius.circular(4),
+              height: 4,
+              decoration: const BoxDecoration(
+                color: T.border,
+                borderRadius: T.badgeCircle,
               ),
             ),
           ),
@@ -118,10 +117,10 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: T.surfaceAlt,
+                    border: Border.all(color: T.border),
                   ),
-                  child: const Icon(Icons.help_outline_rounded, size: 20, color: AppTheme.primaryDark),
+                  child: const Icon(Icons.help_outline_rounded, size: 20, color: T.onSurface),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -130,24 +129,24 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
                     children: [
                       Text(
                         'Human-in-the-Loop Clarification',
-                        style: AppTheme.displayMedium.copyWith(fontSize: 18, fontWeight: FontWeight.w800),
+                        style: T.headlineSm,
                       ),
                       Text(
-                        'Raised by ${widget.issue.raisedBy} (${widget.issue.kind.toUpperCase()})',
-                        style: AppTheme.bodySmall.copyWith(color: AppTheme.textSecondary, fontSize: 11),
+                        'RAISED BY ${widget.issue.raisedBy.toUpperCase()} (${widget.issue.kind.toUpperCase()})',
+                        style: T.labelUpXs,
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
+                  icon: const Icon(Icons.close_rounded, color: T.onSurfaceVar),
                   onPressed: widget.onClose,
                 ),
               ],
             ),
           ),
 
-          const Divider(height: 1, color: AppTheme.borderSubtle),
+          const Divider(height: 1, color: T.border),
 
           Flexible(
             child: SingleChildScrollView(
@@ -160,38 +159,36 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.statusRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppTheme.statusRed),
+                        color: T.destructive.withValues(alpha: 0.1),
+                        border: Border.all(color: T.destructive),
                       ),
-                      child: Text(_errorMessage!, style: const TextStyle(color: AppTheme.statusRed, fontSize: 12)),
+                      child: Text(_errorMessage!, style: const TextStyle(color: T.destructive, fontSize: 12)),
                     ),
 
                   // Question card
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.surfaceRaised,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.borderSubtle),
+                      color: T.surfaceAlt,
+                      border: Border.all(color: T.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.psychology_alt_rounded, size: 16, color: AppTheme.primaryDark),
+                            const Icon(Icons.psychology_alt_rounded, size: 16, color: T.onSurface),
                             const SizedBox(width: 6),
                             Text(
                               'QUESTION FROM ${widget.issue.raisedBy.toUpperCase()}',
-                              style: AppTheme.labelUppercase.copyWith(color: AppTheme.primaryDark),
+                              style: T.labelUpXs.copyWith(color: T.onSurface),
                             ),
                           ],
                         ),
                         const SizedBox(height: 10),
                         Text(
                           widget.issue.text,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary, height: 1.4),
+                          style: T.bodyMd.copyWith(fontWeight: FontWeight.w600, height: 1.4),
                         ),
                       ],
                     ),
@@ -200,16 +197,19 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
                   const SizedBox(height: 20),
 
                   // Answer input
-                  Text('YOUR INSTRUCTION / CLARIFICATION', style: AppTheme.labelUppercase),
+                  Text('YOUR INSTRUCTION / CLARIFICATION', style: T.labelUpXs),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _resolutionController,
                     maxLines: 4,
+                    style: T.bodyMd,
                     decoration: InputDecoration(
                       hintText: 'e.g. Export as CSV format with standard comma delimiter...',
+                      hintStyle: T.bodySm,
                       filled: true,
-                      fillColor: AppTheme.surfaceRaised,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      fillColor: T.surfaceAlt,
+                      enabledBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.border)),
+                      focusedBorder: const OutlineInputBorder(borderRadius: T.zero, borderSide: BorderSide(color: T.onSurface)),
                     ),
                   ),
 
@@ -221,13 +221,14 @@ class _IssueResolverModalState extends State<IssueResolverModal> {
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _handleResolve,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: AppTheme.onPrimary,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        backgroundColor: T.primary,
+                        foregroundColor: T.onPrimary,
+                        elevation: 0,
+                        shape: const RoundedRectangleBorder(borderRadius: T.zero),
                       ),
                       child: Text(
-                        _isSubmitting ? 'Resuming Guild...' : 'Submit Resolution & Resume',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                        _isSubmitting ? 'RESUMING GUILD...' : 'Submit Resolution & Resume',
+                        style: T.labelUpMd.copyWith(color: T.onPrimary, fontWeight: FontWeight.w700),
                       ),
                     ),
                   ),

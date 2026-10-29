@@ -35,15 +35,14 @@ class ApiException implements Exception {
 class DevPilotApiClient {
   String _baseUrl;
   final http.Client _httpClient;
-  final WebSocketChannel Function(Uri uri)? _webSocketFactory;
+  final WebSocketChannel Function(Uri uri)? webSocketFactory;
 
   DevPilotApiClient({
     String? baseUrl,
     http.Client? httpClient,
-    WebSocketChannel Function(Uri uri)? webSocketFactory,
+    this.webSocketFactory,
   })  : _baseUrl = baseUrl ?? defaultBaseUrl,
-        _httpClient = httpClient ?? http.Client(),
-        _webSocketFactory = webSocketFactory;
+        _httpClient = httpClient ?? http.Client();
 
   /// Default host auto-detects Android emulator (10.0.2.2) vs iOS / Desktop (127.0.0.1).
   static String get defaultBaseUrl {
@@ -125,7 +124,7 @@ class DevPilotApiClient {
       body: jsonEncode({
         'request': request,
         'repo_path': repoPath,
-        if (title != null) 'title': title,
+        'title': ?title,
         'start': start,
       }),
     );
@@ -214,7 +213,7 @@ class DevPilotApiClient {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'approved': approved,
-        if (note != null) 'note': note,
+        'note': ?note,
       }),
     );
     return _handleJson(response);
@@ -320,8 +319,9 @@ class DevPilotApiClient {
     final wsBase = _baseUrl.replaceFirst(RegExp(r'^http'), 'ws');
     final query = afterSeq > 0 ? '?after_seq=$afterSeq' : '';
     final wsUri = Uri.parse('$wsBase/api/v1/realtime/missions/$missionId$query');
-    if (_webSocketFactory != null) {
-      return _webSocketFactory!(wsUri);
+    final factory = webSocketFactory;
+    if (factory != null) {
+      return factory(wsUri);
     }
     return WebSocketChannel.connect(wsUri);
   }
