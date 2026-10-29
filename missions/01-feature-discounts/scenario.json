@@ -1,0 +1,8 @@
+{
+  "id": "01-feature-discounts",
+  "title": "Feature implementation: discount codes",
+  "ps_scenario": "Feature Implementation — add a feature while preserving existing behavior",
+  "request": "Add discount codes to the shopping cart. Cart.apply_discount(code) must accept SAVE10 (10% off the subtotal) and FLAT5 (5.00 off the subtotal, never below zero); any other code raises ValueError. Add Cart.total() that returns the subtotal after the applied discount (or the subtotal when no discount is applied). Existing behaviour, including subtotal(), must not change.",
+  "clarification_answer": null,
+  "expect": "Completed; hidden checks pass; existing tests still pass."
+}

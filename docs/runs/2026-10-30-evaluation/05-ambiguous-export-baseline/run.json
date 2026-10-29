@@ -1,0 +1,148 @@
+{
+ "result": {
+  "scenario": "05-ambiguous-export",
+  "mode": "baseline",
+  "mission_id": "msn_1111c1ee97f8",
+  "outcome": "failed",
+  "claimed_success": false,
+  "hidden": {
+   "passed": false,
+   "tests_passed": 0,
+   "tests_failed": 3,
+   "exit_code": 1,
+   "output_tail": "py:18: AssertionError\n____________________ test_empty_report_is_just_the_header _____________________\n\n    def test_empty_report_is_just_the_header():\n>       assert export_csv([]).strip() == \",\".join(COLUMNS)\nE       AssertionError: assert '' == 'region,product,units,revenue'\nE         \nE         - region,product,units,revenue\n\n..\\..\\..\\..\\..\\..\\..\\devpilot-checks-monkkpxc\\checks\\test_acceptance.py:24: AssertionError\n============================== warnings summary ===============================\nchecks/test_acceptance.py::test_first_line_is_a_header\n  C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:1177: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16\n    return asyncio.get_event_loop_policy()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-monkkpxc\\checks\\test_acceptance.py::test_first_line_is_a_header\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-monkkpxc\\checks\\test_acceptance.py::test_fields_with_commas_and_quotes_round_trip_through_a_csv_reader\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-monkkpxc\\checks\\test_acceptance.py::test_empty_report_is_just_the_header\n3 failed, 1 warning in 0.32s\nC:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n"
+  },
+  "metrics": {
+   "duration_s": 0.3,
+   "llm_tokens": 0,
+   "tool_calls": 0,
+   "tool_outcomes": {},
+   "agents": [
+    "Solo"
+   ],
+   "tasks": 0,
+   "feedback_loops": 0,
+   "reassignments": 0,
+   "retries": 0,
+   "escalations": 0,
+   "clarifications": 0,
+   "messages": 0,
+   "test_runs": 0,
+   "test_runs_failed": 0,
+   "criteria_met": 0,
+   "criteria_total": 0,
+   "findings": 0
+  },
+  "human_answers": [],
+  "reason": "llm_unavailable",
+  "verified_success": false
+ },
+ "scenario": {
+  "id": "05-ambiguous-export",
+  "title": "Unexpected condition: an ambiguous requirement",
+  "ps_scenario": "Unexpected Conditions \u2014 an ambiguous requirement",
+  "request": "The finance team says the sales export is not good enough. Make the export better.",
+  "clarification_answer": "Better means two things: the CSV must start with a header row of the column names, and values that contain commas or quotes must be quoted properly so spreadsheets read them correctly. Nothing else needs to change.",
+  "expect": "The guild pauses to ask what 'better' means (mission goes to awaiting_human), resumes with the answer, then completes; hidden checks encode the answer, so guessing fails them."
+ },
+ "mission": {
+  "mission_id": "msn_1111c1ee97f8",
+  "title": "[baseline] Unexpected condition: an ambiguous requirement",
+  "request": "The finance team says the sales export is not good enough. Make the export better.",
+  "repo_path": "D:\\Projects\\devPolit\\missions\\05-ambiguous-export\\repo",
+  "workspace_path": "C:\\Users\\kaush\\AppData\\Local\\Temp\\claude\\D--Projects-devPolit\\192fda04-40d3-43eb-963e-77e53f308012\\scratchpad\\evaldata\\workspaces\\msn_1111c1ee97f8",
+  "baseline_commit": "cdb8183e4fc23970011d05fd213044625636ec38",
+  "status": "stopped",
+  "status_reason": "baseline run finished",
+  "objectives": [],
+  "acceptance_criteria": [],
+  "tasks": [],
+  "findings": [],
+  "decisions": [],
+  "issues": [],
+  "hires": [],
+  "inbox_cursors": {},
+  "report": null,
+  "application": null,
+  "created_by": "operator",
+  "created_at": 1793307312284,
+  "updated_at": 1793307312534,
+  "version": 2
+ },
+ "events": [
+  {
+   "event_id": "evt_bca0cbfc7633",
+   "mission_id": "msn_1111c1ee97f8",
+   "kind": "mission_created",
+   "at": 1793307312534,
+   "seq": 1,
+   "data": {
+    "title": "[baseline] Unexpected condition: an ambiguous requirement",
+    "request": "The finance team says the sales export is not good enough. Make the export better.",
+    "repo_path": "D:\\Projects\\devPolit\\missions\\05-ambiguous-export\\repo",
+    "baseline_commit": "cdb8183e4fc23970011d05fd213044625636ec38",
+    "created_by": "operator"
+   }
+  },
+  {
+   "event_id": "evt_94bf00bebb98",
+   "mission_id": "msn_1111c1ee97f8",
+   "kind": "start",
+   "at": 1793307312534,
+   "seq": 2,
+   "data": {
+    "agent": "Solo",
+    "task": "You are working alone on this request.",
+    "team": "baseline",
+    "task_id": null
+   }
+  },
+  {
+   "event_id": "evt_993146fa817c",
+   "mission_id": "msn_1111c1ee97f8",
+   "kind": "finish",
+   "at": 1793307312534,
+   "seq": 3,
+   "data": {
+    "agent": "Solo",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": null,
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_b641f9b444d6",
+   "mission_id": "msn_1111c1ee97f8",
+   "kind": "log",
+   "at": 1793307312534,
+   "seq": 4,
+   "data": {
+    "level": "warn",
+    "text": "Solo finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_7e1902b6ef8f",
+   "mission_id": "msn_1111c1ee97f8",
+   "kind": "mission_status",
+   "at": 1793307312534,
+   "seq": 5,
+   "data": {
+    "status": "stopped",
+    "reason": "baseline run finished",
+    "by": "harness",
+    "progress": {
+     "tasks": {},
+     "criteria": {},
+     "open_findings": 0,
+     "open_issues": 0
+    }
+   }
+  }
+ ],
+ "audit": [],
+ "evidence": [],
+ "messages": []
+}

@@ -1,0 +1,8 @@
+{
+  "id": "05-ambiguous-export",
+  "title": "Unexpected condition: an ambiguous requirement",
+  "ps_scenario": "Unexpected Conditions — an ambiguous requirement",
+  "request": "The finance team says the sales export is not good enough. Make the export better.",
+  "clarification_answer": "Better means two things: the CSV must start with a header row of the column names, and values that contain commas or quotes must be quoted properly so spreadsheets read them correctly. Nothing else needs to change.",
+  "expect": "The guild pauses to ask what 'better' means (mission goes to awaiting_human), resumes with the answer, then completes; hidden checks encode the answer, so guessing fails them."
+}

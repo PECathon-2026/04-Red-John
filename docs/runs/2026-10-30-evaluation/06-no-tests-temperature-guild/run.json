@@ -1,0 +1,1557 @@
+{
+ "result": {
+  "scenario": "06-no-tests-temperature",
+  "mode": "guild",
+  "mission_id": "msn_0d50fc92c299",
+  "outcome": "awaiting_human",
+  "claimed_success": false,
+  "hidden": {
+   "passed": false,
+   "tests_passed": 1,
+   "tests_failed": 8,
+   "exit_code": 1,
+   "output_tail": "/test_acceptance.py::test_fahrenheit_to_celsius[212-100]\n  C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:1177: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16\n    return asyncio.get_event_loop_policy()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_fahrenheit_to_celsius[212-100]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_fahrenheit_to_celsius[32-0]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_fahrenheit_to_celsius[-40--40]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_fahrenheit_to_celsius[98.6-37]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_round_trip[-40]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_round_trip[0]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_round_trip[37]\nFAILED ..\\..\\..\\..\\..\\..\\..\\devpilot-checks-90r20m3d\\checks\\test_acceptance.py::test_round_trip[100]\n8 failed, 1 passed, 1 warning in 0.35s\nC:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n"
+  },
+  "metrics": {
+   "duration_s": 67.1,
+   "llm_tokens": 7643,
+   "tool_calls": 3,
+   "tool_outcomes": {
+    "ok": 3
+   },
+   "agents": [
+    "Kenji",
+    "Hana",
+    "Ryo"
+   ],
+   "tasks": 3,
+   "feedback_loops": 0,
+   "reassignments": 0,
+   "retries": 4,
+   "escalations": 2,
+   "clarifications": 0,
+   "messages": 0,
+   "test_runs": 0,
+   "test_runs_failed": 0,
+   "criteria_met": 0,
+   "criteria_total": 0,
+   "findings": 0
+  },
+  "human_answers": [],
+  "reason": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+  "verified_success": false
+ },
+ "scenario": {
+  "id": "06-no-tests-temperature",
+  "title": "Unexpected condition: no test runner (an unavailable tool)",
+  "ps_scenario": "Unexpected Conditions \u2014 an unavailable tool",
+  "request": "The weather widget shows wrong temperatures: fahrenheit_to_celsius(212) should be 100 but it is not. Fix the conversion.",
+  "clarification_answer": null,
+  "expect": "run_tests finds no test runner (recorded as evidence); Atlas has a test author add a test setup and tests, so the fix is verified by a real run; hidden checks pass."
+ },
+ "mission": {
+  "mission_id": "msn_0d50fc92c299",
+  "title": "Unexpected condition: no test runner (an unavailable tool)",
+  "request": "The weather widget shows wrong temperatures: fahrenheit_to_celsius(212) should be 100 but it is not. Fix the conversion.",
+  "repo_path": "D:\\Projects\\devPolit\\missions\\06-no-tests-temperature\\repo",
+  "workspace_path": "C:\\Users\\kaush\\AppData\\Local\\Temp\\claude\\D--Projects-devPolit\\192fda04-40d3-43eb-963e-77e53f308012\\scratchpad\\evaldata\\workspaces\\msn_0d50fc92c299",
+  "baseline_commit": "5b9386c1d47b469783ebd8316207ae9a1cbbd070",
+  "status": "awaiting_human",
+  "status_reason": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+  "objectives": [],
+  "acceptance_criteria": [],
+  "tasks": [
+   {
+    "id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "description": "Turn the request into objectives and testable acceptance criteria.",
+    "kind": "analysis",
+    "status": "blocked",
+    "depends_on": [],
+    "required_skills": [
+     "requirements"
+    ],
+    "criteria_ids": [],
+    "assignee": "Kenji",
+    "attempts": 3,
+    "max_attempts": 3,
+    "failures": 0,
+    "result_summary": "The language model was unavailable: No LLM provider could serve the request",
+    "origin": "bootstrap:requirements",
+    "created_by": "Atlas",
+    "created_at": 1793307337537,
+    "updated_at": 1793307379614
+   },
+   {
+    "id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "description": "Map the files, conventions and test setup relevant to the request; record the test baseline.",
+    "kind": "analysis",
+    "status": "blocked",
+    "depends_on": [],
+    "required_skills": [
+     "recon"
+    ],
+    "criteria_ids": [],
+    "assignee": "Hana",
+    "attempts": 3,
+    "max_attempts": 3,
+    "failures": 0,
+    "result_summary": "The language model was unavailable: No LLM provider could serve the request",
+    "origin": "bootstrap:recon",
+    "created_by": "Atlas",
+    "created_at": 1793307337537,
+    "updated_at": 1793307379615
+   },
+   {
+    "id": "tsk_255f95d2bf81",
+    "title": "Plan the work",
+    "description": "Break the mission into tasks using the acceptance criteria and the recon findings.",
+    "kind": "plan",
+    "status": "pending",
+    "depends_on": [
+     "tsk_194f132b82fe",
+     "tsk_45bb0904df8e"
+    ],
+    "required_skills": [],
+    "criteria_ids": [],
+    "assignee": null,
+    "attempts": 0,
+    "max_attempts": 3,
+    "failures": 0,
+    "result_summary": null,
+    "origin": "bootstrap:plan",
+    "created_by": "Atlas",
+    "created_at": 1793307337537,
+    "updated_at": 1793307337537
+   }
+  ],
+  "findings": [],
+  "decisions": [
+   {
+    "id": "dec_e5436fa08cf4",
+    "by": "Atlas",
+    "decision": "continue",
+    "reason": "Mission opened: Maya staffs the Shogun's Council; analysis and reconnaissance run in parallel, then planning.",
+    "task_id": null,
+    "at": 1793307314932
+   },
+   {
+    "id": "dec_65c0eb689e61",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Analyse the request' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307364572
+   },
+   {
+    "id": "dec_42461b129e67",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Reconnoitre the codebase' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307369581
+   },
+   {
+    "id": "dec_c44d111f8ba2",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Analyse the request' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307374602
+   },
+   {
+    "id": "dec_9f2662b474e0",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Reconnoitre the codebase' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307379611
+   },
+   {
+    "id": "dec_e458a7ff0547",
+    "by": "Atlas",
+    "decision": "escalate",
+    "reason": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307379614
+   },
+   {
+    "id": "dec_34a4d1cb0f1d",
+    "by": "Atlas",
+    "decision": "escalate",
+    "reason": "'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307379616
+   }
+  ],
+  "issues": [
+   {
+    "id": "iss_92d03e23cde5",
+    "raised_by": "Atlas",
+    "kind": "blocker",
+    "text": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "needs_human": true,
+    "task_id": "tsk_194f132b82fe",
+    "status": "open",
+    "resolution": null,
+    "resolved_by": null,
+    "at": 1793307379614
+   },
+   {
+    "id": "iss_77e9703e6791",
+    "raised_by": "Atlas",
+    "kind": "blocker",
+    "text": "'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "needs_human": true,
+    "task_id": "tsk_45bb0904df8e",
+    "status": "open",
+    "resolution": null,
+    "resolved_by": null,
+    "at": 1793307379615
+   }
+  ],
+  "hires": [
+   {
+    "agent": "Kenji",
+    "agent_id": "planning_kenji",
+    "team": "planning",
+    "role": "Requirements Analyst",
+    "badge": "DVP-003-KEN",
+    "clearance": "GREEN",
+    "mandate": "Create objectives and acceptance criteria to confirm fahrenheit_to_celsius(212) equals 100.",
+    "reason": "Turn the request into objectives and acceptance criteria",
+    "score": 1.0,
+    "matched_skills": [
+     "requirements"
+    ],
+    "task_id": null,
+    "hired_by": "Maya",
+    "hired_at": 1793307334871,
+    "released_at": null,
+    "release_reason": null
+   },
+   {
+    "agent": "Hana",
+    "agent_id": "planning_hana",
+    "team": "planning",
+    "role": "Codebase Scout",
+    "badge": "DVP-004-HAN",
+    "clearance": "GREEN",
+    "mandate": "Survey the entire repository, documenting structure, conventions, and test baseline before any modifications.",
+    "reason": "Map the codebase, its conventions and its test baseline",
+    "score": 1.0,
+    "matched_skills": [
+     "recon"
+    ],
+    "task_id": null,
+    "hired_by": "Maya",
+    "hired_at": 1793307336633,
+    "released_at": null,
+    "release_reason": null
+   },
+   {
+    "agent": "Ryo",
+    "agent_id": "planning_ryo",
+    "team": "planning",
+    "role": "Task Planner",
+    "badge": "DVP-005-RYO",
+    "clearance": "GREEN",
+    "mandate": "Break the temperature conversion bug into parallel tasks for analysis, debugging, and refactoring.",
+    "reason": "Break the mission into a task graph",
+    "score": 1.0,
+    "matched_skills": [
+     "planning"
+    ],
+    "task_id": null,
+    "hired_by": "Maya",
+    "hired_at": 1793307337536,
+    "released_at": null,
+    "release_reason": null
+   }
+  ],
+  "inbox_cursors": {},
+  "report": null,
+  "application": null,
+  "created_by": "operator",
+  "created_at": 1793307314685,
+  "updated_at": 1793307379616,
+  "version": 34
+ },
+ "events": [
+  {
+   "event_id": "evt_9f84c4643d4f",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "mission_created",
+   "at": 1793307314932,
+   "seq": 1,
+   "data": {
+    "title": "Unexpected condition: no test runner (an unavailable tool)",
+    "request": "The weather widget shows wrong temperatures: fahrenheit_to_celsius(212) should be 100 but it is not. Fix the conversion.",
+    "repo_path": "D:\\Projects\\devPolit\\missions\\06-no-tests-temperature\\repo",
+    "baseline_commit": "5b9386c1d47b469783ebd8316207ae9a1cbbd070",
+    "created_by": "operator"
+   }
+  },
+  {
+   "event_id": "evt_45c60ce50b0a",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "mission_status",
+   "at": 1793307314932,
+   "seq": 2,
+   "data": {
+    "status": "planning",
+    "reason": "mission opened",
+    "by": "Atlas",
+    "progress": {
+     "tasks": {},
+     "criteria": {},
+     "open_findings": 0,
+     "open_issues": 0
+    }
+   }
+  },
+  {
+   "event_id": "evt_9ed5d109b2e9",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307314932,
+   "seq": 3,
+   "data": {
+    "id": "dec_e5436fa08cf4",
+    "by": "Atlas",
+    "decision": "continue",
+    "reason": "Mission opened: Maya staffs the Shogun's Council; analysis and reconnaissance run in parallel, then planning.",
+    "task_id": null,
+    "at": 1793307314932
+   }
+  },
+  {
+   "event_id": "evt_80a96e2fc80c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307314932,
+   "seq": 4,
+   "data": {
+    "level": "action",
+    "text": "Atlas [continue]: Mission opened: Maya staffs the Shogun's Council; analysis and reconnaissance run in parallel, then planning."
+   }
+  },
+  {
+   "event_id": "evt_bc7cab83dac5",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307314932,
+   "seq": 5,
+   "data": {
+    "level": "action",
+    "text": "Maya reviewing the request. Only load-bearing specialists will be hired."
+   }
+  },
+  {
+   "event_id": "evt_9f39207aaf32",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "hire",
+   "at": 1793307334871,
+   "seq": 6,
+   "data": {
+    "agent": "Kenji",
+    "team": "Planning",
+    "role": "Requirements Analyst",
+    "badge": "DVP-003-KEN",
+    "clearance": "GREEN",
+    "mandate": "Create objectives and acceptance criteria to confirm fahrenheit_to_celsius(212) equals 100.",
+    "reason": "Turn the request into objectives and acceptance criteria",
+    "score": 1.0,
+    "matched_skills": [
+     "requirements"
+    ],
+    "task_id": null
+   }
+  },
+  {
+   "event_id": "evt_c67303bf25f7",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307334871,
+   "seq": 7,
+   "data": {
+    "level": "action",
+    "text": "Maya \u2192 hire Kenji (Requirements Analyst; requirements; score 1.00) for: Turn the request into objectives and acceptance criteria"
+   }
+  },
+  {
+   "event_id": "evt_af1cfc285768",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "hire",
+   "at": 1793307336634,
+   "seq": 8,
+   "data": {
+    "agent": "Hana",
+    "team": "Planning",
+    "role": "Codebase Scout",
+    "badge": "DVP-004-HAN",
+    "clearance": "GREEN",
+    "mandate": "Survey the entire repository, documenting structure, conventions, and test baseline before any modifications.",
+    "reason": "Map the codebase, its conventions and its test baseline",
+    "score": 1.0,
+    "matched_skills": [
+     "recon"
+    ],
+    "task_id": null
+   }
+  },
+  {
+   "event_id": "evt_5c2cd3fc2ac5",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307336634,
+   "seq": 9,
+   "data": {
+    "level": "action",
+    "text": "Maya \u2192 hire Hana (Codebase Scout; recon; score 1.00) for: Map the codebase, its conventions and its test baseline"
+   }
+  },
+  {
+   "event_id": "evt_3efa903823a5",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "hire",
+   "at": 1793307337536,
+   "seq": 10,
+   "data": {
+    "agent": "Ryo",
+    "team": "Planning",
+    "role": "Task Planner",
+    "badge": "DVP-005-RYO",
+    "clearance": "GREEN",
+    "mandate": "Break the temperature conversion bug into parallel tasks for analysis, debugging, and refactoring.",
+    "reason": "Break the mission into a task graph",
+    "score": 1.0,
+    "matched_skills": [
+     "planning"
+    ],
+    "task_id": null
+   }
+  },
+  {
+   "event_id": "evt_f64e08211953",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307337536,
+   "seq": 11,
+   "data": {
+    "level": "action",
+    "text": "Maya \u2192 hire Ryo (Task Planner; planning; score 1.00) for: Break the mission into a task graph"
+   }
+  },
+  {
+   "event_id": "evt_6cd871b4ff61",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307337537,
+   "seq": 12,
+   "data": {
+    "level": "success",
+    "text": "Maya: opening task force is Kenji, Hana, Ryo. More will be hired as the plan shows what the work needs."
+   }
+  },
+  {
+   "event_id": "evt_a861a4cd3710",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "plan_updated",
+   "at": 1793307337537,
+   "seq": 13,
+   "data": {
+    "action": "tasks_added",
+    "by": "Atlas",
+    "tasks": [
+     {
+      "id": "tsk_194f132b82fe",
+      "title": "Analyse the request",
+      "description": "Turn the request into objectives and testable acceptance criteria.",
+      "kind": "analysis",
+      "status": "pending",
+      "depends_on": [],
+      "required_skills": [
+       "requirements"
+      ],
+      "criteria_ids": [],
+      "assignee": null,
+      "attempts": 0,
+      "max_attempts": 3,
+      "failures": 0,
+      "result_summary": null,
+      "origin": "bootstrap:requirements",
+      "created_by": "Atlas",
+      "created_at": 1793307337537,
+      "updated_at": 1793307337537
+     },
+     {
+      "id": "tsk_45bb0904df8e",
+      "title": "Reconnoitre the codebase",
+      "description": "Map the files, conventions and test setup relevant to the request; record the test baseline.",
+      "kind": "analysis",
+      "status": "pending",
+      "depends_on": [],
+      "required_skills": [
+       "recon"
+      ],
+      "criteria_ids": [],
+      "assignee": null,
+      "attempts": 0,
+      "max_attempts": 3,
+      "failures": 0,
+      "result_summary": null,
+      "origin": "bootstrap:recon",
+      "created_by": "Atlas",
+      "created_at": 1793307337537,
+      "updated_at": 1793307337537
+     },
+     {
+      "id": "tsk_255f95d2bf81",
+      "title": "Plan the work",
+      "description": "Break the mission into tasks using the acceptance criteria and the recon findings.",
+      "kind": "plan",
+      "status": "pending",
+      "depends_on": [
+       "tsk_194f132b82fe",
+       "tsk_45bb0904df8e"
+      ],
+      "required_skills": [],
+      "criteria_ids": [],
+      "assignee": null,
+      "attempts": 0,
+      "max_attempts": 3,
+      "failures": 0,
+      "result_summary": null,
+      "origin": "bootstrap:plan",
+      "created_by": "Atlas",
+      "created_at": 1793307337537,
+      "updated_at": 1793307337537
+     }
+    ]
+   }
+  },
+  {
+   "event_id": "evt_8914e4e7d4de",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307337538,
+   "seq": 14,
+   "data": {
+    "level": "action",
+    "text": "Atlas dispatching in parallel: Kenji \u2192 Analyse the request, Hana \u2192 Reconnoitre the codebase"
+   }
+  },
+  {
+   "event_id": "evt_6a2b405d393c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307337538,
+   "seq": 15,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "pending",
+    "assignee": "Kenji",
+    "attempts": 0,
+    "summary": null
+   }
+  },
+  {
+   "event_id": "evt_d44ecd0ad02e",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307337538,
+   "seq": 16,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "in_progress",
+    "assignee": "Kenji",
+    "attempts": 1,
+    "summary": null
+   }
+  },
+  {
+   "event_id": "evt_0954f248e65c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307337538,
+   "seq": 17,
+   "data": {
+    "agent": "Kenji",
+    "task": "Analyse the request",
+    "team": "planning",
+    "task_id": "tsk_194f132b82fe"
+   }
+  },
+  {
+   "event_id": "evt_c5c2321e936a",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307337539,
+   "seq": 18,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "pending",
+    "assignee": "Hana",
+    "attempts": 0,
+    "summary": null
+   }
+  },
+  {
+   "event_id": "evt_e20dbef96b06",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307337539,
+   "seq": 19,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "in_progress",
+    "assignee": "Hana",
+    "attempts": 1,
+    "summary": null
+   }
+  },
+  {
+   "event_id": "evt_32479b9f8a4c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307337540,
+   "seq": 20,
+   "data": {
+    "agent": "Hana",
+    "task": "Reconnoitre the codebase",
+    "team": "planning",
+    "task_id": "tsk_45bb0904df8e"
+   }
+  },
+  {
+   "event_id": "evt_85f7f8bb2aa3",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_call",
+   "at": 1793307338075,
+   "seq": 21,
+   "data": {
+    "agent": "Kenji",
+    "tool": "find_files",
+    "args": {
+     "path": ".",
+     "pattern": "*fahrenheit_to_celsius*"
+    },
+    "class": "GREEN",
+    "reason": "reads '.'"
+   }
+  },
+  {
+   "event_id": "evt_eee97d0219ff",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_result",
+   "at": 1793307338077,
+   "seq": 22,
+   "data": {
+    "agent": "Kenji",
+    "tool": "find_files",
+    "args": {
+     "path": ".",
+     "pattern": "*fahrenheit_to_celsius*"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "found 0 file(s)",
+    "error": "",
+    "duration_s": 0.002
+   }
+  },
+  {
+   "event_id": "evt_91bfda4b8d88",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307338077,
+   "seq": 23,
+   "data": {
+    "level": "action",
+    "text": "Kenji \u2192 find_files: found 0 file(s)"
+   }
+  },
+  {
+   "event_id": "evt_68e38e372c81",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_call",
+   "at": 1793307342059,
+   "seq": 24,
+   "data": {
+    "agent": "Kenji",
+    "tool": "search_text",
+    "args": {
+     "limit": "20",
+     "path": ".",
+     "query": "celsius",
+     "regex": "false"
+    },
+    "class": "GREEN",
+    "reason": "reads '.'"
+   }
+  },
+  {
+   "event_id": "evt_654d396bd9fe",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_result",
+   "at": 1793307342062,
+   "seq": 25,
+   "data": {
+    "agent": "Kenji",
+    "tool": "search_text",
+    "args": {
+     "limit": "20",
+     "path": ".",
+     "query": "celsius",
+     "regex": "false"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "4 match(es) for 'celsius' in 1 file(s)",
+    "error": "",
+    "duration_s": 0.003
+   }
+  },
+  {
+   "event_id": "evt_d3b1652d5deb",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307342062,
+   "seq": 26,
+   "data": {
+    "level": "action",
+    "text": "Kenji \u2192 search_text: 4 match(es) for 'celsius' in 1 file(s)"
+   }
+  },
+  {
+   "event_id": "evt_1736f0429c57",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307359178,
+   "seq": 27,
+   "data": {
+    "agent": "Hana",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_45bb0904df8e",
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_ef1a8c207fc7",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307359178,
+   "seq": 28,
+   "data": {
+    "level": "warn",
+    "text": "Hana finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_869fc4aa44bf",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_call",
+   "at": 1793307359558,
+   "seq": 29,
+   "data": {
+    "agent": "Kenji",
+    "tool": "read_file",
+    "args": {
+     "limit": "200",
+     "offset": "1",
+     "path": "units/convert.py"
+    },
+    "class": "GREEN",
+    "reason": "reads 'units/convert.py'"
+   }
+  },
+  {
+   "event_id": "evt_8624a35f4942",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "tool_result",
+   "at": 1793307359559,
+   "seq": 30,
+   "data": {
+    "agent": "Kenji",
+    "tool": "read_file",
+    "args": {
+     "limit": "200",
+     "offset": "1",
+     "path": "units/convert.py"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "read units/convert.py (16 lines)",
+    "error": "",
+    "duration_s": 0.001
+   }
+  },
+  {
+   "event_id": "evt_5e4786cf02cf",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307359559,
+   "seq": 31,
+   "data": {
+    "level": "action",
+    "text": "Kenji \u2192 read_file: read units/convert.py (16 lines)"
+   }
+  },
+  {
+   "event_id": "evt_9d7ba8c90be9",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307359559,
+   "seq": 32,
+   "data": {
+    "agent": "Kenji",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_194f132b82fe",
+    "iterations": 4,
+    "tool_calls": 3
+   }
+  },
+  {
+   "event_id": "evt_8d3000c851bd",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307359559,
+   "seq": 33,
+   "data": {
+    "level": "warn",
+    "text": "Kenji finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_c36767b9a1e7",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307364572,
+   "seq": 34,
+   "data": {
+    "id": "dec_65c0eb689e61",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Analyse the request' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307364572
+   }
+  },
+  {
+   "event_id": "evt_96b677de997c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307364572,
+   "seq": 35,
+   "data": {
+    "level": "action",
+    "text": "Atlas [retry]: 'Analyse the request' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause."
+   }
+  },
+  {
+   "event_id": "evt_63924aa42466",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307364572,
+   "seq": 36,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "pending",
+    "assignee": "Kenji",
+    "attempts": 1,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_5402e4941712",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307369582,
+   "seq": 37,
+   "data": {
+    "id": "dec_42461b129e67",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Reconnoitre the codebase' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307369581
+   }
+  },
+  {
+   "event_id": "evt_0a4d82850b7e",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307369582,
+   "seq": 38,
+   "data": {
+    "level": "action",
+    "text": "Atlas [retry]: 'Reconnoitre the codebase' attempt 1/3: the language model is unavailable (llm_unavailable). Retrying after a pause."
+   }
+  },
+  {
+   "event_id": "evt_c7f7d2322d09",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307369583,
+   "seq": 39,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "pending",
+    "assignee": "Hana",
+    "attempts": 1,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_ed5b90311e8c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307369583,
+   "seq": 40,
+   "data": {
+    "level": "action",
+    "text": "Atlas dispatching in parallel: Kenji \u2192 Analyse the request, Hana \u2192 Reconnoitre the codebase"
+   }
+  },
+  {
+   "event_id": "evt_a958a2bdcf82",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307369584,
+   "seq": 41,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "pending",
+    "assignee": "Kenji",
+    "attempts": 1,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_96f5881aebaa",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307369585,
+   "seq": 42,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "in_progress",
+    "assignee": "Kenji",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_b079caadec53",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307369586,
+   "seq": 43,
+   "data": {
+    "agent": "Kenji",
+    "task": "Analyse the request",
+    "team": "planning",
+    "task_id": "tsk_194f132b82fe"
+   }
+  },
+  {
+   "event_id": "evt_6547c998ad34",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307369587,
+   "seq": 44,
+   "data": {
+    "agent": "Kenji",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_194f132b82fe",
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_04d3656ab103",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307369587,
+   "seq": 45,
+   "data": {
+    "level": "warn",
+    "text": "Kenji finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_a34ab16009f3",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307369587,
+   "seq": 46,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "pending",
+    "assignee": "Hana",
+    "attempts": 1,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_f6db80527aaf",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307369588,
+   "seq": 47,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "in_progress",
+    "assignee": "Hana",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_af6f7c023d06",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307369589,
+   "seq": 48,
+   "data": {
+    "agent": "Hana",
+    "task": "Reconnoitre the codebase",
+    "team": "planning",
+    "task_id": "tsk_45bb0904df8e"
+   }
+  },
+  {
+   "event_id": "evt_fa42599d22d7",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307369589,
+   "seq": 49,
+   "data": {
+    "agent": "Hana",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_45bb0904df8e",
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_10fd04b869a2",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307369589,
+   "seq": 50,
+   "data": {
+    "level": "warn",
+    "text": "Hana finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_f931646f38dd",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307374603,
+   "seq": 51,
+   "data": {
+    "id": "dec_c44d111f8ba2",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Analyse the request' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307374602
+   }
+  },
+  {
+   "event_id": "evt_3610e845af87",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307374603,
+   "seq": 52,
+   "data": {
+    "level": "action",
+    "text": "Atlas [retry]: 'Analyse the request' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause."
+   }
+  },
+  {
+   "event_id": "evt_5a465a504a9a",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307374603,
+   "seq": 53,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "pending",
+    "assignee": "Kenji",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_9f40462886d1",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307379611,
+   "seq": 54,
+   "data": {
+    "id": "dec_9f2662b474e0",
+    "by": "Atlas",
+    "decision": "retry",
+    "reason": "'Reconnoitre the codebase' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause.",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307379611
+   }
+  },
+  {
+   "event_id": "evt_943cca116c78",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379611,
+   "seq": 55,
+   "data": {
+    "level": "action",
+    "text": "Atlas [retry]: 'Reconnoitre the codebase' attempt 2/3: the language model is unavailable (llm_unavailable). Retrying after a pause."
+   }
+  },
+  {
+   "event_id": "evt_fb65d01fe067",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379611,
+   "seq": 56,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "pending",
+    "assignee": "Hana",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_0c074db7a711",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379612,
+   "seq": 57,
+   "data": {
+    "level": "action",
+    "text": "Atlas dispatching in parallel: Kenji \u2192 Analyse the request, Hana \u2192 Reconnoitre the codebase"
+   }
+  },
+  {
+   "event_id": "evt_0d80c5c935a6",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379612,
+   "seq": 58,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "pending",
+    "assignee": "Kenji",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_e7f651e6bfbd",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379612,
+   "seq": 59,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "in_progress",
+    "assignee": "Kenji",
+    "attempts": 3,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_5698e8c2079e",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307379612,
+   "seq": 60,
+   "data": {
+    "agent": "Kenji",
+    "task": "Analyse the request",
+    "team": "planning",
+    "task_id": "tsk_194f132b82fe"
+   }
+  },
+  {
+   "event_id": "evt_07fc7bfde596",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307379613,
+   "seq": 61,
+   "data": {
+    "agent": "Kenji",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_194f132b82fe",
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_2f89e94bfb96",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379613,
+   "seq": 62,
+   "data": {
+    "level": "warn",
+    "text": "Kenji finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_faa697461339",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379613,
+   "seq": 63,
+   "data": {
+    "action": "assigned",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "pending",
+    "assignee": "Hana",
+    "attempts": 2,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_505e95c2b2c1",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379613,
+   "seq": 64,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "in_progress",
+    "assignee": "Hana",
+    "attempts": 3,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_8928e4898e9c",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "start",
+   "at": 1793307379614,
+   "seq": 65,
+   "data": {
+    "agent": "Hana",
+    "task": "Reconnoitre the codebase",
+    "team": "planning",
+    "task_id": "tsk_45bb0904df8e"
+   }
+  },
+  {
+   "event_id": "evt_027283f8837a",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "finish",
+   "at": 1793307379614,
+   "seq": 66,
+   "data": {
+    "agent": "Hana",
+    "status": "failed",
+    "summary": "The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_45bb0904df8e",
+    "iterations": 1,
+    "tool_calls": 0
+   }
+  },
+  {
+   "event_id": "evt_b843398ffaec",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379614,
+   "seq": 67,
+   "data": {
+    "level": "warn",
+    "text": "Hana finished (failed): The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_d433a0ba04e1",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379614,
+   "seq": 68,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_194f132b82fe",
+    "title": "Analyse the request",
+    "status": "blocked",
+    "assignee": "Kenji",
+    "attempts": 3,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_d4f1be2894fe",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "issue",
+   "at": 1793307379614,
+   "seq": 69,
+   "data": {
+    "action": "raised",
+    "id": "iss_92d03e23cde5",
+    "raised_by": "Atlas",
+    "kind": "blocker",
+    "text": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "needs_human": true,
+    "task_id": "tsk_194f132b82fe",
+    "status": "open",
+    "resolution": null,
+    "resolved_by": null,
+    "at": 1793307379614
+   }
+  },
+  {
+   "event_id": "evt_3391844967a1",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379614,
+   "seq": 70,
+   "data": {
+    "level": "warn",
+    "text": "Atlas needs a human: 'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_ab135f406c9e",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307379614,
+   "seq": 71,
+   "data": {
+    "id": "dec_e458a7ff0547",
+    "by": "Atlas",
+    "decision": "escalate",
+    "reason": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_194f132b82fe",
+    "at": 1793307379614
+   }
+  },
+  {
+   "event_id": "evt_6c691dd2d7d0",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379615,
+   "seq": 72,
+   "data": {
+    "level": "warn",
+    "text": "Atlas [escalate]: 'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_c8d37e555f75",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "mission_status",
+   "at": 1793307379615,
+   "seq": 73,
+   "data": {
+    "status": "awaiting_human",
+    "reason": "'Analyse the request' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "by": "Atlas",
+    "progress": {
+     "tasks": {
+      "blocked": 1,
+      "in_progress": 1,
+      "pending": 1
+     },
+     "criteria": {},
+     "open_findings": 0,
+     "open_issues": 1
+    }
+   }
+  },
+  {
+   "event_id": "evt_d410c1a3d668",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "task_updated",
+   "at": 1793307379615,
+   "seq": 74,
+   "data": {
+    "action": "status",
+    "by": "Atlas",
+    "task_id": "tsk_45bb0904df8e",
+    "title": "Reconnoitre the codebase",
+    "status": "blocked",
+    "assignee": "Hana",
+    "attempts": 3,
+    "summary": "The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_b71fa8da5570",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "issue",
+   "at": 1793307379616,
+   "seq": 75,
+   "data": {
+    "action": "raised",
+    "id": "iss_77e9703e6791",
+    "raised_by": "Atlas",
+    "kind": "blocker",
+    "text": "'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "needs_human": true,
+    "task_id": "tsk_45bb0904df8e",
+    "status": "open",
+    "resolution": null,
+    "resolved_by": null,
+    "at": 1793307379615
+   }
+  },
+  {
+   "event_id": "evt_3eaf55754322",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379616,
+   "seq": 76,
+   "data": {
+    "level": "warn",
+    "text": "Atlas needs a human: 'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request"
+   }
+  },
+  {
+   "event_id": "evt_35b877d5b8c7",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "decision",
+   "at": 1793307379616,
+   "seq": 77,
+   "data": {
+    "id": "dec_34a4d1cb0f1d",
+    "by": "Atlas",
+    "decision": "escalate",
+    "reason": "'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request",
+    "task_id": "tsk_45bb0904df8e",
+    "at": 1793307379616
+   }
+  },
+  {
+   "event_id": "evt_e2620016086e",
+   "mission_id": "msn_0d50fc92c299",
+   "kind": "log",
+   "at": 1793307379616,
+   "seq": 78,
+   "data": {
+    "level": "warn",
+    "text": "Atlas [escalate]: 'Reconnoitre the codebase' failed 3 time(s): the language model is unavailable. The language model was unavailable: No LLM provider could serve the request"
+   }
+  }
+ ],
+ "audit": [
+  {
+   "entry_id": "aud_55c8f3c125ed",
+   "mission_id": "msn_0d50fc92c299",
+   "at": 1793307338077,
+   "agent": "Kenji",
+   "tool": "find_files",
+   "args": {
+    "path": ".",
+    "pattern": "*fahrenheit_to_celsius*"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "found 0 file(s)",
+   "duration_s": 0.002
+  },
+  {
+   "entry_id": "aud_f520e77a02df",
+   "mission_id": "msn_0d50fc92c299",
+   "at": 1793307342062,
+   "agent": "Kenji",
+   "tool": "search_text",
+   "args": {
+    "limit": "20",
+    "path": ".",
+    "query": "celsius",
+    "regex": "false"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "4 match(es) for 'celsius' in 1 file(s)",
+   "duration_s": 0.003
+  },
+  {
+   "entry_id": "aud_758d02fcd59e",
+   "mission_id": "msn_0d50fc92c299",
+   "at": 1793307359559,
+   "agent": "Kenji",
+   "tool": "read_file",
+   "args": {
+    "limit": "200",
+    "offset": "1",
+    "path": "units/convert.py"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "read units/convert.py (16 lines)",
+   "duration_s": 0.001
+  }
+ ],
+ "evidence": [],
+ "messages": []
+}

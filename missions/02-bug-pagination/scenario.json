@@ -1,0 +1,8 @@
+{
+  "id": "02-bug-pagination",
+  "title": "Bug investigation: duplicated products across pages",
+  "ps_scenario": "Bug Investigation — fix a seeded defect using repository context and test output",
+  "request": "Bug report from the storefront: when customers page through the catalog, the last product on each page appears again at the top of the next page. Find the cause and fix it, and make sure it cannot come back.",
+  "clarification_answer": null,
+  "expect": "Completed; the existing tests pass even with the bug, so the agents must investigate the code (and ideally add a regression test); hidden checks pass."
+}
