@@ -5,8 +5,8 @@ import '../theme/app_theme.dart';
 
 /// Horizontal scrolling stream of artifact cards produced during execution.
 ///
-/// Displays generated files (APKs, screenshots, diagnostic logs, PDFs)
-/// with file-type badges, formatted file sizes, and interactive preview taps.
+/// Implements Paper & Lime styling with 24px preview cards in `surfaceAlt` (#EBE8E0),
+/// zero drop shadows, Space Grotesk typography, and tactile file badges.
 class ArtifactStream extends StatelessWidget {
   final List<ArtifactItem> artifacts;
   final void Function(ArtifactItem artifact)? onArtifactTap;
@@ -33,14 +33,9 @@ class ArtifactStream extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: Row(
               children: [
-                const Text(
-                  'Artifacts & Output',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textDark,
-                    letterSpacing: -0.2,
-                  ),
+                Text(
+                  'ARTIFACTS & OUTPUT',
+                  style: AppTheme.labelUppercase,
                 ),
                 const SizedBox(width: 8),
                 Container(
@@ -49,15 +44,14 @@ class ArtifactStream extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.bgWarm,
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppTheme.surfaceAlt,
+                    borderRadius: AppTheme.pillRadius,
                   ),
                   child: Text(
                     '${artifacts.length}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textDark,
+                    style: AppTheme.numeralSm.copyWith(
+                      fontSize: 10,
+                      color: AppTheme.onSurface,
                     ),
                   ),
                 ),
@@ -67,7 +61,7 @@ class ArtifactStream extends StatelessWidget {
           const SizedBox(height: 12),
         ],
         SizedBox(
-          height: 120,
+          height: 124,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -98,19 +92,19 @@ class _ArtifactCard extends StatelessWidget {
     final meta = _getArtifactMeta(artifact.type);
 
     return Container(
+      key: Key('artifact_card_${artifact.id}'),
       width: 200,
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.softShadow,
+        color: AppTheme.surfaceAlt,
+        borderRadius: AppTheme.cardRadius,
+        border: Border.all(color: AppTheme.border, width: 1.0),
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppTheme.cardRadius,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppTheme.cardRadius,
           child: Padding(
             padding: const EdgeInsets.all(14.0),
             child: Column(
@@ -122,13 +116,13 @@ class _ArtifactCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      width: 36,
-                      height: 36,
+                      width: 38,
+                      height: 38,
                       decoration: BoxDecoration(
-                        color: meta.bgColor,
+                        color: AppTheme.surfaceRaised,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(meta.icon, size: 20, color: meta.fgColor),
+                      child: Icon(meta.icon, size: 20, color: AppTheme.onSurface),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -136,19 +130,18 @@ class _ArtifactCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.bgMain,
-                        borderRadius: BorderRadius.circular(12),
+                        color: AppTheme.surfaceRaised,
+                        borderRadius: AppTheme.pillRadius,
                         border: Border.all(
-                          color: AppTheme.borderSubtle,
+                          color: AppTheme.border,
                           width: 1,
                         ),
                       ),
                       child: Text(
                         artifact.size,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textSecondary,
+                        style: AppTheme.numeralSm.copyWith(
+                          fontSize: 10,
+                          color: AppTheme.onSurfaceVariant,
                         ),
                       ),
                     ),
@@ -164,21 +157,18 @@ class _ArtifactCard extends StatelessWidget {
                         children: [
                           Text(
                             artifact.name,
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textDark,
+                            style: AppTheme.cardTitle.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            artifact.typeLabel,
-                            style: const TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                            artifact.typeLabel.toUpperCase(),
+                            style: AppTheme.labelUppercase.copyWith(
+                              fontSize: 9,
                             ),
                           ),
                         ],
@@ -186,8 +176,8 @@ class _ArtifactCard extends StatelessWidget {
                     ),
                     const Icon(
                       Icons.arrow_forward_ios_rounded,
-                      size: 12,
-                      color: AppTheme.textSecondary,
+                      size: 11,
+                      color: AppTheme.onSurfaceVariant,
                     ),
                   ],
                 ),

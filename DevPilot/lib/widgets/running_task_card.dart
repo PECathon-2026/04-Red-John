@@ -5,31 +5,33 @@ import '../theme/app_theme.dart';
 import 'macro_deck.dart';
 import 'vitals_bar.dart';
 
-/// Primary tactical card for Image 1 Home Screen.
-/// Displays active pipeline task, live duration counter, E2EE security badge,
-/// embedded hardware vitals bar, and quick-action macro deck.
+/// Primary hero active card for DevPilot.
+/// Displays active pipeline task, electric lime status pill, live duration counter
+/// with Space Grotesk tabular figures, LAN E2EE security badge,
+/// and optionally embedded hardware vitals bar and macro deck.
+///
+/// Implements Paper & Lime language: `surfaceAlt` fill, 24px radius, flat without shadows.
 class RunningTaskCard extends StatelessWidget {
   final RunningTask task;
-  final HardwareVitals vitals;
-  final void Function(String action) onMacroAction;
+  final HardwareVitals? vitals;
+  final void Function(String action)? onMacroAction;
   final VoidCallback? onTap;
 
   const RunningTaskCard({
     super.key,
     required this.task,
-    required this.vitals,
-    required this.onMacroAction,
+    this.vitals,
+    this.onMacroAction,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: const Key('running_task_card'),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
+        color: AppTheme.surfaceAlt,
         borderRadius: AppTheme.cardRadius,
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.cardShadow,
       ),
       child: Material(
         color: Colors.transparent,
@@ -43,7 +45,7 @@ class RunningTaskCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Row: Status chip, timer pill & security badge
+                // Top Row: Electric lime status chip, timer pill & security badge
                 _buildHeaderRow(),
 
                 const SizedBox(height: 16),
@@ -51,20 +53,22 @@ class RunningTaskCard extends StatelessWidget {
                 // Middle: Pipeline category & task title
                 _buildTitleSection(),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
                 // Task Progress indicator
                 _buildProgressSection(),
 
-                const SizedBox(height: 16),
+                // Optional Vitals metrics bar
+                if (vitals != null) ...[
+                  const SizedBox(height: 16),
+                  VitalsBar(vitals: vitals!),
+                ],
 
-                // Vitals metrics bar
-                VitalsBar(vitals: vitals),
-
-                const SizedBox(height: 16),
-
-                // Tactile Macro Action Deck
-                MacroDeck(onActionTriggered: onMacroAction),
+                // Optional Tactile Macro Action Deck
+                if (onMacroAction != null) ...[
+                  const SizedBox(height: 16),
+                  MacroDeck(onActionTriggered: onMacroAction!),
+                ],
               ],
             ),
           ),
@@ -76,25 +80,52 @@ class RunningTaskCard extends StatelessWidget {
   Widget _buildHeaderRow() {
     return Row(
       children: [
-        // Pulsing Phase Indicator Chip
-        _PulsingStatusChip(label: task.phaseLabel, color: task.statusColor),
+        // Electric lime status pill
+        Container(
+          key: const Key('running_task_status_chip'),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppTheme.primary,
+            borderRadius: AppTheme.pillRadius,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppTheme.onPrimary,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                task.phaseLabel,
+                style: AppTheme.labelMd.copyWith(
+                  color: AppTheme.onPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
 
         const Spacer(),
 
-        // Elapsed duration pill
+        // Elapsed duration counter pill (Space Grotesk tabular figures)
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: AppTheme.darkPill,
-            borderRadius: BorderRadius.circular(12),
+            color: AppTheme.surfaceInverse,
+            borderRadius: AppTheme.pillRadius,
           ),
           child: Text(
             task.elapsedString,
-            style: const TextStyle(
-              fontFamily: 'monospace',
+            style: AppTheme.numeralSm.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+              color: AppTheme.onInverse,
               letterSpacing: 0.5,
             ),
           ),
@@ -104,11 +135,11 @@ class RunningTaskCard extends StatelessWidget {
 
         // LAN E2EE Lock badge
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
           decoration: BoxDecoration(
-            color: AppTheme.bgWarm,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.borderSubtle, width: 1),
+            color: AppTheme.surfaceRaised,
+            borderRadius: AppTheme.pillRadius,
+            border: Border.all(color: AppTheme.border, width: 1),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -116,16 +147,15 @@ class RunningTaskCard extends StatelessWidget {
               const Icon(
                 Icons.lock_rounded,
                 size: 11,
-                color: AppTheme.statusGreen,
+                color: AppTheme.onSurface,
               ),
               const SizedBox(width: 4),
               Text(
                 task.securityBadge,
-                style: const TextStyle(
+                style: AppTheme.labelSm.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onSurface,
                   fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textDark,
-                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -141,22 +171,14 @@ class RunningTaskCard extends StatelessWidget {
       children: [
         Text(
           task.pipelineName,
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textSecondary,
-            letterSpacing: 0.8,
-          ),
+          style: AppTheme.labelUppercase,
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         Text(
           task.taskName,
-          style: const TextStyle(
+          style: AppTheme.headlineMd.copyWith(
             fontSize: 18,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textDark,
-            letterSpacing: -0.3,
-            height: 1.25,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
@@ -171,132 +193,32 @@ class RunningTaskCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'PROGRESS',
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
-                letterSpacing: 0.5,
-              ),
+              style: AppTheme.labelUppercase,
             ),
             Text(
               '$percent%',
-              style: const TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.accentOrange,
+              style: AppTheme.numeralSm.copyWith(
+                fontSize: 12,
+                color: AppTheme.onSurface,
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
             value: task.progress.clamp(0.0, 1.0),
-            minHeight: 5,
-            backgroundColor: AppTheme.bgWarm,
+            minHeight: 4,
+            backgroundColor: AppTheme.borderStrong,
             valueColor: const AlwaysStoppedAnimation<Color>(
-              AppTheme.accentOrange,
+              AppTheme.onSurface,
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _PulsingStatusChip extends StatefulWidget {
-  final String label;
-  final Color color;
-
-  const _PulsingStatusChip({required this.label, required this.color});
-
-  @override
-  State<_PulsingStatusChip> createState() => _PulsingStatusChipState();
-}
-
-class _PulsingStatusChipState extends State<_PulsingStatusChip>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    // Only repeat animation in non-test runtime to allow pumpAndSettle in test suites
-    final isTest = WidgetsBinding.instance.runtimeType.toString().contains(
-      'TestWidgetsFlutterBinding',
-    );
-    if (!isTest) {
-      _controller.repeat(reverse: true);
-    } else {
-      _controller.value = 1.0;
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: widget.color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: widget.color.withValues(alpha: 0.35),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return Opacity(
-                opacity: 0.4 + (_controller.value * 0.6),
-                child: Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: widget.color,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: widget.color.withValues(alpha: 0.5),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 6),
-          Text(
-            widget.label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: widget.color,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -7,8 +7,10 @@ import '../theme/app_theme.dart';
 
 /// Live scrolling terminal console displaying color-coded logs from the build daemon.
 ///
-/// Features:
-/// - Dark monospace console (`#0E0E14`) with 20px radius and subtle border.
+/// Implements Paper & Lime ink card styling:
+/// - Dark ink card (`surfaceInverse` #0E0F0C) with 24px radius (`AppTheme.cardRadius`).
+/// - Flat surface without drop shadows.
+/// - Color-coded monospace logs (lime #D7FE47, yellow #EAB308, red #EF4444, cyan #38BDF8).
 /// - Live indicator dot, entry counter, copy-to-clipboard, and clear actions.
 /// - Smart auto-scroll with pause-on-touch when reading past logs.
 class TerminalFeed extends StatefulWidget {
@@ -114,27 +116,38 @@ class _TerminalFeedState extends State<TerminalFeed> {
     );
   }
 
+  Color _resolveLogColor(TerminalLog log) {
+    switch (log.type) {
+      case LogType.success:
+        return const Color(0xFFD7FE47); // Electric Lime
+      case LogType.warning:
+        return const Color(0xFFEAB308); // Yellow
+      case LogType.error:
+      case LogType.stderr:
+        return const Color(0xFFEF4444); // Red
+      case LogType.command:
+        return const Color(0xFF38BDF8); // Cyan
+      case LogType.info:
+      case LogType.stdout:
+        return const Color(0xFFF4F2EC); // Paper on inverse
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: const Key('terminal_feed_card'),
       height: widget.height,
       decoration: BoxDecoration(
-        color: AppTheme.terminalBg,
-        borderRadius: BorderRadius.circular(20),
+        color: AppTheme.surfaceInverse,
+        borderRadius: AppTheme.cardRadius,
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.08),
-          width: 1.2,
+          width: 1.0,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1F000000),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppTheme.cardRadius,
         child: Column(
           children: [
             if (widget.showHeader) _buildTerminalHeader(),
@@ -148,9 +161,9 @@ class _TerminalFeedState extends State<TerminalFeed> {
 
   Widget _buildTerminalHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF14141A),
+        color: const Color(0xFF141512),
         border: Border(
           bottom: BorderSide(
             color: Colors.white.withValues(alpha: 0.06),
@@ -160,33 +173,23 @@ class _TerminalFeedState extends State<TerminalFeed> {
       ),
       child: Row(
         children: [
-          // Live status dot
+          // Live status dot (lime)
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(
-              color: AppTheme.statusGreen,
+            decoration: const BoxDecoration(
+              color: AppTheme.primary,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.statusGreen.withValues(alpha: 0.6),
-                  blurRadius: 6,
-                  spreadRadius: 1,
-                ),
-              ],
             ),
           ),
           const SizedBox(width: 8),
 
           // Title & line count
-          const Text(
+          Text(
             'CONSOLE',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 11,
+            style: AppTheme.labelUppercase.copyWith(
+              color: AppTheme.onInverse,
               fontWeight: FontWeight.w700,
-              letterSpacing: 1.1,
-              color: Colors.white70,
             ),
           ),
           const SizedBox(width: 6),
@@ -195,7 +198,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 11,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: AppTheme.onInverse.withValues(alpha: 0.4),
             ),
           ),
 
@@ -244,7 +247,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
             fontFamily: 'monospace',
             fontSize: 12,
             height: 1.6,
-            color: Colors.white.withValues(alpha: 0.3),
+            color: AppTheme.onInverse.withValues(alpha: 0.35),
           ),
         ),
       );
@@ -262,8 +265,10 @@ class _TerminalFeedState extends State<TerminalFeed> {
         itemCount: widget.logs.length,
         itemBuilder: (context, index) {
           final log = widget.logs[index];
+          final color = _resolveLogColor(log);
+
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2.0),
+            padding: const EdgeInsets.symmetric(vertical: 2.5),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -273,7 +278,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
                   style: TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 11.5,
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: AppTheme.onInverse.withValues(alpha: 0.35),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -286,7 +291,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
                       fontFamily: 'monospace',
                       fontSize: 12,
                       height: 1.4,
-                      color: log.logColor,
+                      color: color,
                     ),
                   ),
                 ),
@@ -301,7 +306,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
   Widget _buildPausedIndicator() {
     return Container(
       width: double.infinity,
-      color: AppTheme.accentOrange.withValues(alpha: 0.15),
+      color: AppTheme.accent.withValues(alpha: 0.15),
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -309,7 +314,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
           const Icon(
             Icons.pause_circle_outline,
             size: 13,
-            color: AppTheme.accentOrange,
+            color: AppTheme.accent,
           ),
           const SizedBox(width: 6),
           const Text(
@@ -317,7 +322,7 @@ class _TerminalFeedState extends State<TerminalFeed> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppTheme.accentOrange,
+              color: AppTheme.accent,
             ),
           ),
           const Spacer(),

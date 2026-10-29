@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 
-/// Tactile Agent Personnel Card inspired by MYCEL `hire-cards.tsx`.
-/// Displays agent portrait / initials, team badge, security clearance,
-/// execution phase chip, current assignment task, and elapsed mission timer.
+/// Tactile Agent Personnel Card.
+/// Displays agent avatar / initials, tracked-out uppercase team kicker,
+/// security clearance badge, active execution phase chip, current assignment task,
+/// and elapsed mission timer with tabular numerals.
+///
+/// Implements Paper & Lime white raised card (`surfaceRaised` #FFFFFF, 24px radius,
+/// flat without drop shadows).
 class AgentCard extends StatelessWidget {
   final AgentItem agent;
   final VoidCallback? onTap;
@@ -23,18 +27,17 @@ class AgentCard extends StatelessWidget {
               : 'T+${agent.elapsed}');
 
     return Container(
+      key: const Key('agent_card'),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-        boxShadow: AppTheme.softShadow,
+        color: AppTheme.surfaceRaised,
+        borderRadius: AppTheme.cardRadius,
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppTheme.cardRadius,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: AppTheme.cardRadius,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -60,11 +63,8 @@ class AgentCard extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   agent.name,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.textDark,
-                                    letterSpacing: 0.4,
+                                  style: AppTheme.headlineSm.copyWith(
+                                    fontWeight: FontWeight.w700,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -76,8 +76,8 @@ class AgentCard extends StatelessWidget {
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              _buildTeamBadge(teamColor),
-                              const SizedBox(width: 6),
+                              _buildTeamBadge(),
+                              const SizedBox(width: 8),
                               _buildPhaseChip(phaseColor),
                             ],
                           ),
@@ -87,23 +87,21 @@ class AgentCard extends StatelessWidget {
 
                     const SizedBox(width: 8),
 
-                    // Elapsed timer pill
+                    // Elapsed timer pill (ink surface, Space Grotesk tabular figures)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkPill,
-                        borderRadius: BorderRadius.circular(10),
+                        color: AppTheme.surfaceInverse,
+                        borderRadius: AppTheme.pillRadius,
                       ),
                       child: Text(
                         formattedElapsed,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
+                        style: AppTheme.numeralSm.copyWith(
                           fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: AppTheme.onInverse,
                         ),
                       ),
                     ),
@@ -114,7 +112,7 @@ class AgentCard extends StatelessWidget {
                 const Divider(
                   height: 1,
                   thickness: 1,
-                  color: AppTheme.borderSubtle,
+                  color: AppTheme.border,
                 ),
                 const SizedBox(height: 10),
 
@@ -127,17 +125,15 @@ class AgentCard extends StatelessWidget {
                       child: Icon(
                         Icons.terminal_rounded,
                         size: 13,
-                        color: AppTheme.textSecondary,
+                        color: AppTheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         agent.currentTask,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textDark,
+                        style: AppTheme.bodySm.copyWith(
+                          color: AppTheme.onSurface,
                           height: 1.35,
                         ),
                         maxLines: 2,
@@ -163,18 +159,16 @@ class AgentCard extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: teamColor.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: teamColor.withValues(alpha: 0.6), width: 1.5),
+        color: AppTheme.surfaceAlt,
+        borderRadius: AppTheme.thumbRadius,
+        border: Border.all(color: AppTheme.border, width: 1.0),
       ),
       child: Center(
         child: Text(
           initials,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: _darken(teamColor, 0.4),
-            fontFamily: 'monospace',
+          style: AppTheme.headlineSm.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
           ),
         ),
       ),
@@ -184,10 +178,10 @@ class AgentCard extends StatelessWidget {
   Widget _buildClearanceChip() {
     final color = agent.clearanceColor;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppTheme.pillRadius,
         border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
       ),
       child: Text(
@@ -202,21 +196,10 @@ class AgentCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTeamBadge(Color teamColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: teamColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        agent.team,
-        style: TextStyle(
-          fontSize: 9.5,
-          fontWeight: FontWeight.w700,
-          color: _darken(teamColor, 0.45),
-        ),
-      ),
+  Widget _buildTeamBadge() {
+    return Text(
+      agent.team.toUpperCase(),
+      style: AppTheme.labelUppercase,
     );
   }
 
@@ -225,7 +208,7 @@ class AgentCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: phaseColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: AppTheme.pillRadius,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -243,7 +226,7 @@ class AgentCard extends StatelessWidget {
             agent.phase,
             style: TextStyle(
               fontSize: 9.5,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               color: phaseColor,
             ),
           ),
@@ -267,7 +250,7 @@ class AgentCard extends StatelessWidget {
       case 'council':
         return const Color(0xFFE3C1C8);
       default:
-        return AppTheme.bgWarm;
+        return AppTheme.surfaceAlt;
     }
   }
 
@@ -276,7 +259,7 @@ class AgentCard extends StatelessWidget {
       case 'working':
       case 'compiling':
       case 'running':
-        return AppTheme.accentOrange;
+        return AppTheme.accent;
       case 'done':
       case 'completed':
       case 'success':
@@ -289,13 +272,7 @@ class AgentCard extends StatelessWidget {
       case 'blocked':
         return AppTheme.statusRed;
       default:
-        return AppTheme.textSecondary;
+        return AppTheme.onSurfaceVariant;
     }
-  }
-
-  Color _darken(Color color, [double amount = 0.3]) {
-    final hsl = HSLColor.fromColor(color);
-    final hslDark = hsl.withLightness((hsl.lightness - amount).clamp(0.0, 1.0));
-    return hslDark.toColor();
   }
 }
