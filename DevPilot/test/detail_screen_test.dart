@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:devpilot/screens/detail_screen.dart';
 import 'package:devpilot/widgets/terminal_feed.dart';
 import 'package:devpilot/widgets/artifact_stream.dart';
+import 'package:devpilot/widgets/agent_card.dart';
+import 'package:devpilot/widgets/vitals_bar.dart';
+import 'package:devpilot/widgets/macro_deck.dart';
 import 'package:devpilot/services/telemetry_service.dart';
 import 'package:devpilot/models/models.dart';
 
@@ -66,6 +69,13 @@ void main() {
         // Embedded Terminal Feed and Artifact Stream
         expect(find.byType(TerminalFeed), findsOneWidget);
         expect(find.byType(ArtifactStream), findsOneWidget);
+
+        // Embedded Active Agent Roster and Host Vitals/Macros inside project screen
+        expect(find.byType(AgentCard), findsWidgets);
+        expect(find.text('Atlas'), findsOneWidget);
+        expect(find.text('Dev'), findsOneWidget);
+        expect(find.byType(VitalsBar), findsOneWidget);
+        expect(find.byType(MacroDeck), findsOneWidget);
 
         // Open CLI terminal button
         expect(find.text('Open CLI Terminal'), findsOneWidget);

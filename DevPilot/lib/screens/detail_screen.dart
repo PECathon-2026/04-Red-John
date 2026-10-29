@@ -4,23 +4,24 @@ import 'package:flutter/services.dart';
 import '../models/models.dart';
 import '../services/telemetry_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/agent_card.dart';
 import '../widgets/artifact_stream.dart';
+import '../widgets/macro_deck.dart';
 import '../widgets/terminal_feed.dart';
+import '../widgets/vitals_bar.dart';
 
-/// Full implementation of Image 2 Detail & Pipeline Screen.
+/// Full implementation of the Paper & Lime Project Command Center (DetailScreen).
 ///
 /// Features:
-/// - Warm cream beige `#F6ECD9` header background (`AppTheme.bgWarm`).
-/// - Navigation top bar with `< Back` and `Done` buttons.
-/// - Giant bold project title and date subtitle.
-/// - Image 2 session cards: Dark pill schedule card and Share link card.
-/// - Members & agents section with overlapping avatar stack and reminder capsule.
-/// - Pure white rounded sheet (`Radius.circular(32)`) containing:
-///   - Goals & pipeline step checklist with circular pastel badges.
-///   - Embedded Live Terminal Feed console (`TerminalFeed`).
-///   - Embedded Artifact Stream carousel (`ArtifactStream`).
-///   - Tactile "Open CLI Terminal" bottom action button.
-/// - Reactive updates with `ListenableBuilder(listenable: service)`.
+/// - Screen-based navigation with top back button (`onBack`).
+/// - Editorial header with project title and live elapsed timer in electric lime pill.
+/// - Ink schedule card with Space Grotesk display numeral "21", LAN status, and host share button.
+/// - Team members section with reminder action.
+/// - Numbered pipeline goals in white raised cards (`surfaceRaised`).
+/// - **Active Agent Roster (inside current project)**: Atlas, Dev, Nisha in white raised cards.
+/// - **Live Terminal Feed (inside current project)**: color-coded streaming console with CLI trigger.
+/// - **Artifact Stream (inside current project)**: horizontal generated file preview cards.
+/// - **Host Hardware Vitals & Tactile Macro Deck (inside current project)**: CPU/RAM/NET/BAT tabular strip and quick actions.
 class DetailScreen extends StatefulWidget {
   final TelemetryService service;
   final ProjectItem project;
@@ -61,19 +62,22 @@ class _DetailScreenState extends State<DetailScreen> {
       SnackBar(
         content: const Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            Icon(Icons.check_circle_rounded, color: AppTheme.primary, size: 18),
             SizedBox(width: 10),
             Expanded(
               child: Text(
                 'Host link copied to clipboard: devpilot.lan',
-                style: TextStyle(fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onInverse,
+                ),
               ),
             ),
           ],
         ),
-        backgroundColor: AppTheme.darkPill,
+        backgroundColor: AppTheme.surfaceInverse,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.cardRadius),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -86,11 +90,14 @@ class _DetailScreenState extends State<DetailScreen> {
       SnackBar(
         content: Text(
           'Telemetry reminder dispatched to $count agents.',
-          style: const TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.onInverse,
+          ),
         ),
-        backgroundColor: AppTheme.darkPill,
+        backgroundColor: AppTheme.surfaceInverse,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: AppTheme.cardRadius),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -99,43 +106,68 @@ class _DetailScreenState extends State<DetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.bgWarm,
+      backgroundColor: AppTheme.surface,
       body: SafeArea(
         bottom: false,
         child: ListenableBuilder(
           listenable: widget.service,
           builder: (context, _) {
+            final agents = widget.service.agents;
             final goals = widget.service.goals;
             final logs = widget.service.logs;
             final artifacts = widget.service.artifacts;
-            final agents = widget.service.agents;
+            final vitals = widget.service.vitals;
+            final currentTask = widget.service.currentTask;
 
             return SingleChildScrollView(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 60),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- Image 2 Top Navigation Bar ---
-                  _buildTopBar(),
+                  // --- 1. Top Navigation Bar ---
+                  _buildTopBar(currentTask.elapsedString),
 
-                  // --- Image 2 Header Title & Date ---
-                  _buildHeaderTitle(),
+                  const SizedBox(height: 12),
 
-                  const SizedBox(height: 18),
+                  // --- 2. Title & Date Subtitle ---
+                  _buildTitleSection(),
 
-                  // --- Image 2 Session / Schedule Cards Row ---
-                  _buildSessionCardsRow(),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 22),
+                  // --- 3. Session & Host Share Pill Card ---
+                  _buildSessionCard(),
 
-                  // --- Image 2 Members & Agents Section ---
+                  const SizedBox(height: 24),
+
+                  // --- 4. Members & Team Section ---
                   _buildMembersSection(agents),
 
                   const SizedBox(height: 24),
 
-                  // --- Image 2 Pure White Rounded Sheet ---
-                  _buildWhiteSheet(goals, logs, artifacts),
+                  // --- 5. Goals & Pipeline Steps Sheet (White Raised) ---
+                  _buildGoalsSheet(goals),
+
+                  const SizedBox(height: 28),
+
+                  // --- 6. Active Agent Roster (Inside Project) ---
+                  _buildActiveAgentRoster(agents),
+
+                  const SizedBox(height: 28),
+
+                  // --- 7. Live Terminal Feed (Inside Project) ---
+                  _buildTerminalSection(logs),
+
+                  const SizedBox(height: 28),
+
+                  // --- 8. Artifact Stream (Inside Project) ---
+                  _buildArtifactSection(artifacts),
+
+                  const SizedBox(height: 28),
+
+                  // --- 9. Host Vitals & Tactile Macro Deck (Inside Project) ---
+                  _buildHostVitalsAndMacros(vitals),
                 ],
               ),
             );
@@ -146,51 +178,88 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   // --- 1. Top Navigation Bar ---
-  Widget _buildTopBar() {
+  Widget _buildTopBar(String elapsed) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Back arrow button
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.6),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: AppTheme.textDark,
-                size: 22,
-              ),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                widget.onBack();
-              },
-            ),
-          ),
-
-          // Done text button on right
-          TextButton(
-            key: const Key('detail_done_button'),
-            onPressed: () {
+          // Round Icon Back Button
+          GestureDetector(
+            onTap: () {
               HapticFeedback.lightImpact();
               widget.onBack();
             },
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              backgroundColor: Colors.white.withValues(alpha: 0.7),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: const BoxDecoration(
+                color: AppTheme.surfaceAlt,
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.arrow_back,
+                  size: 18,
+                  color: AppTheme.onSurface,
+                ),
               ),
             ),
-            child: const Text(
-              'Done',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textDark,
+          ),
+
+          // Center Live Duration Pill (Electric Lime Accent)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.primary, // Electric Lime #D7FE47
+              borderRadius: AppTheme.pillRadius,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppTheme.onPrimary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  elapsed.isNotEmpty ? elapsed : 'T+08:42',
+                  style: const TextStyle(
+                    fontFamily: 'Space Grotesk',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.onPrimary,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Right "Done" Ink Pill Button
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              widget.onBack();
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceInverse,
+                borderRadius: AppTheme.pillRadius,
+              ),
+              child: const Text(
+                'Done',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.onInverse,
+                ),
               ),
             ),
           ),
@@ -199,33 +268,27 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // --- 2. Title & Date Subtitle ---
-  Widget _buildHeaderTitle() {
+  // --- 2. Title Section ---
+  Widget _buildTitleSection() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 4.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Project Title
           Text(
             widget.project.title,
             style: AppTheme.displayLarge.copyWith(
-              fontSize: 34,
-              letterSpacing: -0.6,
+              color: AppTheme.onSurface,
+              fontSize: 36,
+              height: 1.1,
             ),
           ),
-          const SizedBox(height: 4),
-
-          // Date Subtitle
+          const SizedBox(height: 6),
           Text(
-            widget.project.subtitle.isNotEmpty
-                ? widget.project.subtitle
-                : 'November 18th, 2026',
-            style: const TextStyle(
-              fontSize: 14.5,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary,
-              letterSpacing: 0.1,
+            widget.project.subtitle,
+            style: AppTheme.bodySmall.copyWith(
+              color: AppTheme.onSurfaceVariant,
+              fontSize: 13,
             ),
           ),
         ],
@@ -233,382 +296,433 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  // --- 3. Session / Schedule Cards (Row) ---
-  Widget _buildSessionCardsRow() {
+  // --- 3. Session & Host Card ---
+  Widget _buildSessionCard() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Row(
-        children: [
-          // Left: Dark rounded pill card (#161618)
-          Expanded(
-            flex: 5,
-            child: Container(
-              height: 140,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.darkPill,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: AppTheme.softShadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Text(
-                          'DAY',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white70,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.edit_outlined,
-                        size: 16,
-                        color: Colors.white60,
-                      ),
-                    ],
-                  ),
-                  const Text(
-                    '21',
-                    style: TextStyle(
-                      fontSize: 36,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      height: 1.0,
-                    ),
-                  ),
-                  const Text(
-                    'November, 10 AM',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 12),
-
-          // Right: Light beige pill card with Location & Share link button
-          Expanded(
-            flex: 6,
-            child: Container(
-              height: 140,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-                boxShadow: AppTheme.softShadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Location',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'devpilot.lan',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textDark,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  // Tactile Share link pill button
-                  Material(
-                    color: AppTheme.surfaceCard,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: _handleShareLink,
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppTheme.borderMedium,
-                            width: 1,
-                          ),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.link_rounded,
-                              size: 15,
-                              color: AppTheme.textDark,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Share link',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textDark,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- 4. Members / Agents Section ---
-  Widget _buildMembersSection(List<AgentItem> agents) {
-    final memberCount = agents.length;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Section header with title and + button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Members ($memberCount)',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textDark,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.borderSubtle, width: 1),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 18,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Capsule button: Stacked avatars + "Send telemetry reminder" + chevron
-          Material(
-            color: Colors.white.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(20),
-            child: InkWell(
-              onTap: _handleSendReminder,
-              borderRadius: BorderRadius.circular(20),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.borderSubtle, width: 1.2),
-                ),
-                child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceInverse, // Ink #0E0F0C
+          borderRadius: AppTheme.cardRadius,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Left: Space Grotesk display numeral "21"
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
-                    // Avatar stack
-                    _buildAvatarStack(agents),
-
-                    const SizedBox(width: 12),
-
-                    // Label
-                    const Expanded(
-                      child: Text(
-                        'Send telemetry reminder',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textDark,
-                        ),
+                    Text(
+                      '21',
+                      style: AppTheme.displayMd.copyWith(
+                        color: AppTheme.onInverse,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'November, 10 AM',
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.onInverse.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary, // Electric Lime Dot
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'LAN E2EE • ',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'devpilot.lan',
+                      style: AppTheme.caption.copyWith(
+                        color: AppTheme.onInverse.withValues(alpha: 0.8),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
 
-                    // Chevron >
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: AppTheme.textSecondary,
+            // Right: Host Share link pill
+            GestureDetector(
+              onTap: _handleShareLink,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface, // Warm Paper Button
+                  borderRadius: AppTheme.pillRadius,
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.link_rounded, size: 16, color: AppTheme.onSurface),
+                    SizedBox(width: 6),
+                    Text(
+                      'Share link',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.onSurface,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAvatarStack(List<AgentItem> agents) {
-    final displayAgents = agents.take(4).toList();
-    const colors = [
-      Color(0xFFFFD700),
-      Color(0xFFAAEBFD),
-      Color(0xFFE3C1C8),
-      Color(0xFFB5EAD7),
-    ];
-
-    return SizedBox(
-      height: 28,
-      width: (displayAgents.length * 18.0) + 12,
-      child: Stack(
-        children: [
-          for (int i = 0; i < displayAgents.length; i++)
-            Positioned(
-              left: i * 18.0,
-              child: GestureDetector(
-                onTap: () => widget.onOpenAgent?.call(displayAgents[i]),
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: colors[i % colors.length],
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: AppTheme.softShadow,
-                  ),
-                  child: Center(
-                    child: Text(
-                      displayAgents[i].name.isNotEmpty
-                          ? displayAgents[i].name.substring(0, 1).toUpperCase()
-                          : 'A',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textDark,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // --- 5. Pure White Rounded Sheet ---
-  Widget _buildWhiteSheet(
-    List<GoalItem> goals,
-    List<TerminalLog> logs,
-    List<ArtifactItem> artifacts,
-  ) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppTheme.surfaceCard,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        border: Border(
-          top: BorderSide(color: AppTheme.borderSubtle, width: 1.5),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 24,
-            offset: Offset(0, -6),
-          ),
-        ],
       ),
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 36),
+    );
+  }
+
+  // --- 4. Members Section ---
+  Widget _buildMembersSection(List<AgentItem> agents) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Section header: "Goals (N)" + add button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Goals (${goals.length})', style: AppTheme.titleLarge),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppTheme.bgMain,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.borderSubtle, width: 1),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 18,
-                  color: AppTheme.textDark,
+              Text('Members (${agents.length})', style: AppTheme.headlineSm),
+              GestureDetector(
+                onTap: _handleSendReminder,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceAlt,
+                    borderRadius: AppTheme.pillRadius,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.send_rounded, size: 13, color: AppTheme.onSurface),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Send telemetry reminder',
+                        style: AppTheme.labelSm.copyWith(
+                          color: AppTheme.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 40,
+            child: Stack(
+              children: [
+                for (int i = 0; i < agents.length && i < 6; i++)
+                  Positioned(
+                    left: i * 26.0,
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceAlt,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.surface, width: 2),
+                      ),
+                      child: Center(
+                        child: Text(
+                          agents[i].name.substring(0, 1),
+                          style: const TextStyle(
+                            fontFamily: 'Space Grotesk',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 16),
+  // --- 5. Goals Sheet (White Raised) ---
+  Widget _buildGoalsSheet(List<GoalItem> goals) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceRaised, // Pure White #FFFFFF
+          borderRadius: AppTheme.cardRadius,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Goals (${goals.length})', style: AppTheme.headlineSm),
+                Text('PIPELINE QUEUE', style: AppTheme.labelUppercase),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: goals.length,
+              separatorBuilder: (_, _) => const Divider(
+                height: 24,
+                thickness: 1,
+                color: AppTheme.border,
+              ),
+              itemBuilder: (context, index) {
+                final goal = goals[index];
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Number Badge
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.surfaceAlt,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: const TextStyle(
+                            fontFamily: 'Space Grotesk',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            goal.category.toUpperCase(),
+                            style: AppTheme.labelUppercase,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            goal.title,
+                            style: AppTheme.cardTitle.copyWith(
+                              fontSize: 15,
+                              color: AppTheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildGoalStatusChip(goal.status),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-          // Goal Items list
+  Widget _buildGoalStatusChip(GoalStatus status) {
+    String label;
+    Color bg;
+    Color textColor;
+
+    switch (status) {
+      case GoalStatus.completed:
+        label = 'Completed';
+        bg = AppTheme.primaryDeep.withValues(alpha: 0.15);
+        textColor = AppTheme.onSurface;
+        break;
+      case GoalStatus.inProgress:
+        label = 'Active';
+        bg = AppTheme.primary;
+        textColor = AppTheme.onPrimary;
+        break;
+      case GoalStatus.failed:
+      case GoalStatus.blocked:
+        label = 'Blocked';
+        bg = AppTheme.accent.withValues(alpha: 0.15);
+        textColor = AppTheme.accent;
+        break;
+      case GoalStatus.pending:
+        label = 'Pending';
+        bg = AppTheme.surfaceAlt;
+        textColor = AppTheme.onSurfaceVariant;
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: AppTheme.pillRadius,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
+  // --- 6. Active Agent Roster (Inside Project) ---
+  Widget _buildActiveAgentRoster(List<AgentItem> agents) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('ACTIVE AGENT ROSTER (${agents.length})', style: AppTheme.labelUppercase),
+                  const SizedBox(height: 4),
+                  Text('Running Subagents', style: AppTheme.headlineSm),
+                ],
+              ),
+              const Icon(Icons.psychology_outlined, size: 20, color: AppTheme.onSurface),
+            ],
+          ),
+          const SizedBox(height: 14),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: goals.length,
+            itemCount: agents.length,
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final goal = goals[index];
-              return _GoalStepTile(
-                goal: goal,
-                pastelColor: _getPastelColorForIndex(index),
+              final agent = agents[index];
+              return AgentCard(
+                agent: agent,
+                onTap: () => widget.onOpenAgent?.call(agent),
               );
             },
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 28),
+  // --- 7. Live Terminal Feed (Inside Project) ---
+  Widget _buildTerminalSection(List<TerminalLog> logs) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('LIVE TELEMETRY STREAM', style: AppTheme.labelUppercase),
+                  const SizedBox(height: 4),
+                  Text('Terminal Console', style: AppTheme.headlineSm),
+                ],
+              ),
+              GestureDetector(
+                onTap: widget.onOpenCli,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceInverse,
+                    borderRadius: AppTheme.pillRadius,
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.terminal_rounded, size: 14, color: AppTheme.onInverse),
+                      SizedBox(width: 6),
+                      Text(
+                        'Open CLI Terminal',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.onInverse,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TerminalFeed(
+            logs: logs,
+            onClear: widget.service.clearLogs,
+          ),
+        ],
+      ),
+    );
+  }
 
-          // Embedded Live Monospace Terminal Feed
-          TerminalFeed(logs: logs, onClear: () => widget.service.clearLogs()),
-
-          const SizedBox(height: 26),
-
-          // Embedded Artifact Stream Carousel
+  // --- 8. Artifact Section (Inside Project) ---
+  Widget _buildArtifactSection(List<ArtifactItem> artifacts) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('OUTPUT ARTIFACTS', style: AppTheme.labelUppercase),
+                  const SizedBox(height: 4),
+                  Text('Artifact Stream (${artifacts.length})', style: AppTheme.headlineSm),
+                ],
+              ),
+              const Icon(Icons.auto_awesome_outlined, size: 18, color: AppTheme.onSurfaceVariant),
+            ],
+          ),
+          const SizedBox(height: 14),
           ArtifactStream(
             artifacts: artifacts,
             onArtifactTap: (artifact) {
@@ -616,276 +730,35 @@ class _DetailScreenState extends State<DetailScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('Previewing artifact: ${artifact.name}'),
+                  backgroundColor: AppTheme.surfaceInverse,
                   behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
                 ),
               );
             },
           ),
-
-          const SizedBox(height: 28),
-
-          // Bottom Bar Action: "Open CLI Terminal"
-          SizedBox(
-            width: double.infinity,
-            height: 54,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                HapticFeedback.selectionClick();
-                widget.onOpenCli?.call();
-              },
-              icon: const Icon(
-                Icons.terminal_rounded,
-                size: 20,
-                color: Colors.white,
-              ),
-              label: const Text(
-                'Open CLI Terminal',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                  letterSpacing: 0.2,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.darkPill,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Color _getPastelColorForIndex(int index) {
-    switch (index % 4) {
-      case 0:
-        return AppTheme.cardPeach;
-      case 1:
-        return AppTheme.cardMint;
-      case 2:
-        return AppTheme.cardLavender;
-      case 3:
-      default:
-        return const Color(0xFFFFF3C4);
-    }
-  }
-}
-
-/// Goal / Pipeline Step Tile widget inside the Image 2 White Rounded Sheet.
-class _GoalStepTile extends StatelessWidget {
-  final GoalItem goal;
-  final Color pastelColor;
-
-  const _GoalStepTile({required this.goal, required this.pastelColor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppTheme.bgMain,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.borderSubtle, width: 1),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+  // --- 9. Host Vitals & Macros (Inside Project) ---
+  Widget _buildHostVitalsAndMacros(HardwareVitals vitals) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Circular number badge with soft pastel background
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: pastelColor,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.black.withValues(alpha: 0.06),
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '${goal.stepNumber}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textDark,
-                ),
-              ),
-            ),
+          Text('HOST VITALS & COMMAND DECK', style: AppTheme.labelUppercase),
+          const SizedBox(height: 12),
+          VitalsBar(vitals: vitals),
+          const SizedBox(height: 14),
+          MacroDeck(
+            onAction: (action) {
+              widget.service.triggerAction(action);
+            },
           ),
-
-          const SizedBox(width: 14),
-
-          // Step Category & Bold Title
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  goal.category.toUpperCase(),
-                  style: const TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  goal.title,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                if (goal.description.isNotEmpty) ...[
-                  const SizedBox(height: 3),
-                  Text(
-                    goal.description,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w400,
-                      color: AppTheme.textSecondary,
-                      height: 1.3,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 10),
-
-          // Status Badge
-          _buildStatusBadge(goal),
         ],
       ),
     );
-  }
-
-  Widget _buildStatusBadge(GoalItem goal) {
-    switch (goal.status) {
-      case GoalStatus.completed:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: AppTheme.statusGreen.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle_rounded,
-                size: 14,
-                color: AppTheme.statusGreen,
-              ),
-              SizedBox(width: 4),
-              Text(
-                'Completed',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.statusGreen,
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case GoalStatus.inProgress:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: AppTheme.accentOrange.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 11,
-                height: 11,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  value:
-                      WidgetsBinding.instance.runtimeType.toString().contains(
-                        'TestWidgetsFlutterBinding',
-                      )
-                      ? 0.75
-                      : null,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppTheme.accentOrange,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'Active',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.accentOrange,
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case GoalStatus.failed:
-      case GoalStatus.blocked:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: AppTheme.statusRed.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline_rounded,
-                size: 14,
-                color: AppTheme.statusRed,
-              ),
-              SizedBox(width: 4),
-              Text(
-                'Blocked',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.statusRed,
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case GoalStatus.pending:
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text(
-            'Pending',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-        );
-    }
   }
 }
