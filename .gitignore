@@ -73,6 +73,7 @@ coverage.xml
 htmlcov/
 cover/
 test/
+!DevPilot/test/
 tests/
 __tests__/
 test_*.py
@@ -223,3 +224,7 @@ python_modules/
 docs/_build/
 /site
 backend/docs
+# Graphify local-only artifacts
+graphify-out/
+.agents/
+MOBILE_APP_FEATURE_SPEC.md\.superpowers/
