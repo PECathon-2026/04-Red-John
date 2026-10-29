@@ -1,122 +1,140 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'models/models.dart';
+import 'screens/detail_screen.dart';
+import 'screens/home_screen.dart';
+import 'services/telemetry_service.dart';
+import 'theme/app_theme.dart';
+import 'widgets/modals/agent_dossier_modal.dart';
+import 'widgets/modals/approval_modal.dart';
+import 'widgets/modals/cli_sheet.dart';
+import 'widgets/modals/parameter_modal.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  final service = TelemetryService(autoStart: true);
+  runApp(DevPilotApp(service: service));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+/// Root widget for the DevPilot application.
+class DevPilotApp extends StatefulWidget {
+  final TelemetryService? service;
 
-  // This widget is the root of your application.
+  const DevPilotApp({super.key, this.service});
+
+  @override
+  State<DevPilotApp> createState() => _DevPilotAppState();
+}
+
+class _DevPilotAppState extends State<DevPilotApp> {
+  late final TelemetryService _service;
+  late final bool _ownsService;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _isApprovalDialogOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.service != null) {
+      _service = widget.service!;
+      _ownsService = false;
+    } else {
+      _service = TelemetryService(autoStart: true);
+      _ownsService = true;
+    }
+    _service.addListener(_onServiceUpdate);
+  }
+
+  @override
+  void dispose() {
+    _service.removeListener(_onServiceUpdate);
+    if (_ownsService) {
+      _service.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onServiceUpdate() {
+    if (_service.isPendingApproval && !_isApprovalDialogOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _service.isPendingApproval && !_isApprovalDialogOpen) {
+          _handleApprovalGate();
+        }
+      });
+    }
+  }
+
+  Future<void> _handleApprovalGate([BuildContext? context]) async {
+    if (_isApprovalDialogOpen) return;
+    final targetContext = context ?? _navigatorKey.currentContext;
+    if (targetContext == null) return;
+
+    _isApprovalDialogOpen = true;
+
+    final title = _service.pendingActionTitle ?? 'Kill All Processes';
+    final details = _service.pendingActionDetails ??
+        'Terminates all active worker threads, agent sandboxes, and build pipelines immediately. Requires biometric verification.';
+
+    try {
+      final approved = await ApprovalModal.show(
+        targetContext,
+        actionTitle: title,
+        details: details,
+        riskLevel: 'AMBER',
+      );
+
+      if (approved == true) {
+        _service.approvePendingGate();
+      } else {
+        _service.denyPendingGate();
+      }
+    } finally {
+      _isApprovalDialogOpen = false;
+    }
+  }
+
+  void _navigateToDetail(BuildContext context, ProjectItem project) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => DetailScreen(
+          service: _service,
+          project: project,
+          onBack: () => Navigator.of(ctx).pop(),
+          onOpenCli: () => CliSheet.show(ctx, _service),
+          onOpenSettings: () => ParameterModal.show(ctx, _service),
+          onOpenAgent: (agent) => AgentDossierModal.show(ctx, agent: agent),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      title: 'DevPilot',
+      navigatorKey: _navigatorKey,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.themeData,
+      home: Builder(
+        builder: (context) => HomeScreen(
+          service: _service,
+          onOpenProject: (project) => _navigateToDetail(context, project),
+          onOpenAgent: (agent) => AgentDossierModal.show(context, agent: agent),
+          onOpenTerminal: () => CliSheet.show(context, _service),
+          onOpenSettings: () => ParameterModal.show(context, _service),
+          onKillTriggered: () => _handleApprovalGate(context),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
+
+typedef MyApp = DevPilotApp;

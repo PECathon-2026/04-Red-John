@@ -138,6 +138,8 @@ class AppTheme {
   );
 
   // --- Material 3 ThemeData ---
+  static ThemeData get themeData => lightTheme;
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
