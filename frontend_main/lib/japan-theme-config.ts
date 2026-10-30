@@ -23,36 +23,12 @@ export interface DepartmentConfig {
  * Department Configurations
  */
 export const DEPARTMENTS: Record<string, DepartmentConfig> = {
-  Executive: {
-    english: 'EXECUTIVE',
-    archetype: 'samurai',
-    icon: 'katana',
-  },
-  Intelligence: {
-    english: 'INTELLIGENCE',
-    archetype: 'ninja',
-    icon: 'shuriken',
-  },
-  Network: {
-    english: 'NETWORK',
-    archetype: 'artisan',
-    icon: 'torii',
-  },
-  Resilience: {
-    english: 'RESILIENCE',
-    archetype: 'samurai',
-    icon: 'shield',
-  },
-  Council: {
-    english: 'COUNCIL',
-    archetype: 'strategist',
-    icon: 'fan',
-  },
-  Architecture: {
-    english: 'ARCHITECTURE',
-    archetype: 'architect',
-    icon: 'compass',
-  },
+  Executive: { english: 'EXECUTIVE', archetype: 'samurai', icon: 'katana' },
+  Planning: { english: 'PLANNING', archetype: 'strategist', icon: 'compass' },
+  Forge: { english: 'FORGE', archetype: 'artisan', icon: 'torii' },
+  Sentinel: { english: 'SENTINEL', archetype: 'samurai', icon: 'shield' },
+  Shadow: { english: 'SHADOW', archetype: 'ninja', icon: 'shuriken' },
+  Support: { english: 'SUPPORT', archetype: 'monk', icon: 'fan' },
 }
 
 /**
@@ -78,16 +54,6 @@ export const MEMBER_THEMES: Record<string, JapaneseColorTheme> = {
     darkFrom: '#2E2211',
     darkTo: '#20180B',
     darkAccent: '#F6BD60',
-  },
-  // Mira (Intelligence, ninja): Teal / cyan
-  Mira: {
-    name: 'Teal',
-    from: '#D8F2F0',
-    to: '#B5E3E0',
-    accent: '#0E7C86',
-    darkFrom: '#102528',
-    darkTo: '#0B1B1E',
-    darkAccent: '#4ED6DF',
   },
 }
 

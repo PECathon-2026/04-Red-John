@@ -1,21 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { AGENTS, type AgentDef, type Team } from '@/lib/agents'
+import { TEAM_ORDER, useGuild, type AgentDef, type Team } from '@/lib/agents'
 import type { AgentState } from '@/lib/mission-sim'
 import { TeamCard } from '@/components/theme/team-card'
 import { AgentDossierCard } from './agent-dossier-card'
 import { Search, Users } from 'lucide-react'
 
-const TEAMS: (Team | 'All')[] = [
-  'All',
-  'Executive',
-  'Intelligence',
-  'Network',
-  'Resilience',
-  'Council',
-  'Architecture',
-]
+const TEAMS: (Team | 'All')[] = ['All', ...TEAM_ORDER]
 
 export function AgentRosterTab({
   agents,
@@ -28,7 +20,8 @@ export function AgentRosterTab({
   const [search, setSearch] = useState('')
   const [activeDossier, setActiveDossier] = useState<AgentDef | null>(null)
 
-  const filtered = AGENTS.filter((a) => {
+  const { agents: guild, error } = useGuild()
+  const filtered = guild.filter((a) => {
     const matchesTeam = selectedTeam === 'All' || a.team === selectedTeam
     const matchesSearch =
       a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,7 +43,7 @@ export function AgentRosterTab({
                 Specialist Directory
               </h3>
               <p className="text-[11px] font-normal text-[#2B2B2B]/65">
-                {filtered.length} active specialists in organization
+                {guild.length} specialists in the guild · {Object.keys(agents).length} on this mission
               </p>
             </div>
           </div>
@@ -105,7 +98,7 @@ export function AgentRosterTab({
               key={agent.name}
               index={idx}
               name={agent.name}
-              title={agent.role}
+              title={state?.task || agent.role}
               department={agent.team}
               status={phase}
               avatar={agent.charIdx}
@@ -117,7 +110,7 @@ export function AgentRosterTab({
         {filtered.length === 0 && (
           <div className="flex h-48 flex-col items-center justify-center text-center">
             <p className="text-xs font-medium text-[#2B2B2B]/60">
-              No specialists match the search criteria.
+              {error ? `Could not load the guild: ${error}` : 'No specialists match the search.'}
             </p>
           </div>
         )}

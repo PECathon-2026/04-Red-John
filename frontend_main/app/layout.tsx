@@ -21,7 +21,7 @@ const pressStart = Press_Start_2P({
 export const metadata: Metadata = {
   title: 'DevPilot — Autonomous AI Engineering Organization',
   description:
-    'Modern autonomous AI organization that plans, builds, tests, and reviews changes to your software & supply systems.',
+    'Modern autonomous AI organization that plans, builds, tests, and reviews changes to your software, with a human approving every risky step.',
 }
 
 export const viewport: Viewport = {

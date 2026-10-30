@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -59,8 +60,17 @@ def truncate_middle(text: str, limit: int) -> str:
     return f"{text[:half]}\n… [{len(text) - limit} chars elided] …\n{text[-half:]}"
 
 
+def tool_path() -> str:
+    """PATH for agent commands, with this interpreter's own bin directory first: `python` and
+    `pytest` then mean the interpreter running DevPilot, even when its venv was never activated."""
+    interpreter_bin = str(Path(sys.executable).parent)
+    rest = [p for p in os.environ.get("PATH", "").split(os.pathsep) if p and p != interpreter_bin]
+    return os.pathsep.join([interpreter_bin, *rest])
+
+
 def scrubbed_env() -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if not _SECRET_ENV.search(k)}
+    env["PATH"] = tool_path()
     env.update(
         {
             "CI": "1",
@@ -76,7 +86,7 @@ def scrubbed_env() -> dict[str, str]:
 
 
 def resolve_executable(argv: list[str]) -> list[str]:
-    exe = shutil.which(argv[0])
+    exe = shutil.which(argv[0], path=tool_path())
     if exe is None:
         raise PolicyViolation(f"'{argv[0]}' is not installed or not on PATH", details={"tool_unavailable": True})
     if exe.lower().endswith((".bat", ".cmd")):

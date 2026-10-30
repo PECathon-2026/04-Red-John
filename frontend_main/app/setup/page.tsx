@@ -1,266 +1,151 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { saveSetup, getToken } from '@/lib/auth'
-import {
-  Check,
-  ArrowRight,
-  ArrowLeft,
-  Layers,
-  Globe2,
-  Calendar,
-  Sparkles,
-} from 'lucide-react'
+import { endpoints, getUser, hasRole } from '@/lib/api'
+import { resolveSession } from '@/lib/auth'
+import { ArrowRight, FolderGit2, FileText, Rocket } from 'lucide-react'
 
-export default function SetupPage() {
+const REPO_KEY = 'devpilot_last_repo'
+
+/** New mission: a plain-language request plus the repository the guild should work on. */
+export default function NewMissionPage() {
   const router = useRouter()
-  const [currentStep, setCurrentStep] = useState(0)
+  const [request, setRequest] = useState('')
+  const [repoPath, setRepoPath] = useState('')
+  const [title, setTitle] = useState('')
+  const [start, setStart] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [canCreate, setCanCreate] = useState(true)
 
-  const [formData, setFormData] = useState({
-    businessType: 'Hardware & IoT Electronics',
-    productDescription: 'Autonomous sensor node with cellular backhaul',
-    targetRegions: ['North America', 'European Union'],
-    annualUnits: '50,000 units / year',
-    targetLaunch: 'Q4 2026',
-    priorities: 'Resilience over lowest initial landed cost; Dual-sourcing on MCUs',
-  })
-
-  const steps = [
-    { title: 'Product Spec', icon: Layers },
-    { title: 'Markets', icon: Globe2 },
-    { title: 'Volume', icon: Calendar },
-    { title: 'Directives', icon: Sparkles },
-  ]
-
-  async function handleComplete() {
-    setSubmitting(true)
-    const token = getToken() || 'mock-token'
+  useEffect(() => {
     try {
-      const res = await saveSetup(token, formData)
-      router.push(`/control?project=${res.project_id}`)
+      setRepoPath(localStorage.getItem(REPO_KEY) ?? '')
     } catch {
-      router.push('/control')
-    } finally {
+      /* storage unavailable */
+    }
+    resolveSession()
+      .then((user) => {
+        if (!user) router.replace('/login?next=/setup')
+        else setCanCreate(hasRole(getUser(), 'operator'))
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+  }, [router])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      const res = await endpoints.createMission({
+        request: request.trim(),
+        repo_path: repoPath.trim(),
+        title: title.trim() || undefined,
+        start,
+      })
+      try {
+        localStorage.setItem(REPO_KEY, repoPath.trim())
+      } catch {
+        /* storage unavailable */
+      }
+      router.push(`/control?mission=${res.mission.mission_id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
       setSubmitting(false)
     }
   }
 
   return (
-    <main className="relative flex min-h-svh flex-col justify-between bg-[#fff6f8] p-5 md:p-8">
-      {/* Top Header */}
+    <main className="relative flex min-h-svh flex-col bg-[#fff6f8] p-5 md:p-8">
       <header className="mx-auto flex w-full max-w-2xl items-center justify-between pb-6">
         <Link href="/" className="flex items-center gap-2">
           <span className="text-base">🌸</span>
-          <span className="text-xs font-bold text-[#1c1917] uppercase tracking-wider">
-            Directives Setup
-          </span>
+          <span className="text-xs font-bold text-[#1c1917] uppercase tracking-wider">New mission</span>
         </Link>
-
-        <Link
-          href="/control"
-          className="text-xs font-semibold text-[#78716c] hover:text-[#1c1917]"
-        >
-          Skip to Dojo →
+        <Link href="/control" className="text-xs font-semibold text-[#78716c] hover:text-[#1c1917]">
+          Mission control →
         </Link>
       </header>
 
-      {/* Stepper Wizard Card */}
-      <div className="glass-panel mx-auto w-full max-w-2xl p-6 shadow-xl sm:p-8">
-        {/* Step Indicators */}
-        <div className="mb-6 flex items-center justify-between">
-          {steps.map((st, i) => {
-            const Icon = st.icon
-            const isDone = i < currentStep
-            const isCurrent = i === currentStep
-            return (
-              <div key={st.title} className="flex flex-1 items-center">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-xl transition-all ${
-                      isDone
-                        ? 'bg-[#1c1917] text-rose-200'
-                        : isCurrent
-                          ? 'border border-rose-400 bg-rose-50 text-rose-700 shadow-2xs'
-                          : 'bg-white/40 text-[#a8a29e]'
-                    }`}
-                  >
-                    {isDone ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                  </div>
-                  <span className="mt-1.5 hidden text-[10px] font-semibold text-[#1c1917] sm:block">
-                    {st.title}
-                  </span>
-                </div>
-                {i < steps.length - 1 && (
-                  <div
-                    className={`mx-2 h-0.5 flex-1 transition-all ${
-                      i < currentStep ? 'bg-[#1c1917]' : 'bg-rose-100/60'
-                    }`}
-                  />
-                )}
-              </div>
-            )
-          })}
+      <form onSubmit={handleSubmit} className="glass-panel mx-auto w-full max-w-2xl space-y-5 p-6 shadow-xl sm:p-8">
+        <div>
+          <h1 className="text-lg font-bold text-[#1c1917]">What should the guild build or fix?</h1>
+          <p className="mt-1 text-xs text-[#78716c]">
+            Kenji turns this into acceptance criteria, Maya hires the specialists, and nothing touches
+            your repository until you approve the final change.
+          </p>
         </div>
 
-        {/* Step Content */}
-        <div className="min-h-[200px] space-y-4">
-          {currentStep === 0 && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-[#1c1917]">
-                  Category / Architecture Scope
-                </label>
-                <input
-                  type="text"
-                  value={formData.businessType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, businessType: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/70 bg-white/40 px-3.5 py-2 text-xs outline-none focus:bg-white/70"
-                />
-              </div>
+        <label className="block">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1c1917]">
+            <FileText className="h-3.5 w-3.5" /> Request
+          </span>
+          <textarea
+            value={request}
+            onChange={(e) => setRequest(e.target.value)}
+            required
+            minLength={3}
+            rows={6}
+            placeholder="e.g. Add a discount code to the checkout: SAVE10 takes 10% off the subtotal. Reject unknown codes with a clear error and add tests."
+            className="mt-1 w-full rounded-xl border border-white/70 bg-white/60 px-3 py-2 text-sm text-foreground outline-none transition-all focus:border-rose-300 focus:bg-white/90"
+          />
+        </label>
 
-              <div>
-                <label className="text-xs font-semibold text-[#1c1917]">
-                  Technical Specification
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.productDescription}
-                  onChange={(e) =>
-                    setFormData({ ...formData, productDescription: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/70 bg-white/40 px-3.5 py-2 text-xs outline-none focus:bg-white/70"
-                />
-              </div>
-            </div>
-          )}
+        <label className="block">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#1c1917]">
+            <FolderGit2 className="h-3.5 w-3.5" /> Repository path (on the backend machine)
+          </span>
+          <input
+            value={repoPath}
+            onChange={(e) => setRepoPath(e.target.value)}
+            required
+            placeholder="D:\Projects\devPolit\missions\01-feature-discounts\repo"
+            className="mt-1 w-full rounded-xl border border-white/70 bg-white/60 px-3 py-2 font-mono text-xs text-foreground outline-none transition-all focus:border-rose-300 focus:bg-white/90"
+          />
+          <span className="mt-1 block text-[10px] text-[#a8a29e]">
+            The guild works on a sandboxed copy; the original changes only after you approve the apply.
+          </span>
+        </label>
 
-          {currentStep === 1 && (
-            <div className="space-y-3">
-              <label className="text-xs font-semibold text-[#1c1917]">
-                Target Regions
-              </label>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {['North America', 'European Union', 'East Asia', 'Southeast Asia', 'South America', 'India'].map(
-                  (reg) => {
-                    const selected = formData.targetRegions.includes(reg)
-                    return (
-                      <button
-                        key={reg}
-                        type="button"
-                        onClick={() => {
-                          const next = selected
-                            ? formData.targetRegions.filter((r) => r !== reg)
-                            : [...formData.targetRegions, reg]
-                          setFormData({ ...formData, targetRegions: next })
-                        }}
-                        className={`rounded-xl border p-3 text-left transition-all ${
-                          selected
-                            ? 'border-rose-400 bg-rose-50/70 text-rose-950 font-semibold'
-                            : 'border-white/60 bg-white/40 text-[#57534e] hover:bg-white/70'
-                        }`}
-                      >
-                        <span className="text-xs">{reg}</span>
-                      </button>
-                    )
-                  },
-                )}
-              </div>
-            </div>
-          )}
+        <label className="block">
+          <span className="text-[11px] font-semibold text-[#1c1917]">Title (optional)</span>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={200}
+            className="mt-1 w-full rounded-xl border border-white/70 bg-white/60 px-3 py-2 text-xs text-foreground outline-none transition-all focus:border-rose-300 focus:bg-white/90"
+          />
+        </label>
 
-          {currentStep === 2 && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-[#1c1917]">
-                  Volume
-                </label>
-                <input
-                  type="text"
-                  value={formData.annualUnits}
-                  onChange={(e) =>
-                    setFormData({ ...formData, annualUnits: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/70 bg-white/40 px-3.5 py-2 text-xs outline-none focus:bg-white/70"
-                />
-              </div>
+        <label className="flex items-center gap-2 text-xs text-[#44403c]">
+          <input
+            type="checkbox"
+            checked={start}
+            onChange={(e) => setStart(e.target.checked)}
+            className="h-3.5 w-3.5 rounded accent-rose-600"
+          />
+          Start the guild right away
+        </label>
 
-              <div>
-                <label className="text-xs font-semibold text-[#1c1917]">
-                  Timeline
-                </label>
-                <input
-                  type="text"
-                  value={formData.targetLaunch}
-                  onChange={(e) =>
-                    setFormData({ ...formData, targetLaunch: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/70 bg-white/40 px-3.5 py-2 text-xs outline-none focus:bg-white/70"
-                />
-              </div>
-            </div>
-          )}
+        {!canCreate && (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            Your role is viewer — an operator, approver or admin must create missions.
+          </p>
+        )}
+        {error && <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-800">{error}</p>}
 
-          {currentStep === 3 && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs font-semibold text-[#1c1917]">
-                  Clan Resilience Directives
-                </label>
-                <textarea
-                  rows={3}
-                  value={formData.priorities}
-                  onChange={(e) =>
-                    setFormData({ ...formData, priorities: e.target.value })
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/70 bg-white/40 px-3.5 py-2 text-xs outline-none focus:bg-white/70"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="mt-6 flex items-center justify-between border-t border-rose-100/50 pt-4">
-          <button
-            type="button"
-            disabled={currentStep === 0}
-            onClick={() => setCurrentStep((prev) => prev - 1)}
-            className="flex items-center gap-1 rounded-full px-4 py-2 text-xs font-semibold text-[#78716c] hover:bg-white/50 disabled:opacity-30"
-          >
-            <ArrowLeft className="h-3 w-3" />
-            <span>Back</span>
-          </button>
-
-          {currentStep < steps.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => setCurrentStep((prev) => prev + 1)}
-              className="flex items-center gap-1 rounded-full bg-[#1c1917] px-5 py-2 text-xs font-semibold text-rose-100 shadow-2xs hover:bg-rose-950"
-            >
-              <span>Continue</span>
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={submitting}
-              onClick={handleComplete}
-              className="flex items-center gap-1.5 rounded-full bg-[#1c1917] px-6 py-2 text-xs font-semibold text-rose-200 shadow-md hover:bg-rose-950 disabled:opacity-50"
-            >
-              <span>{submitting ? 'Commissioning...' : 'Launch Directives'}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      <footer className="mx-auto mt-4 text-center text-[10px] text-[#a8a29e]">
-        DevPilot Dojo Directives
-      </footer>
+        <button
+          type="submit"
+          disabled={submitting || !canCreate}
+          className="flex w-full items-center justify-center gap-1.5 rounded-full bg-[#1c1917] py-2.5 text-xs font-semibold text-rose-100 shadow-xs transition-all hover:bg-rose-950 disabled:opacity-50"
+        >
+          <Rocket className="h-3.5 w-3.5" />
+          <span>{submitting ? 'Creating mission…' : start ? 'Launch mission' : 'Create mission'}</span>
+          <ArrowRight className="h-3 w-3" />
+        </button>
+      </form>
     </main>
   )
 }

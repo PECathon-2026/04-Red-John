@@ -103,8 +103,14 @@ class OpenAICompatibleProvider:
         if response.status_code != 400:
             return None
         try:
-            error = response.json().get("error") or {}
+            body = response.json()
         except ValueError:
+            return None
+        # Gemini's OpenAI-compatible endpoint wraps its error in a list: [{"error": {...}}].
+        if isinstance(body, list):
+            body = body[0] if body else {}
+        error = body.get("error") if isinstance(body, dict) else None
+        if not isinstance(error, dict):
             return None
         # Both mean the model's own output was malformed, not the request: the agent should try again.
         if error.get("code") not in ("tool_use_failed", "output_parse_failed"):

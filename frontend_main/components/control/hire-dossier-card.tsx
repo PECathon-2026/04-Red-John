@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
-import { getAgent, TEAM_COLORS } from '@/lib/agents'
-import { AGENT_DOSSIERS } from '@/lib/agent-dossiers'
+import { getAgent, teamColors } from '@/lib/agents'
 import { formatElapsed, type AgentState, type HireEvent } from '@/lib/mission-sim'
 import { AgentSprite } from '@/components/pixel/agent-sprite'
 import { X, Shield, Clock, CheckCircle } from 'lucide-react'
@@ -20,8 +19,7 @@ export function HireDossierCard({
   onClose: () => void
 }) {
   const def = getAgent(hire.agent)
-  const dossier = AGENT_DOSSIERS[hire.agent]
-  const colors = TEAM_COLORS[hire.team]
+  const colors = teamColors(hire.team)
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -100,26 +98,35 @@ export function HireDossierCard({
             </p>
           </div>
 
-          {/* Dossier Mission */}
-          {dossier && (
+          {/* Live status */}
+          {state && (
+            <div className="flex items-center gap-2 rounded-xl bg-gray-50/80 p-2.5 text-xs text-[#2b2742]">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-purple-500" />
+              <span className="font-semibold capitalize">{state.phase}</span>
+              <span className="truncate text-muted-foreground">{state.task}</span>
+            </div>
+          )}
+
+          {/* Guild record */}
+          {def?.detail && (
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                 Specialist Background
               </h4>
               <p className="text-xs leading-relaxed text-muted-foreground">
-                {dossier.mission}
+                {def.detail}
               </p>
             </div>
           )}
 
           {/* Responsibilities */}
-          {dossier?.responsibilities && (
+          {def && def.skills.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Responsibilities
+                Skills
               </h4>
               <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {dossier.responsibilities.map((r) => (
+                {def.skills.map((r) => (
                   <li
                     key={r}
                     className="flex items-start gap-2 rounded-xl bg-gray-50/80 p-2.5 text-xs text-[#2b2742]"
@@ -133,13 +140,13 @@ export function HireDossierCard({
           )}
 
           {/* Tools */}
-          {dossier?.tools && (
+          {def && def.tools.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Connected Tools & Skills
+                Tools
               </h4>
               <div className="flex flex-wrap gap-2">
-                {dossier.tools.map((t) => (
+                {def.tools.map((t) => (
                   <span
                     key={t}
                     className="rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-mono text-[#332f4a]"

@@ -34,6 +34,25 @@ def client_address(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def route_template(request: Request) -> str:
+    """The matched route's full path template, e.g. /api/v1/missions/{mission_id}.
+
+    Newer FastAPI keeps each route's own path (without the router prefix), so the prefix is
+    recovered from the request path: it is whatever precedes the route's filled-in template.
+    """
+    route = request.scope.get("route")
+    path = getattr(route, "path", None)
+    if not path:
+        return "unmatched"
+    filled = path
+    for name, value in (request.scope.get("path_params") or {}).items():
+        filled = filled.replace(f"{{{name}}}", str(value)).replace(f"{{{name}:path}}", str(value))
+    actual = request.scope.get("path", "")
+    if actual != filled and actual.endswith(filled):
+        return actual[: -len(filled)] + path
+    return path
+
+
 class RequestIdMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         request_id = request.headers.get("x-request-id") or uuid.uuid4().hex[:16]
@@ -44,8 +63,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         finally:
             request_id_var.reset(token)
         elapsed = time.perf_counter() - started
-        route = request.scope.get("route")
-        template = getattr(route, "path", "unmatched")  # route templates keep metric labels bounded
+        template = route_template(request)  # route templates keep metric labels bounded
         metrics.HTTP_REQUESTS.inc(method=request.method, route=template, status=str(response.status_code))
         metrics.HTTP_LATENCY.observe(elapsed, method=request.method, route=template)
         response.headers["x-request-id"] = request_id

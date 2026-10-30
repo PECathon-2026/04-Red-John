@@ -57,7 +57,7 @@ export default function WelcomePage() {
 
         {/* Subtitle */}
         <p className="mt-5 max-w-xl text-sm leading-relaxed text-[#57534e] sm:text-base">
-          A synchronized organization of 21 AI specialists that researches, constructs, stress-tests, and executes changes across software and supply systems with disciplined efficiency.
+          A guild of 16 AI specialists that turns a plain-language request into a tested, reviewed, evidence-backed change to your repository — and applies it only after a human approves.
         </p>
 
         {/* Actions */}
@@ -74,7 +74,7 @@ export default function WelcomePage() {
             href="/team"
             className="flex items-center gap-2 rounded-full border border-white/70 bg-white/50 px-5 py-2.5 text-xs font-semibold text-[#1c1917] shadow-2xs backdrop-blur-md transition-all hover:bg-white/70"
           >
-            <span>Specialists Roster (21)</span>
+            <span>Specialist Guild (16)</span>
           </Link>
         </div>
 

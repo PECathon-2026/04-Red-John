@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getAgent, TEAM_COLORS } from '@/lib/agents'
+import { getAgent, teamColors } from '@/lib/agents'
 import { formatElapsed, type AgentState, type HireEvent } from '@/lib/mission-sim'
 import { AgentSprite } from '@/components/pixel/agent-sprite'
 import { HireDossierCard } from './hire-dossier-card'
@@ -42,7 +42,7 @@ export function HireCardsTab({
         {hires.length === 0 ? (
           <div className="flex h-32 flex-col items-center justify-center text-center">
             <p className="text-xs text-muted-foreground">
-              Reviewing mission parameters...
+              Maya has not hired anyone yet.
             </p>
           </div>
         ) : (
@@ -81,7 +81,7 @@ function IdentityCard({
   onOpen: () => void
 }) {
   const def = getAgent(hire.agent)
-  const colors = TEAM_COLORS[hire.team]
+  const colors = teamColors(hire.team)
 
   return (
     <button
