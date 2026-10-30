@@ -70,6 +70,10 @@ class Settings(BaseSettings):
             "http://127.0.0.1:3001",
         ]
     )
+    # Extra origins as a regex. Outside production this defaults to any localhost port, so the
+    # Flutter app's web build (`flutter run -d chrome` picks a random port) can call the API.
+    # Native Android/iOS builds don't send an Origin and need no CORS entry.
+    cors_origin_regex: str | None = None
 
     # ── Logging ───────────────────────────────────────────────────
     log_level: str = "INFO"

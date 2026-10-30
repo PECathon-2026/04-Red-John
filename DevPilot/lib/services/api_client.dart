@@ -57,6 +57,20 @@ class DevPilotApiClient {
 
   String get baseUrl => _baseUrl;
 
+  /// Bearer token from `/auth/login`; sent on every request and on the WebSocket.
+  String? _token;
+  String? get token => _token;
+  bool get hasToken => _token != null && _token!.isNotEmpty;
+
+  void setToken(String? token) {
+    _token = (token == null || token.isEmpty) ? null : token;
+  }
+
+  Map<String, String> _headers({bool json = false}) => {
+        if (json) 'Content-Type': 'application/json',
+        if (hasToken) 'Authorization': 'Bearer $_token',
+      };
+
   void setBaseUrl(String url) {
     var clean = url.trim();
     if (clean.endsWith('/')) {
@@ -83,7 +97,7 @@ class DevPilotApiClient {
   /// Checks server readiness: storage, event bus, and LLM routes.
   Future<Map<String, dynamic>> checkHealth() async {
     final uri = Uri.parse('$_baseUrl/api/v1/health/ready');
-    final response = await _httpClient.get(uri).timeout(const Duration(seconds: 4));
+    final response = await _httpClient.get(uri, headers: _headers()).timeout(const Duration(seconds: 4));
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(response.body) as Map<String, dynamic>;
     }
@@ -91,6 +105,30 @@ class DevPilotApiClient {
       statusCode: response.statusCode,
       message: 'Health check failed: ${response.body}',
     );
+  }
+
+  // --- Auth Endpoints (same accounts as the web control room) ---
+
+  /// Sign in (`POST /api/v1/auth/login`). Stores the returned bearer token and
+  /// returns the signed-in user (`user_id`, `username`, `role`).
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    final uri = _uri('/auth/login');
+    final response = await _httpClient.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username.trim(), 'password': password}),
+    );
+    final data = _handleJson(response);
+    setToken(data['access_token'] as String?);
+    return (data['user'] as Map<String, dynamic>?) ?? {};
+  }
+
+  /// Current user (`GET /api/v1/auth/me`). Works without a token when the server
+  /// runs with `AUTH_ENABLED=false`; otherwise a missing/expired token is a 401.
+  Future<Map<String, dynamic>> me() async {
+    final uri = _uri('/auth/me');
+    final response = await _httpClient.get(uri, headers: _headers());
+    return _handleJson(response);
   }
 
   // --- Mission Endpoints ---
@@ -104,7 +142,7 @@ class DevPilotApiClient {
     if (status != null) query['status'] = status;
 
     final uri = _uri('/missions', query);
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     final data = _handleJson(response);
     final list = data['missions'] as List<dynamic>? ?? [];
     return list.cast<Map<String, dynamic>>();
@@ -120,7 +158,7 @@ class DevPilotApiClient {
     final uri = _uri('/missions');
     final response = await _httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode({
         'request': request,
         'repo_path': repoPath,
@@ -134,21 +172,21 @@ class DevPilotApiClient {
   /// Get mission details (`GET /api/v1/missions/{id}`).
   Future<Map<String, dynamic>> getMission(String missionId) async {
     final uri = _uri('/missions/$missionId');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     return _handleJson(response);
   }
 
   /// Get aggregated mission snapshot for UI cold-start (`GET /api/v1/missions/{id}/snapshot`).
   Future<Map<String, dynamic>> getMissionSnapshot(String missionId) async {
     final uri = _uri('/missions/$missionId/snapshot');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     return _handleJson(response);
   }
 
   /// Start or resume mission execution (`POST /api/v1/missions/{id}/run`).
   Future<Map<String, dynamic>> runMission(String missionId) async {
     final uri = _uri('/missions/$missionId/run');
-    final response = await _httpClient.post(uri);
+    final response = await _httpClient.post(uri, headers: _headers());
     return _handleJson(response);
   }
 
@@ -160,7 +198,7 @@ class DevPilotApiClient {
     final uri = _uri('/missions/$missionId/stop');
     final response = await _httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode({'reason': reason}),
     );
     return _handleJson(response);
@@ -169,7 +207,7 @@ class DevPilotApiClient {
   /// Fetch full unified git diff patch (`GET /api/v1/missions/{id}/patch`).
   Future<String> getMissionPatch(String missionId) async {
     final uri = _uri('/missions/$missionId/patch');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     if (response.statusCode == 200) {
       return response.body;
     }
@@ -182,7 +220,7 @@ class DevPilotApiClient {
   /// Request applying mission changes to the target repository (`POST /api/v1/missions/{id}/apply`).
   Future<Map<String, dynamic>> applyMissionChanges(String missionId) async {
     final uri = _uri('/missions/$missionId/apply');
-    final response = await _httpClient.post(uri);
+    final response = await _httpClient.post(uri, headers: _headers());
     return _handleJson(response);
   }
 
@@ -195,7 +233,7 @@ class DevPilotApiClient {
   }) async {
     final query = status != null ? {'status': status} : null;
     final uri = _uri('/missions/$missionId/approvals', query);
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     final data = _handleJson(response);
     final list = data['approvals'] as List<dynamic>? ?? [];
     return list.cast<Map<String, dynamic>>();
@@ -210,7 +248,7 @@ class DevPilotApiClient {
     final uri = _uri('/approvals/$approvalId/respond');
     final response = await _httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode({
         'approved': approved,
         'note': ?note,
@@ -228,7 +266,7 @@ class DevPilotApiClient {
     final uri = _uri('/missions/$missionId/issues/$issueId/resolve');
     final response = await _httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode({'resolution': resolution}),
     );
     return _handleJson(response);
@@ -244,7 +282,7 @@ class DevPilotApiClient {
     if (agent != null) query['agent'] = agent;
 
     final uri = _uri('/missions/$missionId/audit', query);
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     return _handleJson(response);
   }
 
@@ -253,7 +291,7 @@ class DevPilotApiClient {
   /// Get the full 16-agent guild roster (`GET /api/v1/agents`).
   Future<List<Map<String, dynamic>>> getGuildRoster() async {
     final uri = _uri('/agents');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     final data = _handleJson(response);
     final list = data['agents'] as List<dynamic>? ?? [];
     return list.cast<Map<String, dynamic>>();
@@ -262,7 +300,7 @@ class DevPilotApiClient {
   /// Get hired personnel on a mission (`GET /api/v1/missions/{id}/hires`).
   Future<Map<String, dynamic>> getMissionHires(String missionId) async {
     final uri = _uri('/missions/$missionId/hires');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     return _handleJson(response);
   }
 
@@ -275,7 +313,7 @@ class DevPilotApiClient {
     final uri = _uri('/missions/$missionId/hires');
     final response = await _httpClient.post(
       uri,
-      headers: {'Content-Type': 'application/json'},
+      headers: _headers(json: true),
       body: jsonEncode({'skills': skills, 'reason': reason}),
     );
     return _handleJson(response);
@@ -294,7 +332,7 @@ class DevPilotApiClient {
     if (taskId != null) query['task_id'] = taskId;
 
     final uri = _uri('/missions/$missionId/evidence', query);
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     final data = _handleJson(response);
     final list = data['evidence'] as List<dynamic>? ?? [];
     return list.cast<Map<String, dynamic>>();
@@ -303,7 +341,7 @@ class DevPilotApiClient {
   /// List available tools catalogue (`GET /api/v1/tools`).
   Future<List<Map<String, dynamic>>> getToolCatalogue() async {
     final uri = _uri('/tools');
-    final response = await _httpClient.get(uri);
+    final response = await _httpClient.get(uri, headers: _headers());
     final data = _handleJson(response);
     final list = data['tools'] as List<dynamic>? ?? [];
     return list.cast<Map<String, dynamic>>();
@@ -317,8 +355,13 @@ class DevPilotApiClient {
     int afterSeq = 0,
   }) {
     final wsBase = _baseUrl.replaceFirst(RegExp(r'^http'), 'ws');
-    final query = afterSeq > 0 ? '?after_seq=$afterSeq' : '';
-    final wsUri = Uri.parse('$wsBase/api/v1/realtime/missions/$missionId$query');
+    final wsUri = Uri.parse('$wsBase/api/v1/realtime/missions/$missionId').replace(
+      queryParameters: {
+        if (afterSeq > 0) 'after_seq': '$afterSeq',
+        // The backend accepts ?token= because browsers can't set WebSocket headers.
+        if (hasToken) 'token': _token!,
+      },
+    );
     final factory = webSocketFactory;
     if (factory != null) {
       return factory(wsUri);
@@ -335,8 +378,26 @@ class DevPilotApiClient {
     }
     throw ApiException(
       statusCode: response.statusCode,
-      message: response.body,
+      message: _errorMessage(response),
+      details: response.body,
     );
+  }
+
+  /// backend_main errors are `{"error": {"code", "message"}}`; FastAPI validation is `{"detail": ...}`.
+  static String _errorMessage(http.Response response) {
+    try {
+      final body = jsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        final error = body['error'];
+        if (error is Map && error['message'] is String) return error['message'] as String;
+        final detail = body['detail'];
+        if (detail is String) return detail;
+        if (detail is List && detail.isNotEmpty && detail.first is Map) {
+          return detail.map((d) => (d as Map)['msg']).join('; ');
+        }
+      }
+    } catch (_) {}
+    return response.body.isEmpty ? 'HTTP ${response.statusCode}' : response.body;
   }
 
   void close() {

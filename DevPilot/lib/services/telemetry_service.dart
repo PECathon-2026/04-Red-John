@@ -6,6 +6,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/models.dart';
 import 'api_client.dart';
+import 'session_store.dart';
 
 /// Telemetry and real-time backend orchestration service for DevPilot mobile frontend.
 ///
@@ -18,6 +19,7 @@ import 'api_client.dart';
 class TelemetryService extends ChangeNotifier {
   final bool autoStart;
   final DevPilotApiClient apiClient;
+  final SessionStore sessionStore;
 
   Timer? _pollingTimer;
   Timer? _tickTimer;
@@ -54,10 +56,17 @@ class TelemetryService extends ChangeNotifier {
   String? _connectionError;
   BackendHealth _backendHealth = const BackendHealth();
   int _lastSeq = 0;
+  Timer? _snapshotDebounce;
+  bool _disposed = false;
+
+  // Auth (same accounts as the web control room)
+  bool _authRequired = false;
+  Map<String, dynamic>? _currentUser;
 
   TelemetryService({
     this.autoStart = true,
     DevPilotApiClient? client,
+    this.sessionStore = const SessionStore(),
   }) : apiClient = client ?? DevPilotApiClient() {
     _initializeDefaultState();
     if (autoStart) {
@@ -92,6 +101,12 @@ class TelemetryService extends ChangeNotifier {
   bool get isSyncing => _isSyncing;
   String? get connectionError => _connectionError;
   BackendHealth get backendHealth => _backendHealth;
+
+  /// True once the backend has refused us with 401: the app should show sign-in.
+  bool get authRequired => _authRequired;
+  Map<String, dynamic>? get currentUser => _currentUser;
+  String? get username => _currentUser?['username'] as String?;
+  String? get role => _currentUser?['role'] as String?;
 
   // --- Initialization ---
 
@@ -295,12 +310,14 @@ class TelemetryService extends ChangeNotifier {
       simulateTick();
     });
 
-    // Initial backend fetch
-    refreshFromBackend();
+    // Restore the saved session, then do the initial backend fetch
+    restoreSession().then((_) {
+      if (!_disposed) refreshFromBackend();
+    });
 
     // Periodic mission list polling (every 6 seconds)
     _pollingTimer = Timer.periodic(const Duration(seconds: 6), (_) {
-      if (_isLANConnected) {
+      if (_isLANConnected && !_authRequired) {
         _pollBackendStatus();
       }
     });
@@ -326,8 +343,13 @@ class TelemetryService extends ChangeNotifier {
         _connectionError = 'Backend unreachable: $e';
       }
 
-      // 2. Fetch Missions
+      // 2. Who am I? (401 → sign-in needed)
       if (_isBackendConnected) {
+        await _checkAuth();
+      }
+
+      // 3. Fetch Missions
+      if (_isBackendConnected && !_authRequired) {
         final missionList = await apiClient.listMissions(limit: 50);
         _updateProjectsList(missionList);
 
@@ -340,6 +362,8 @@ class TelemetryService extends ChangeNotifier {
           await selectMission(running.id);
         }
       }
+    } on ApiException catch (e) {
+      if (!_handleUnauthorized(e)) _connectionError = e.message;
     } catch (e) {
       _connectionError = e.toString();
     } finally {
@@ -406,6 +430,8 @@ class TelemetryService extends ChangeNotifier {
         await _fetchMissionSnapshot(_activeMissionId!);
       }
       notifyListeners();
+    } on ApiException catch (e) {
+      if (_handleUnauthorized(e)) notifyListeners();
     } catch (_) {
       // Background poll failure handled gracefully
     }
@@ -424,6 +450,20 @@ class TelemetryService extends ChangeNotifier {
     try {
       final snap = await apiClient.getMissionSnapshot(missionId);
       _applySnapshot(snap);
+    } on ApiException catch (e) {
+      if (_handleUnauthorized(e)) {
+        notifyListeners();
+        return;
+      }
+      _logs.add(
+        TerminalLog(
+          id: 'snap-err-${DateTime.now().millisecondsSinceEpoch}',
+          timestamp: DateTime.now(),
+          message: '[ERROR] Snapshot failed for $missionId: ${e.message}',
+          type: LogType.error,
+        ),
+      );
+      notifyListeners();
     } catch (e) {
       _logs.add(
         TerminalLog(
@@ -671,6 +711,13 @@ class TelemetryService extends ChangeNotifier {
             ),
           );
         },
+        onDone: () {
+          // 4401 = the backend refused the token (expired or signed out elsewhere).
+          if (_wsChannel?.closeCode == 4401) {
+            _handleUnauthorized(const ApiException(statusCode: 401, message: 'unauthenticated'));
+            notifyListeners();
+          }
+        },
       );
     } catch (_) {}
   }
@@ -770,9 +817,19 @@ class TelemetryService extends ChangeNotifier {
         );
 
       case 'mission_status':
-        if (_activeMissionId != null) {
-          _fetchMissionSnapshot(_activeMissionId!);
-        }
+      case 'mission_created':
+      case 'plan_updated':
+      case 'task_updated':
+      case 'criterion':
+      case 'issue':
+      case 'finding':
+      case 'hire':
+      case 'release':
+      case 'start':
+      case 'finish':
+      case 'complete':
+      case 'apply':
+        _scheduleSnapshotRefresh();
     }
 
     if (_logs.length > 300) {
@@ -1093,11 +1150,101 @@ class TelemetryService extends ChangeNotifier {
 
   void updateBackendUrl(String newUrl) {
     apiClient.setBaseUrl(newUrl);
+    sessionStore.writeBaseUrl(apiClient.baseUrl);
     refreshFromBackend();
+  }
+
+  // --- Session ---
+
+  /// Loads the saved backend URL and token (if any) into the API client.
+  Future<void> restoreSession() async {
+    final url = await sessionStore.readBaseUrl();
+    if (url != null && url.isNotEmpty) apiClient.setBaseUrl(url);
+    final token = await sessionStore.readToken();
+    if (token != null && token.isNotEmpty) apiClient.setToken(token);
+  }
+
+  /// Signs in against `backend_main` with the same account used on the web.
+  /// Returns null on success, otherwise a message to show the user.
+  Future<String?> signIn(String username, String password) async {
+    try {
+      _currentUser = await apiClient.login(username, password);
+      await sessionStore.writeToken(apiClient.token);
+      _authRequired = false;
+      _connectionError = null;
+      _activeMissionId = null;
+      notifyListeners();
+      await refreshFromBackend();
+      return null;
+    } on ApiException catch (e) {
+      if (e.statusCode == 401) return 'Wrong username or password';
+      if (e.statusCode == 429) return 'Too many attempts. Wait a minute and try again';
+      return e.message;
+    } catch (_) {
+      return 'Cannot reach the DevPilot backend at ${apiClient.baseUrl}';
+    }
+  }
+
+  /// Forgets the token here and on disk; the app falls back to the sign-in screen.
+  Future<void> signOut() async {
+    apiClient.setToken(null);
+    await sessionStore.writeToken(null);
+    _closeWebSocket();
+    _currentUser = null;
+    _activeMissionId = null;
+    _authRequired = true;
+    notifyListeners();
+  }
+
+  Future<void> _checkAuth() async {
+    try {
+      _currentUser = await apiClient.me();
+      _authRequired = false;
+    } on ApiException catch (e) {
+      if (!_handleUnauthorized(e)) rethrow;
+    }
+  }
+
+  /// On a 401 drops the stale token and flags that sign-in is needed. Returns true if handled.
+  bool _handleUnauthorized(ApiException e) {
+    if (e.statusCode != 401) return false;
+    if (apiClient.hasToken) {
+      apiClient.setToken(null);
+      sessionStore.writeToken(null);
+    }
+    _closeWebSocket();
+    _currentUser = null;
+    _activeMissionId = null;
+    _authRequired = true;
+    return true;
+  }
+
+  void _closeWebSocket() {
+    _wsSubscription?.cancel();
+    _wsSubscription = null;
+    _wsChannel?.sink.close();
+    _wsChannel = null;
+  }
+
+  /// Many events change the board at once; coalesce them into one snapshot fetch.
+  void _scheduleSnapshotRefresh() {
+    _snapshotDebounce?.cancel();
+    _snapshotDebounce = Timer(const Duration(milliseconds: 400), () {
+      final id = _activeMissionId;
+      if (id != null) _fetchMissionSnapshot(id);
+    });
+  }
+
+  // Requests in flight may finish after dispose; drop their updates instead of throwing.
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
   }
 
   @override
   void dispose() {
+    _disposed = true;
+    _snapshotDebounce?.cancel();
     _tickTimer?.cancel();
     _pollingTimer?.cancel();
     _wsSubscription?.cancel();

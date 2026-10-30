@@ -7,14 +7,22 @@ import '../widgets/phosphor_icon.dart';
 /// Authentication Screen providing unified Sign In and Account Creation.
 /// Designed for developers with high-contrast Light Theme, Phosphor icons,
 /// passkey/GitHub options, client-side validation, and instant Demo Mode bypass.
+///
+/// When [onSignIn] is given, SIGN IN authenticates against `backend_main`
+/// (the same accounts as the web control room); it returns null on success or
+/// an error message. Without it the screen keeps its offline demo behaviour.
 class AuthScreen extends StatefulWidget {
   final VoidCallback onSuccess;
   final VoidCallback? onBack;
+  final Future<String?> Function(String username, String password)? onSignIn;
+  final String? backendUrl;
 
   const AuthScreen({
     super.key,
     required this.onSuccess,
     this.onBack,
+    this.onSignIn,
+    this.backendUrl,
   });
 
   @override
@@ -26,13 +34,16 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _obscurePassword = true;
   bool _rememberMe = true;
   bool _isLoading = false;
+  String? _error;
+
+  bool get _isLive => widget.onSignIn != null;
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController(text: 'Aryan');
-  final TextEditingController _emailController =
-      TextEditingController(text: 'developer@devpilot.io');
-  final TextEditingController _passwordController =
-      TextEditingController(text: '••••••••••••');
+  late final TextEditingController _emailController =
+      TextEditingController(text: _isLive ? '' : 'developer@devpilot.io');
+  late final TextEditingController _passwordController =
+      TextEditingController(text: _isLive ? '' : '••••••••••••');
 
   @override
   void dispose() {
@@ -44,7 +55,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _handleAuthSubmit() async {
     HapticFeedback.mediumImpact();
+    final signIn = widget.onSignIn;
+    if (signIn != null && _isSignUp) {
+      _showInfo('Accounts are issued by a DevPilot admin. Ask them for a username, then sign in.');
+      return;
+    }
     if (_formKey.currentState?.validate() ?? false) {
+      if (signIn != null) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+        final error = await signIn(_emailController.text, _passwordController.text);
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _error = error;
+        });
+        if (error == null) widget.onSuccess();
+        return;
+      }
       setState(() => _isLoading = true);
       // Simulate client-side instantaneous authentication
       await Future.delayed(const Duration(milliseconds: 400));
@@ -57,6 +87,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _handleOAuth(String provider) async {
     HapticFeedback.lightImpact();
+    if (_isLive) {
+      _showInfo('$provider sign-in is not enabled on this server. Use your DevPilot username.');
+      return;
+    }
     setState(() => _isLoading = true);
     await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
@@ -67,6 +101,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _showForgotKeyDialog() {
     HapticFeedback.selectionClick();
+    if (_isLive) {
+      _showInfo('Ask a DevPilot admin to reset your password.');
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -81,6 +119,18 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ],
         ),
+        backgroundColor: T.onSurface,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: T.rSm),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showInfo(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: T.bodySm.copyWith(color: T.onPrimary)),
         backgroundColor: T.onSurface,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: T.rSm),
@@ -141,7 +191,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           const PhosphorIcon('shield-check', size: 12, color: T.success),
                           const SizedBox(width: 6),
                           Text(
-                            'OFFLINE READY • LOCAL ENCLAVE',
+                            _isLive ? 'DEVPILOT BACKEND' : 'OFFLINE READY • LOCAL ENCLAVE',
                             style: T.labelUpXs.copyWith(
                               fontSize: 9,
                               color: T.onSurfaceVar,
@@ -332,17 +382,18 @@ class _AuthScreenState extends State<AuthScreen> {
 
                       // Email / ID Field
                       Text(
-                        'DEVELOPER EMAIL OR ID',
+                        _isLive ? 'USERNAME' : 'DEVELOPER EMAIL OR ID',
                         style: T.labelUpXs.copyWith(color: T.onSurfaceVar),
                       ),
                       const SizedBox(height: 6),
                       _buildTextInput(
                         controller: _emailController,
-                        hint: 'developer@devpilot.io',
+                        hint: _isLive ? 'admin' : 'developer@devpilot.io',
                         icon: 'user',
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) =>
-                            (v == null || v.isEmpty) ? 'Email is required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? (_isLive ? 'Username is required' : 'Email is required')
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
@@ -368,8 +419,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           onPressed: () =>
                               setState(() => _obscurePassword = !_obscurePassword),
                         ),
-                        validator: (v) =>
-                            (v == null || v.length < 4) ? 'Enter master key' : null,
+                        validator: (v) => (v == null || (_isLive ? v.isEmpty : v.length < 4))
+                            ? (_isLive ? 'Password is required' : 'Enter master key')
+                            : null,
                       ),
                       const SizedBox(height: 14),
 
@@ -420,6 +472,21 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                         ],
                       ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _error!,
+                          key: const Key('auth_error_text'),
+                          style: T.bodySm.copyWith(color: T.destructive, fontSize: 12),
+                        ),
+                      ],
+                      if (_isLive && widget.backendUrl != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Server: ${widget.backendUrl}',
+                          style: T.bodySm.copyWith(color: T.onSurfaceMuted, fontSize: 11),
+                        ),
+                      ],
                       const SizedBox(height: 20),
 
                       // Primary Submit Button

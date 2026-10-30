@@ -53,6 +53,9 @@ class _DevPilotAppState extends State<DevPilotApp> {
   late bool _authActive;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isApprovalDialogOpen = false;
+  // Chose "Explore in Demo Mode" while the backend wants a sign-in.
+  bool _demoMode = false;
+  bool _lastAuthRequired = false;
 
   @override
   void initState() {
@@ -79,6 +82,11 @@ class _DevPilotAppState extends State<DevPilotApp> {
   }
 
   void _onServiceUpdate() {
+    if (_service.authRequired != _lastAuthRequired) {
+      _lastAuthRequired = _service.authRequired;
+      if (_lastAuthRequired) _demoMode = false;
+      if (mounted) setState(() {});
+    }
     if (_service.isPendingApproval && !_isApprovalDialogOpen) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _service.isPendingApproval && !_isApprovalDialogOpen) {
@@ -146,9 +154,15 @@ class _DevPilotAppState extends State<DevPilotApp> {
         }),
       );
     }
-    if (_authActive) {
+    if (_authActive || (_service.authRequired && !_demoMode)) {
       return AuthScreen(
-        onSuccess: () => setState(() => _authActive = false),
+        onSignIn: _service.signIn,
+        backendUrl: _service.apiClient.baseUrl,
+        onSuccess: () => setState(() {
+          _authActive = false;
+          // Still unauthenticated here means the user skipped to demo mode.
+          _demoMode = _service.authRequired;
+        }),
         onBack: () => setState(() {
           _authActive = false;
           _onboardingActive = true;

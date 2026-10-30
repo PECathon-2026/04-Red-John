@@ -130,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Text(
-            'Aryan',
+            widget.service.username ?? 'Aryan',
             style: T.displayMd.copyWith(
               height: 1.1,
               fontWeight: FontWeight.w600,

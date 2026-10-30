@@ -394,6 +394,48 @@ class _ParameterModalState extends State<ParameterModal> {
                                 ),
                               ),
                             ),
+                            if (widget.service.username != null) ...[
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.person_rounded,
+                                    size: 16,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Signed in as ${widget.service.username} (${widget.service.role ?? 'viewer'})',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.textDark,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  TextButton(
+                                    key: const Key('sign_out_button'),
+                                    onPressed: () {
+                                      HapticFeedback.lightImpact();
+                                      widget.service.signOut();
+                                      widget.onClose != null
+                                          ? widget.onClose!()
+                                          : Navigator.of(context).maybePop();
+                                    },
+                                    child: const Text(
+                                      'Sign out',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.statusRed,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
