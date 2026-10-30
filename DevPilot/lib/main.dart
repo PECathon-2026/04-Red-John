@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 
 import 'models/models.dart';
 import 'screens/artifact_list_screen.dart';
+import 'screens/auth_screen.dart';
 import 'screens/detail_screen.dart';
 import 'screens/full_terminal_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/telemetry_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/bottom_nav.dart';
@@ -30,8 +32,15 @@ void main() {
 /// Root widget for the DevPilot application.
 class DevPilotApp extends StatefulWidget {
   final TelemetryService? service;
+  final bool showOnboarding;
+  final bool showAuth;
 
-  const DevPilotApp({super.key, this.service});
+  const DevPilotApp({
+    super.key,
+    this.service,
+    this.showOnboarding = false,
+    this.showAuth = false,
+  });
 
   @override
   State<DevPilotApp> createState() => _DevPilotAppState();
@@ -40,12 +49,16 @@ class DevPilotApp extends StatefulWidget {
 class _DevPilotAppState extends State<DevPilotApp> {
   late final TelemetryService _service;
   late final bool _ownsService;
+  late bool _onboardingActive;
+  late bool _authActive;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isApprovalDialogOpen = false;
 
   @override
   void initState() {
     super.initState();
+    _onboardingActive = widget.showOnboarding;
+    _authActive = widget.showAuth;
     if (widget.service != null) {
       _service = widget.service!;
       _ownsService = false;
@@ -120,6 +133,47 @@ class _DevPilotAppState extends State<DevPilotApp> {
     );
   }
 
+  Widget _buildHome(BuildContext context) {
+    if (_onboardingActive) {
+      return OnboardingScreen(
+        onFinish: () => setState(() {
+          _onboardingActive = false;
+          _authActive = false;
+        }),
+        onNavigateToLogin: () => setState(() {
+          _onboardingActive = false;
+          _authActive = true;
+        }),
+      );
+    }
+    if (_authActive) {
+      return AuthScreen(
+        onSuccess: () => setState(() => _authActive = false),
+        onBack: () => setState(() {
+          _authActive = false;
+          _onboardingActive = true;
+        }),
+      );
+    }
+    return _MainShell(
+      service: _service,
+      onOpenProject: (project) {
+        final ctx = _navigatorKey.currentContext ?? context;
+        _navigateToDetail(ctx, project);
+      },
+      onOpenAgent: (agent) {
+        final ctx = _navigatorKey.currentContext ?? context;
+        AgentDossierModal.show(ctx, agent: agent);
+      },
+      onKillTriggered: () {
+        final ctx = _navigatorKey.currentContext ?? context;
+        _handleApprovalGate(ctx);
+      },
+      onOpenOnboarding: () => setState(() => _onboardingActive = true),
+      onOpenAuth: () => setState(() => _authActive = true),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -127,21 +181,7 @@ class _DevPilotAppState extends State<DevPilotApp> {
       navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: T.theme,
-      home: _MainShell(
-        service: _service,
-        onOpenProject: (project) {
-          final ctx = _navigatorKey.currentContext ?? context;
-          _navigateToDetail(ctx, project);
-        },
-        onOpenAgent: (agent) {
-          final ctx = _navigatorKey.currentContext ?? context;
-          AgentDossierModal.show(ctx, agent: agent);
-        },
-        onKillTriggered: () {
-          final ctx = _navigatorKey.currentContext ?? context;
-          _handleApprovalGate(ctx);
-        },
-      ),
+      home: _buildHome(context),
     );
   }
 }
@@ -152,12 +192,16 @@ class _MainShell extends StatefulWidget {
   final void Function(ProjectItem) onOpenProject;
   final void Function(AgentItem) onOpenAgent;
   final VoidCallback onKillTriggered;
+  final VoidCallback? onOpenOnboarding;
+  final VoidCallback? onOpenAuth;
 
   const _MainShell({
     required this.service,
     required this.onOpenProject,
     required this.onOpenAgent,
     required this.onKillTriggered,
+    this.onOpenOnboarding,
+    this.onOpenAuth,
   });
 
   @override

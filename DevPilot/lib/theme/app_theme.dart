@@ -97,6 +97,15 @@ abstract class T {
   static TextStyle get displayMd    => montserrat(32, w: FontWeight.w600, trackEm: -0.02);
   static TextStyle get displaySm    => montserrat(26, w: FontWeight.w600, trackEm: -0.01);
   static TextStyle get numeralXl    => montserrat(52, w: FontWeight.w600, trackEm: -0.02);
+  static TextStyle get numeralSm   => GoogleFonts.spaceGrotesk(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.04 * 20,
+        fontFeatures: const [FontFeature.tabularFigures()],
+        color: onSurface,
+      );
+  static TextStyle mono(double size, {Color? color, FontWeight w = FontWeight.w400}) =>
+      GoogleFonts.jetBrainsMono(fontSize: size, color: color ?? onSurface, fontWeight: w);
   static TextStyle get headlineLg   => montserrat(22, w: FontWeight.w600, trackEm: -0.01);
   static TextStyle get headlineMd   => montserrat(18, w: FontWeight.w600);
   static TextStyle get headlineSm   => montserrat(15, w: FontWeight.w600);
