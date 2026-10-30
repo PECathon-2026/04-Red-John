@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { TEAM_ORDER, useGuild, type AgentDef, type Team } from '@/lib/agents'
 import { TeamCard } from '@/components/theme/team-card'
 import { JapanBackground } from '@/components/theme/japan-background'
@@ -42,11 +43,21 @@ export default function TeamShowcasePage() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold tracking-wide text-[#1D1D1F] uppercase">
-              DevPilot Engineering Guild
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-9 items-center justify-center rounded-lg bg-[#0d0914] px-3.5 py-1 border border-white/10 shadow-xs transition-transform group-hover:scale-105">
+              <Image
+                src="/images/devpilot-logo-cropped.png"
+                alt="DevPilot Logo"
+                width={150}
+                height={24}
+                className="h-5 w-auto object-contain"
+                priority
+              />
+            </div>
+            <span className="hidden sm:inline text-xs font-bold tracking-wider text-[#1D1D1F] uppercase">
+              Engineering Guild
             </span>
-          </div>
+          </Link>
         </header>
 
         {/* ── Hero / Title Section ── */}

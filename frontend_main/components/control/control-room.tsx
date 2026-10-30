@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useMission } from '@/lib/mission-sim'
 import { resolveSession, signOut } from '@/lib/auth'
@@ -85,10 +86,17 @@ export function ControlRoom() {
         <div className="flex flex-col items-center gap-5">
           <Link
             href="/"
-            className="group flex h-8 w-8 items-center justify-center rounded-full bg-[#1c1917] text-rose-300 shadow-xs transition-all duration-300 hover:scale-110 hover:bg-rose-950 active:scale-95"
-            title="Overview"
+            className="group relative flex h-8 w-8 items-center justify-center rounded-full bg-[#0d0914] p-1 border border-white/20 shadow-xs transition-all duration-300 hover:scale-110 hover:border-rose-400 active:scale-95 overflow-hidden"
+            title="DevPilot Overview"
           >
-            <Compass className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45" />
+            <Image
+              src="/images/devpilot-logo-cropped.png"
+              alt="DevPilot"
+              width={80}
+              height={12}
+              className="h-auto w-full object-contain transition-transform duration-300 group-hover:scale-110"
+              priority
+            />
           </Link>
 
           {/* Nav Icons with Smooth Fluid Indicator */}

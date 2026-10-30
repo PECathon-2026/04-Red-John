@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { endpoints, getUser, hasRole } from '@/lib/api'
 import { resolveSession } from '@/lib/auth'
@@ -60,8 +61,17 @@ export default function NewMissionPage() {
   return (
     <main className="relative flex min-h-svh flex-col bg-[#fff6f8] p-5 md:p-8">
       <header className="mx-auto flex w-full max-w-2xl items-center justify-between pb-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-base">🌸</span>
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="flex h-9 items-center justify-center rounded-lg bg-[#0d0914] px-3 py-1 border border-white/10 shadow-xs transition-transform group-hover:scale-105">
+            <Image
+              src="/images/devpilot-logo-cropped.png"
+              alt="DevPilot Logo"
+              width={140}
+              height={22}
+              className="h-5 w-auto object-contain"
+              priority
+            />
+          </div>
           <span className="text-xs font-bold text-[#1c1917] uppercase tracking-wider">New mission</span>
         </Link>
         <Link href="/control" className="text-xs font-semibold text-[#78716c] hover:text-[#1c1917]">

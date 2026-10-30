@@ -72,8 +72,7 @@
     @apply border-border outline-ring/40;
   }
   html, body {
-    @apply h-screen w-screen overflow-hidden bg-background text-foreground font-sans antialiased;
-    background-color: #fbf6f0;
+    @apply min-h-screen w-full text-foreground font-sans antialiased;
   }
 }
 

@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
 import { formatElapsed, type MissionState } from '@/lib/mission-sim'
 import PixelOffice from '@/components/pixel/pixel-office'
 import { Maximize2, Minimize2 } from 'lucide-react'
@@ -29,6 +31,18 @@ export function OfficeViewport({ mission }: { mission: MissionState }) {
     >
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/40 bg-white/30 px-5 py-3 backdrop-blur-md">
         <div className="flex min-w-0 items-center gap-2.5">
+          <Link href="/" className="flex shrink-0 items-center gap-2 group">
+            <div className="flex h-7 items-center justify-center rounded-md bg-[#0d0914] px-2 py-0.5 border border-white/10 shadow-2xs transition-transform group-hover:scale-105">
+              <Image
+                src="/images/devpilot-logo-cropped.png"
+                alt="DevPilot"
+                width={95}
+                height={15}
+                className="h-3.5 w-auto object-contain"
+                priority
+              />
+            </div>
+          </Link>
           <span className={`h-2 w-2 shrink-0 rounded-full ${conn.dot}`} title={`Event stream: ${conn.text}`} />
           <h3 className="truncate text-xs font-semibold tracking-wide text-[#1c1917] uppercase" title={mission.mission?.request}>
             {mission.mission?.title ?? 'Guild floor'}

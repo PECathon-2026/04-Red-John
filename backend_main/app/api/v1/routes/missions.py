@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, Request, status
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
@@ -49,6 +49,35 @@ async def create_mission(body: CreateMission, user: OperatorDep, container: Cont
         await container.runner.start(mission.mission_id)
     return {"mission": mission.model_dump(mode="json"), "running": body.start,
             "stream": f"{container.settings.api_prefix}/realtime/missions/{mission.mission_id}"}
+
+
+@router.post("/projects/create", status_code=status.HTTP_201_CREATED, include_in_schema=False)
+async def create_project_compat(request: Request, container: ContainerDep) -> dict[str, Any]:
+    """Compatibility endpoint for setup wizard calling /projects/create."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    title = data.get("title") or data.get("productDescription") or "DevPilot Mission"
+    req_text = data.get("request") or data.get("priorities") or data.get("productDescription") or "Autonomous development mission"
+    repo_path = data.get("repo_path") or "missions/01-feature-discounts/repo"
+    start = bool(data.get("start", True))
+    mission = await container.board.create_mission(str(req_text), str(repo_path), title=str(title)[:200])
+    if start:
+        await container.runner.start(mission.mission_id)
+    return {
+        "project_id": mission.mission_id,
+        "mission_id": mission.mission_id,
+        "status": "created",
+        "mission": mission.model_dump(mode="json"),
+        "running": start,
+    }
+
+
+@router.get("/projects/{project_id}", include_in_schema=False)
+async def get_project_compat(project_id: str, container: ContainerDep) -> dict[str, Any]:
+    mission = await container.board.get(project_id)
+    return {"project_id": mission.mission_id, "mission": mission.model_dump(mode="json"), "progress": mission.progress()}
 
 
 @router.get("/missions")
