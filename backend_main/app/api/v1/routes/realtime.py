@@ -15,7 +15,8 @@ from typing import Any
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
-from app.api.deps import ContainerDep, WsContainerDep
+from app.api.deps import ContainerDep, ViewerDep, WsContainerDep, authenticate
+from app.core.errors import AuthenticationError
 from app.domain.events import mission_topic
 
 router = APIRouter(prefix="/realtime", tags=["realtime"])
@@ -24,7 +25,7 @@ log = logging.getLogger(__name__)
 
 @router.get("/missions/{mission_id}/events")
 async def list_events(
-    mission_id: str, container: ContainerDep, after_seq: int = 0, limit: int = Query(1000, le=5000)
+    mission_id: str, _: ViewerDep, container: ContainerDep, after_seq: int = 0, limit: int = Query(1000, le=5000)
 ) -> dict[str, Any]:
     events = await container.storage.events.list(mission_id, after_seq=after_seq, limit=limit)
     return {"mission_id": mission_id, "events": [e.model_dump(mode="json") for e in events]}
@@ -39,7 +40,16 @@ async def _watch_disconnect(websocket: WebSocket) -> None:
 
 @router.websocket("/missions/{mission_id}")
 @router.websocket("/sessions/{mission_id}")  # Mycel control-room path
-async def mission_stream(websocket: WebSocket, mission_id: str, container: WsContainerDep, after_seq: int = 0) -> None:
+async def mission_stream(
+    websocket: WebSocket, mission_id: str, container: WsContainerDep, after_seq: int = 0, token: str | None = None
+) -> None:
+    # Browsers cannot set headers on a WebSocket, so the token may come as ?token=… (or a Bearer header).
+    header = websocket.headers.get("authorization", "")
+    try:
+        await authenticate(container, token or (header[7:] if header.lower().startswith("bearer ") else None))
+    except AuthenticationError:
+        await websocket.close(code=4401, reason="unauthenticated")
+        return
     await websocket.accept()
     watcher = asyncio.create_task(_watch_disconnect(websocket))
     try:

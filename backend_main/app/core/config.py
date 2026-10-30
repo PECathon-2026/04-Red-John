@@ -62,7 +62,14 @@ class Settings(BaseSettings):
     environment: Environment = Environment.DEVELOPMENT
     debug: bool = False
     api_prefix: str = "/api/v1"
-    cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+        ]
+    )
 
     # ── Logging ───────────────────────────────────────────────────
     log_level: str = "INFO"
@@ -136,6 +143,19 @@ class Settings(BaseSettings):
     job_claim_after_s: float = 180.0       # a job silent this long is handed to another worker
     worker_max_deliveries: int = 5         # a mission that crashes its worker this often is failed
 
+    # ── Security (Phase 10) ───────────────────────────────────────
+    auth_enabled: bool = True              # false only on a trusted local machine; refused in production
+    jwt_secret: str = ""                   # ≥ 32 chars; required in production (dev: random per process)
+    jwt_ttl_minutes: int = 480
+    bootstrap_admin_username: str = "admin"
+    bootstrap_admin_password: str = ""     # creates this admin on first start if it does not exist
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = 600       # all API requests, per client address
+    login_rate_limit_per_minute: int = 10  # per client address and username (stops password guessing)
+    mission_rate_limit_per_minute: int = 20  # missions created per user
+    max_request_bytes: int = 2_000_000
+    metrics_enabled: bool = True
+
     @field_validator("groq_api_keys", "gemini_api_keys", "cors_origins", "auto_approve_categories", mode="before")
     @classmethod
     def _csv(cls, value: object) -> list[str]:
@@ -153,6 +173,21 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == Environment.PRODUCTION
+
+    def production_problems(self) -> list[str]:
+        """Settings that are fine on a laptop but unsafe on a server. The app refuses to start with any."""
+        if not self.is_production:
+            return []
+        problems = []
+        if not self.auth_enabled:
+            problems.append("AUTH_ENABLED must be true in production")
+        if len(self.jwt_secret) < 32:
+            problems.append("JWT_SECRET must be set (at least 32 characters) in production")
+        if "*" in self.cors_origins:
+            problems.append("CORS_ORIGINS must list explicit origins in production, not '*'")
+        if self.auto_approve_categories:
+            problems.append("AUTO_APPROVE_CATEGORIES must be empty in production")
+        return problems
 
 
 @lru_cache

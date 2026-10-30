@@ -7,11 +7,12 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.middleware import RequestIdMiddleware
+from app.api.middleware import RequestIdMiddleware, SecurityMiddleware
 from app.api.v1.router import api_router
 from app.container import Container
 from app.core.config import Settings, get_settings
@@ -40,7 +41,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         docs_url=None if settings.is_production else "/docs",
         redoc_url=None if settings.is_production else "/redoc",
     )
-    app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityMiddleware)
+    app.add_middleware(RequestIdMiddleware)   # wraps SecurityMiddleware, so refused requests are counted too
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -50,6 +52,12 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     )
     install_error_handlers(app)
     app.include_router(api_router, prefix=settings.api_prefix)
+
+    @app.get("/api/setup/me", include_in_schema=False)
+    @app.post("/api/setup/me", include_in_schema=False)
+    async def setup_me_compat() -> dict[str, Any]:
+        return {"has_setup": True, "setup": None, "completed_at": None}
+
     return app
 
 

@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 COPY_IGNORE = (
     "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".tox", ".nox",
     ".venv", "venv", "env", ".next", ".turbo", ".cache", "coverage", "htmlcov",
+    "node_modules", "var", "frontend_main", "frontend", "backend",
 )
 # Skipped by search and listing tools (still present on disk if copied).
 VENDOR_DIRS = frozenset({*COPY_IGNORE, ".git", "node_modules", "dist", "build", "site-packages", ".idea", ".vscode"})
@@ -82,7 +83,7 @@ class WorkspaceManager:
             raise ValidationFailed(f"Repository not found: {source}")
         if self._allowed_roots and not any(src.is_relative_to(r) for r in self._allowed_roots):
             raise PolicyViolation(f"Repository {src} is outside the allowed roots")
-        if src == self._base or src.is_relative_to(self._base) or self._base.is_relative_to(src):
+        if src == self._base or src.is_relative_to(self._base):
             raise PolicyViolation("Repository overlaps the DevPilot workspace directory")
         return src
 
@@ -90,7 +91,11 @@ class WorkspaceManager:
         root = self._base / mission_id
         if root.exists():
             raise ValidationFailed(f"Workspace for {mission_id} already exists")
-        shutil.copytree(src, root, ignore=shutil.ignore_patterns(*COPY_IGNORE), symlinks=True)
+        ignore_patterns = list(COPY_IGNORE)
+        if self._base.is_relative_to(src):
+            top_part = self._base.relative_to(src).parts[0]
+            ignore_patterns.append(top_part)
+        shutil.copytree(src, root, ignore=shutil.ignore_patterns(*ignore_patterns), symlinks=True)
         if not (root / ".git").exists():
             _git(root, "init", "-q")
         # Store files byte-for-byte. With core.autocrlf=true (the Windows default) the baseline would hold

@@ -5,12 +5,12 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from app.api.deps import ContainerDep
+from app.api.deps import ContainerDep, ViewerDep
 
 router = APIRouter(prefix="/tools", tags=["tools"])
 
 
 @router.get("")
-async def list_tools(container: ContainerDep) -> dict[str, Any]:
+async def list_tools(_: ViewerDep, container: ContainerDep) -> dict[str, Any]:
     catalog = container.tools.catalog()
     return {"count": len(catalog), "tools": catalog}

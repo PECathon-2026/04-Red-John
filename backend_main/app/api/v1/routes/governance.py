@@ -11,9 +11,9 @@ from typing import Any
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
-from app.api.deps import ContainerDep
-from app.services.apply import APPLY_TOOL
+from app.api.deps import ApproverDep, ContainerDep, ViewerDep
 from app.domain.governance import ApprovalStatus
+from app.services.apply import APPLY_TOOL
 
 router = APIRouter(tags=["governance"])
 
@@ -24,16 +24,19 @@ class ApprovalDecision(BaseModel):
 
 
 @router.get("/missions/{mission_id}/approvals")
-async def list_approvals(mission_id: str, container: ContainerDep, status: ApprovalStatus | None = None) -> dict[str, Any]:
+async def list_approvals(
+    mission_id: str, _: ViewerDep, container: ContainerDep, status: ApprovalStatus | None = None
+) -> dict[str, Any]:
     approvals = await container.storage.approvals.list(mission_id, status=status)
     return {"mission_id": mission_id, "approvals": [a.model_dump(mode="json") for a in approvals]}
 
 
 @router.post("/approvals/{approval_id}/respond")
 @router.post("/realtime/approvals/{approval_id}/respond", include_in_schema=False)
-async def respond_to_approval(approval_id: str, body: ApprovalDecision, container: ContainerDep) -> dict[str, Any]:
-    # Phase 10 replaces "operator" with the authenticated user.
-    decided = await container.approvals.resolve(approval_id, body.approved, by="operator", note=body.note)
+async def respond_to_approval(
+    approval_id: str, body: ApprovalDecision, user: ApproverDep, container: ContainerDep
+) -> dict[str, Any]:
+    decided = await container.approvals.resolve(approval_id, body.approved, by=user.username, note=body.note)
     response = {"status": "ok", "approval_id": approval_id, "approved": decided.approved,
                 "approval": decided.model_dump(mode="json")}
     if decided.tool == APPLY_TOOL:
@@ -45,6 +48,7 @@ async def respond_to_approval(approval_id: str, body: ApprovalDecision, containe
 @router.get("/missions/{mission_id}/audit")
 async def mission_audit(
     mission_id: str,
+    _: ViewerDep,
     container: ContainerDep,
     agent: str | None = None,
     limit: int = Query(500, ge=1, le=5000),
