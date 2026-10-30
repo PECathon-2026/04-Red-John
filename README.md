@@ -11,6 +11,8 @@ DevPilot turns a natural-language software request into a **working, tested, rev
 | **End-to-end run log** (live, on Groq) | [docs/runs/2026-10-30-live-billing-fix/](docs/runs/2026-10-30-live-billing-fix/report.md) |
 | **Evaluation scenarios** | [missions/](missions/README.md) |
 | **Backend source** | [backend_main/](backend_main) |
+| **Web Control Room** | [frontend_main/](frontend_main) |
+| **Mobile Client** | [DevPilot/](DevPilot) |
 
 ---
 
@@ -105,6 +107,30 @@ Open **http://localhost:8000/docs**, click **Authorize** and sign in as `admin`.
 docker compose up --build --scale worker=3
 ```
 
+### Web Control Room (`frontend_main`)
+
+Real-time Next.js control room dashboard for monitoring mission progress, reviewing specialist agent actions, approving amber requests, and inspecting git patches:
+
+```bash
+cd frontend_main
+npm install
+npm run dev
+```
+
+Runs on [http://localhost:3001](http://localhost:3001). Connects to the backend via `NEXT_PUBLIC_API_URL` (configured in `frontend_main/.env.local`, defaults to `http://localhost:8000`).
+
+### Mobile App (`DevPilot`)
+
+Flutter mobile client for real-time mission telemetry, live status updates, and human approvals on the go:
+
+```bash
+cd DevPilot
+flutter pub get
+flutter run
+```
+
+Supports Android, iOS, and desktop. Connect to the local backend gateway via `http://10.0.2.2:8000` (Android emulator) or your host machine's LAN IP.
+
 **Tests:** `python -m pytest` (176 tests; set `DEVPILOT_TEST_REDIS_URL` / `DEVPILOT_TEST_MONGO_URL` to include real-server tests).
 **Evaluation:** `python -m app.evaluation --mode both --out ../docs/runs/my-eval`.
 
@@ -165,7 +191,7 @@ All settings are environment variables (or `backend_main/.env`), documented in [
 
 ## Known limitations
 
-- The control-room frontend (from Mycel) has not yet been adapted to DevPilot; the API and Swagger UI are the interface today.
+- The web control room (`frontend_main`) and mobile app (`DevPilot`) provide full mission monitoring and interactive approvals alongside the REST & WebSocket API.
 - Process-level sandbox; stopping a mission is cooperative (a running test command finishes first).
 - Workers need each target project's toolchain (the image includes Python).
 - The Gemini fallback has not been verified live; free-tier Groq limits (~8k tokens per request and per minute per account) bound throughput.
