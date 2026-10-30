@@ -1,0 +1,8 @@
+{
+  "id": "06-no-tests-temperature",
+  "title": "Unexpected condition: no test runner (an unavailable tool)",
+  "ps_scenario": "Unexpected Conditions — an unavailable tool",
+  "request": "The weather widget shows wrong temperatures: fahrenheit_to_celsius(212) should be 100 but it is not. Fix the conversion.",
+  "clarification_answer": null,
+  "expect": "run_tests finds no test runner (recorded as evidence); Atlas has a test author add a test setup and tests, so the fix is verified by a real run; hidden checks pass."
+}

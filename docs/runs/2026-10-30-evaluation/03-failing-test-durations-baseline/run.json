@@ -1,0 +1,611 @@
+{
+ "result": {
+  "scenario": "03-failing-test-durations",
+  "mode": "baseline",
+  "mission_id": "msn_3b43c95330e8",
+  "outcome": "done",
+  "claimed_success": true,
+  "hidden": {
+   "passed": true,
+   "tests_passed": 16,
+   "tests_failed": 0,
+   "exit_code": 0,
+   "output_tail": "................                                                         [100%]\n============================== warnings summary ===============================\nchecks/test_acceptance.py::test_parse[2m-120]\n  C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:1177: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16\n    return asyncio.get_event_loop_policy()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n16 passed, 1 warning in 0.14s\nC:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))\n"
+  },
+  "metrics": {
+   "duration_s": 11.0,
+   "llm_tokens": 15229,
+   "tool_calls": 6,
+   "tool_outcomes": {
+    "failed": 1,
+    "ok": 5
+   },
+   "agents": [
+    "Solo"
+   ],
+   "tasks": 0,
+   "feedback_loops": 0,
+   "reassignments": 0,
+   "retries": 0,
+   "escalations": 0,
+   "clarifications": 0,
+   "messages": 0,
+   "test_runs": 2,
+   "test_runs_failed": 1,
+   "criteria_met": 0,
+   "criteria_total": 0,
+   "findings": 0
+  },
+  "human_answers": [],
+  "reason": "Fixed duration parsing bug by correcting _UNITS mapping for minutes (60 seconds). Ran test suite; all 5 tests now pass (evidence evd_142502937215).",
+  "verified_success": true
+ },
+ "scenario": {
+  "id": "03-failing-test-durations",
+  "title": "Test-driven recovery: CI is red",
+  "ps_scenario": "Test-Driven Recovery \u2014 repair a repository that has a failing test",
+  "request": "CI is red: the duration parser's test suite fails. Make the suite pass by fixing the code, without weakening, skipping or deleting any test.",
+  "clarification_answer": null,
+  "expect": "Completed; two tests fail at baseline (minutes are parsed as hours); hidden checks pass; no test was modified to pass."
+ },
+ "mission": {
+  "mission_id": "msn_3b43c95330e8",
+  "title": "[baseline] Test-driven recovery: CI is red",
+  "request": "CI is red: the duration parser's test suite fails. Make the suite pass by fixing the code, without weakening, skipping or deleting any test.",
+  "repo_path": "D:\\Projects\\devPolit\\missions\\03-failing-test-durations\\repo",
+  "workspace_path": "C:\\Users\\kaush\\AppData\\Local\\Temp\\claude\\D--Projects-devPolit\\192fda04-40d3-43eb-963e-77e53f308012\\scratchpad\\evaldata\\workspaces\\msn_3b43c95330e8",
+  "baseline_commit": "baf22a2dd4c4fb832fc57c55d5e7cca2e921c9d5",
+  "status": "stopped",
+  "status_reason": "baseline run finished",
+  "objectives": [],
+  "acceptance_criteria": [],
+  "tasks": [],
+  "findings": [],
+  "decisions": [],
+  "issues": [],
+  "hires": [],
+  "inbox_cursors": {},
+  "report": null,
+  "application": null,
+  "created_by": "operator",
+  "created_at": 1793306929617,
+  "updated_at": 1793306940625,
+  "version": 2
+ },
+ "events": [
+  {
+   "event_id": "evt_ae9d4c89425c",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "mission_created",
+   "at": 1793306929824,
+   "seq": 1,
+   "data": {
+    "title": "[baseline] Test-driven recovery: CI is red",
+    "request": "CI is red: the duration parser's test suite fails. Make the suite pass by fixing the code, without weakening, skipping or deleting any test.",
+    "repo_path": "D:\\Projects\\devPolit\\missions\\03-failing-test-durations\\repo",
+    "baseline_commit": "baf22a2dd4c4fb832fc57c55d5e7cca2e921c9d5",
+    "created_by": "operator"
+   }
+  },
+  {
+   "event_id": "evt_8911ae6a9ff6",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "start",
+   "at": 1793306929825,
+   "seq": 2,
+   "data": {
+    "agent": "Solo",
+    "task": "You are working alone on this request.",
+    "team": "baseline",
+    "task_id": null
+   }
+  },
+  {
+   "event_id": "evt_94ba09e8d6b4",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306930181,
+   "seq": 3,
+   "data": {
+    "agent": "Solo",
+    "tool": "run_tests",
+    "args": {},
+    "class": "GREEN",
+    "reason": "auto-detected test run"
+   }
+  },
+  {
+   "event_id": "evt_e0ecd81a5de5",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306932189,
+   "seq": 4,
+   "data": {
+    "agent": "Solo",
+    "tool": "run_tests",
+    "args": {},
+    "class": "GREEN",
+    "ok": false,
+    "display": "tests: 3 passed, 2 failed, 0 errors (exit 1) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider",
+    "error": "exit 1: C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid ",
+    "duration_s": 2.007
+   }
+  },
+  {
+   "event_id": "evt_a59e7bf1973d",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "evidence",
+   "at": 1793306932189,
+   "seq": 5,
+   "data": {
+    "evidence_id": "evd_0f0f307fc6f8",
+    "kind": "test_run",
+    "agent": "Solo",
+    "tool": "run_tests",
+    "task_id": null,
+    "passed": false,
+    "summary": "python -m pytest -q -rfE --no-header -p no:cacheprovider: 3 passed, 2 failed, 0 errors (exit 1)"
+   }
+  },
+  {
+   "event_id": "evt_093839317c1d",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306932189,
+   "seq": 6,
+   "data": {
+    "level": "warn",
+    "text": "Solo \u2192 run_tests: tests: 3 passed, 2 failed, 0 errors (exit 1) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider"
+   }
+  },
+  {
+   "event_id": "evt_795f64d45a47",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306934229,
+   "seq": 7,
+   "data": {
+    "agent": "Solo",
+    "tool": "list_dir",
+    "args": {
+     "path": "."
+    },
+    "class": "GREEN",
+    "reason": "reads '.'"
+   }
+  },
+  {
+   "event_id": "evt_7c6dd0e13cd3",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306934230,
+   "seq": 8,
+   "data": {
+    "agent": "Solo",
+    "tool": "list_dir",
+    "args": {
+     "path": "."
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "listed . (3 entries)",
+    "error": "",
+    "duration_s": 0.001
+   }
+  },
+  {
+   "event_id": "evt_d476404b07b5",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306934230,
+   "seq": 9,
+   "data": {
+    "level": "action",
+    "text": "Solo \u2192 list_dir: listed . (3 entries)"
+   }
+  },
+  {
+   "event_id": "evt_c17a7c6e5139",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306935787,
+   "seq": 10,
+   "data": {
+    "agent": "Solo",
+    "tool": "list_dir",
+    "args": {
+     "path": "timeparse"
+    },
+    "class": "GREEN",
+    "reason": "reads 'timeparse'"
+   }
+  },
+  {
+   "event_id": "evt_8e6d598f1b06",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306935788,
+   "seq": 11,
+   "data": {
+    "agent": "Solo",
+    "tool": "list_dir",
+    "args": {
+     "path": "timeparse"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "listed timeparse (2 entries)",
+    "error": "",
+    "duration_s": 0.001
+   }
+  },
+  {
+   "event_id": "evt_09aae190649f",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306935788,
+   "seq": 12,
+   "data": {
+    "level": "action",
+    "text": "Solo \u2192 list_dir: listed timeparse (2 entries)"
+   }
+  },
+  {
+   "event_id": "evt_ef71f4bbf2ce",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306936533,
+   "seq": 13,
+   "data": {
+    "agent": "Solo",
+    "tool": "read_file",
+    "args": {
+     "limit": "400",
+     "path": "timeparse/durations.py"
+    },
+    "class": "GREEN",
+    "reason": "reads 'timeparse/durations.py'"
+   }
+  },
+  {
+   "event_id": "evt_e2ffde169245",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306936533,
+   "seq": 14,
+   "data": {
+    "agent": "Solo",
+    "tool": "read_file",
+    "args": {
+     "limit": "400",
+     "path": "timeparse/durations.py"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "read timeparse/durations.py (26 lines)",
+    "error": "",
+    "duration_s": 0.001
+   }
+  },
+  {
+   "event_id": "evt_d5a3fbb42d26",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306936533,
+   "seq": 15,
+   "data": {
+    "level": "action",
+    "text": "Solo \u2192 read_file: read timeparse/durations.py (26 lines)"
+   }
+  },
+  {
+   "event_id": "evt_8fd6d757369b",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306937508,
+   "seq": 16,
+   "data": {
+    "agent": "Solo",
+    "tool": "edit_file",
+    "args": {
+     "new": "_UNITS = {\"h\": 3600, \"m\": 60, \"s\": 1}",
+     "old": "_UNITS = {\"h\": 3600, \"m\": 3600, \"s\": 1}",
+     "path": "timeparse/durations.py"
+    },
+    "class": "GREEN",
+    "reason": "writes 'timeparse/durations.py' inside the workspace"
+   }
+  },
+  {
+   "event_id": "evt_66c3867cb06a",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306937509,
+   "seq": 17,
+   "data": {
+    "agent": "Solo",
+    "tool": "edit_file",
+    "args": {
+     "new": "_UNITS = {\"h\": 3600, \"m\": 60, \"s\": 1}",
+     "old": "_UNITS = {\"h\": 3600, \"m\": 3600, \"s\": 1}",
+     "path": "timeparse/durations.py"
+    },
+    "class": "GREEN",
+    "ok": true,
+    "display": "edited timeparse/durations.py (1 replacement)",
+    "error": "",
+    "duration_s": 0.001
+   }
+  },
+  {
+   "event_id": "evt_282248a5b600",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306937509,
+   "seq": 18,
+   "data": {
+    "level": "action",
+    "text": "Solo \u2192 edit_file: edited timeparse/durations.py (1 replacement)"
+   }
+  },
+  {
+   "event_id": "evt_f22735bf7c20",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_call",
+   "at": 1793306938174,
+   "seq": 19,
+   "data": {
+    "agent": "Solo",
+    "tool": "run_tests",
+    "args": {},
+    "class": "GREEN",
+    "reason": "auto-detected test run"
+   }
+  },
+  {
+   "event_id": "evt_63833e3b0908",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "tool_result",
+   "at": 1793306940125,
+   "seq": 20,
+   "data": {
+    "agent": "Solo",
+    "tool": "run_tests",
+    "args": {},
+    "class": "GREEN",
+    "ok": true,
+    "display": "tests: 5 passed, 0 failed, 0 errors (exit 0) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider",
+    "error": "",
+    "duration_s": 1.951
+   }
+  },
+  {
+   "event_id": "evt_8d6038d1407b",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "evidence",
+   "at": 1793306940125,
+   "seq": 21,
+   "data": {
+    "evidence_id": "evd_142502937215",
+    "kind": "test_run",
+    "agent": "Solo",
+    "tool": "run_tests",
+    "task_id": null,
+    "passed": true,
+    "summary": "python -m pytest -q -rfE --no-header -p no:cacheprovider: 5 passed, 0 failed, 0 errors (exit 0)"
+   }
+  },
+  {
+   "event_id": "evt_b4ad010cc481",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306940125,
+   "seq": 22,
+   "data": {
+    "level": "action",
+    "text": "Solo \u2192 run_tests: tests: 5 passed, 0 failed, 0 errors (exit 0) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider"
+   }
+  },
+  {
+   "event_id": "evt_5f73c4a6ef1a",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "finish",
+   "at": 1793306940625,
+   "seq": 23,
+   "data": {
+    "agent": "Solo",
+    "status": "done",
+    "summary": "Fixed duration parsing bug by correcting _UNITS mapping for minutes (60 seconds). Ran test suite; all 5 tests now pass (evidence evd_142502937215).",
+    "task_id": null,
+    "iterations": 9,
+    "tool_calls": 6
+   }
+  },
+  {
+   "event_id": "evt_37ba59f5f272",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "log",
+   "at": 1793306940625,
+   "seq": 24,
+   "data": {
+    "level": "success",
+    "text": "Solo finished (done): Fixed duration parsing bug by correcting _UNITS mapping for minutes (60 seconds). Ran test suite; all 5 tests now pass (evidence evd_142502937215)."
+   }
+  },
+  {
+   "event_id": "evt_490f61caacd9",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "mission_status",
+   "at": 1793306940625,
+   "seq": 25,
+   "data": {
+    "status": "stopped",
+    "reason": "baseline run finished",
+    "by": "harness",
+    "progress": {
+     "tasks": {},
+     "criteria": {},
+     "open_findings": 0,
+     "open_issues": 0
+    }
+   }
+  }
+ ],
+ "audit": [
+  {
+   "entry_id": "aud_7bfc993d189f",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306932189,
+   "agent": "Solo",
+   "tool": "run_tests",
+   "args": {},
+   "action_class": "GREEN",
+   "outcome": "failed",
+   "approved_by_human": false,
+   "error": "exit 1: C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))",
+   "display": "tests: 3 passed, 2 failed, 0 errors (exit 1) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider",
+   "duration_s": 2.007
+  },
+  {
+   "entry_id": "aud_1b873fbcb58b",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306934230,
+   "agent": "Solo",
+   "tool": "list_dir",
+   "args": {
+    "path": "."
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "listed . (3 entries)",
+   "duration_s": 0.001
+  },
+  {
+   "entry_id": "aud_7e7f870bb03e",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306935788,
+   "agent": "Solo",
+   "tool": "list_dir",
+   "args": {
+    "path": "timeparse"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "listed timeparse (2 entries)",
+   "duration_s": 0.001
+  },
+  {
+   "entry_id": "aud_55e0e13074ee",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306936533,
+   "agent": "Solo",
+   "tool": "read_file",
+   "args": {
+    "limit": "400",
+    "path": "timeparse/durations.py"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "read timeparse/durations.py (26 lines)",
+   "duration_s": 0.001
+  },
+  {
+   "entry_id": "aud_7c7c70d48ebf",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306937509,
+   "agent": "Solo",
+   "tool": "edit_file",
+   "args": {
+    "new": "_UNITS = {\"h\": 3600, \"m\": 60, \"s\": 1}",
+    "old": "_UNITS = {\"h\": 3600, \"m\": 3600, \"s\": 1}",
+    "path": "timeparse/durations.py"
+   },
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "edited timeparse/durations.py (1 replacement)",
+   "duration_s": 0.001
+  },
+  {
+   "entry_id": "aud_a50664a63c0f",
+   "mission_id": "msn_3b43c95330e8",
+   "at": 1793306940125,
+   "agent": "Solo",
+   "tool": "run_tests",
+   "args": {},
+   "action_class": "GREEN",
+   "outcome": "ok",
+   "approved_by_human": false,
+   "error": "",
+   "display": "tests: 5 passed, 0 failed, 0 errors (exit 0) \u2014 python -m pytest -q -rfE --no-header -p no:cacheprovider",
+   "duration_s": 1.951
+  }
+ ],
+ "evidence": [
+  {
+   "evidence_id": "evd_0f0f307fc6f8",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "test_run",
+   "agent": "Solo",
+   "tool": "run_tests",
+   "task_id": null,
+   "passed": false,
+   "summary": "python -m pytest -q -rfE --no-header -p no:cacheprovider: 3 passed, 2 failed, 0 errors (exit 1)",
+   "data": {
+    "command": "python -m pytest -q -rfE --no-header -p no:cacheprovider",
+    "exit_code": 1,
+    "passed": false,
+    "summary": {
+     "passed": 3,
+     "failed": 2,
+     "errors": 0,
+     "skipped": 0,
+     "failing_tests": [
+      "tests/test_durations.py::test_minutes",
+      "tests/test_durations.py::test_mixed"
+     ],
+     "no_tests_collected": false,
+     "passed_run": false
+    },
+    "output_tail": ".FF..                                                                    [100%]\n================================== FAILURES ===================================\n________________________________ test_minutes _________________________________\n\n    def test_minutes():\n>       assert parse_duration(\"30m\") == 1800\nE       AssertionError: assert 108000 == 1800\nE        +  where 108000 = parse_duration('30m')\n\ntests\\test_durations.py:11: AssertionError\n_________________________________ test_mixed __________________________________\n\n    def test_mixed():\n>       assert parse_duration(\"1h30m\") == 5400\nE       AssertionError: assert 111600 == 5400\nE        +  where 111600 = parse_duration('1h30m')\n\ntests\\test_durations.py:15: AssertionError\n============================== warnings summary ===============================\ntests/test_durations.py::test_hours\n  C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:1177: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16\n    return asyncio.get_event_loop_policy()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ===========================\nFAILED tests/test_durations.py::test_minutes - AssertionError: assert 108000 == 1800\n +  where 108000 = parse_duration('30m')\nFAILED tests/test_durations.py::test_mixed - AssertionError: assert 111600 == 5400\n +  where 111600 = parse_duration('1h30m')\n2 failed, 3 passed, 1 warning in 0.33s\n[stderr]\nC:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))",
+    "duration_s": 2.0
+   },
+   "at": 1793306932189
+  },
+  {
+   "evidence_id": "evd_142502937215",
+   "mission_id": "msn_3b43c95330e8",
+   "kind": "test_run",
+   "agent": "Solo",
+   "tool": "run_tests",
+   "task_id": null,
+   "passed": true,
+   "summary": "python -m pytest -q -rfE --no-header -p no:cacheprovider: 5 passed, 0 failed, 0 errors (exit 0)",
+   "data": {
+    "command": "python -m pytest -q -rfE --no-header -p no:cacheprovider",
+    "exit_code": 0,
+    "passed": true,
+    "summary": {
+     "passed": 5,
+     "failed": 0,
+     "errors": 0,
+     "skipped": 0,
+     "failing_tests": [],
+     "no_tests_collected": false,
+     "passed_run": true
+    },
+    "output_tail": ".....                                                                    [100%]\n============================== warnings summary ===============================\ntests/test_durations.py::test_hours\n  C:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:1177: DeprecationWarning: 'asyncio.get_event_loop_policy' is deprecated and slated for removal in Python 3.16\n    return asyncio.get_event_loop_policy()\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n5 passed, 1 warning in 0.15s\n[stderr]\nC:\\Users\\kaush\\AppData\\Roaming\\Python\\Python314\\site-packages\\pytest_asyncio\\plugin.py:207: PytestDeprecationWarning: The configuration option \"asyncio_default_fixture_loop_scope\" is unset.\nThe event loop scope for asynchronous fixtures will default to the fixture caching scope. Future versions of pytest-asyncio will default the loop scope for asynchronous fixtures to function scope. Set the default fixture loop scope explicitly in order to avoid unexpected behavior in the future. Valid fixture loop scopes are: \"function\", \"class\", \"module\", \"package\", \"session\"\n\n  warnings.warn(PytestDeprecationWarning(_DEFAULT_FIXTURE_LOOP_SCOPE_UNSET))",
+    "duration_s": 1.95
+   },
+   "at": 1793306940125
+  }
+ ],
+ "messages": []
+}

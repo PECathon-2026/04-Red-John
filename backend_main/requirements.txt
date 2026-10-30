@@ -1,0 +1,10 @@
+# Runtime
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.9
+pydantic-settings>=2.6
+httpx>=0.27
+motor>=3.6          # STORAGE_BACKEND=mongo
+redis>=5.0          # BUS_BACKEND=redis
+PyJWT>=2.8          # bearer tokens (AUTH_ENABLED=true)
+python-multipart>=0.0.9  # form sign-in at /auth/token (Swagger "Authorize")
