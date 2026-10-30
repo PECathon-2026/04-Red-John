@@ -527,7 +527,7 @@ function LoadingScreen() {
       fontFamily: '"Press Start 2P", monospace',
     }}>
       <div style={{ fontSize: 20, marginBottom: 24, color: '#ffd700' }}>
-        Supply Chain HQ
+        DevPilot Guild HQ
       </div>
       <div style={{ fontSize: 10, marginBottom: 32, color: '#7ecfcf' }}>
         Loading Office Assets...

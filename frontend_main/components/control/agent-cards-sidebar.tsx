@@ -2,19 +2,25 @@
 
 import Link from 'next/link'
 import { ArrowRight, Users } from 'lucide-react'
-import { AGENTS, type AgentDef } from '@/lib/agents'
+import { useGuild, type AgentDef } from '@/lib/agents'
+import type { MissionState } from '@/lib/mission-sim'
 import { TeamCard } from '@/components/theme/team-card'
 
+/** The mission's task force (Atlas, Maya and whoever Maya hired), with live status. */
 export function AgentCardsSidebar({
+  mission,
   onSelectAgent,
 }: {
+  mission: MissionState
   onSelectAgent?: (agent: AgentDef) => void
 }) {
-  // Featured Organization Leads
-  const featuredLeaderNames = ['Atlas', 'Maya', 'Kenji']
-  const featuredAgents = featuredLeaderNames
-    .map((name) => AGENTS.find((a) => a.name === name))
-    .filter(Boolean) as AgentDef[]
+  const { agents: guild, error } = useGuild()
+
+  const onMission = new Set(Object.keys(mission.agents))
+  const list = guild.filter((a) => onMission.has(a.name))
+  // Working agents first.
+  const rank = (a: AgentDef) => (mission.agents[a.name]?.phase === 'working' ? 0 : mission.agents[a.name] ? 1 : 2)
+  list.sort((a, b) => rank(a) - rank(b))
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -35,19 +41,27 @@ export function AgentCardsSidebar({
 
       {/* Cards Area with Un-crushable TeamCards */}
       <div className="space-y-2.5" data-lenis-prevent>
-        {featuredAgents.map((agent, idx) => (
+        {list.map((agent, idx) => (
           <TeamCard
             key={agent.name}
             index={idx}
             name={agent.name}
-            title={agent.role}
+            title={mission.agents[agent.name]?.task || agent.role}
             department={agent.team}
-            status="working"
+            status={mission.agents[agent.name]?.phase ?? 'standby'}
             avatar={agent.charIdx}
             onOpenDetails={() => onSelectAgent?.(agent)}
             className="p-3.5 sm:p-4"
           />
         ))}
+
+        {list.length === 0 && (
+          <div className="flex h-24 flex-col items-center justify-center text-center">
+            <p className="text-xs text-[#2B2B2B]/60">
+              {error ? `Could not load the guild: ${error}` : 'No one on the mission yet.'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* View All Roster footer button */}

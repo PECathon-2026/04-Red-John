@@ -29,7 +29,7 @@ export function PixelChip({
   )
 }
 
-/** Small 5x5 pixel spore mark used as the MYCEL logotype glyph. */
+/** Small 5x5 pixel spore mark used as the DevPilot logo glyph. */
 export function PixelSunMark({ className }: { className?: string }) {
   const rows = [
     [0, 1, 1, 1, 0],

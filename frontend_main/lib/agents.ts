@@ -1,15 +1,26 @@
-export type Team =
-  | 'Executive'
-  | 'Planning'
-  | 'Forge'
-  | 'Sentinel'
-  | 'Shadow'
-  | 'Support'
-  | 'Intelligence'
-  | 'Network'
-  | 'Resilience'
-  | 'Council'
-  | 'Architecture'
+'use client'
+
+/**
+ * The DevPilot guild, loaded from the backend (`GET /api/v1/agents`).
+ * Components read it through `useGuild()`; `getAgent()` answers from the
+ * last loaded roster.
+ */
+
+import { useEffect, useState } from 'react'
+import { endpoints, type GuildAgent } from './api'
+
+export type Team = 'Executive' | 'Planning' | 'Forge' | 'Sentinel' | 'Shadow' | 'Support'
+
+export const TEAM_ORDER: Team[] = ['Executive', 'Planning', 'Forge', 'Sentinel', 'Shadow', 'Support']
+
+export const TEAM_BLURBS: Record<Team, string> = {
+  Executive: 'Atlas orchestrates the mission; Maya hires the specialists it needs.',
+  Planning: 'Turns the request into acceptance criteria, recon notes and a task plan.',
+  Forge: 'Writes, fixes and refactors the code inside the sandbox.',
+  Sentinel: 'Authors and runs tests, then independently verifies every criterion.',
+  Shadow: 'Reviews the change, scans it for security issues and arbitrates disputes.',
+  Support: 'Writes the evidence report a human reads before approving.',
+}
 
 export type AgentDef = {
   name: string
@@ -19,12 +30,16 @@ export type AgentDef = {
   initials: string
   /* character sprite index (0-5) — matches /assets/pixel-agents/characters/char_{n}.png */
   charIdx: number
-  /* detailed description of the work this agent does */
+  /* what this agent is for (its default mandate) */
   detail: string
-  skills?: string[]
+  badge: string
+  skills: string[]
+  tools: string[]
+  clearance: 'GREEN' | 'AMBER'
+  alwaysOn: boolean
 }
 
-export type TeamStyle = {
+type TeamColors = {
   bg: string
   text: string
   chip: string
@@ -34,7 +49,7 @@ export type TeamStyle = {
   badgeText: string
 }
 
-export const TEAM_COLORS: Record<string, TeamStyle> = {
+export const TEAM_COLORS: Record<Team, TeamColors> = {
   Executive: {
     bg: 'bg-amber-50',
     text: 'text-amber-900',
@@ -89,297 +104,75 @@ export const TEAM_COLORS: Record<string, TeamStyle> = {
     badgeBg: 'bg-[#292524]',
     badgeText: 'text-stone-100',
   },
-  Intelligence: {
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-900',
-    chip: 'bg-emerald-100/70 text-emerald-900 border border-emerald-200/50',
-    cardBg: 'bg-[#f0fdf4]/60',
-    cardBorder: 'border-emerald-200/50',
-    badgeBg: 'bg-[#163022]',
-    badgeText: 'text-emerald-100',
-  },
-  Network: {
-    bg: 'bg-sky-50',
-    text: 'text-sky-900',
-    chip: 'bg-sky-100/70 text-sky-900 border border-sky-200/50',
-    cardBg: 'bg-[#f0f9ff]/60',
-    cardBorder: 'border-sky-200/50',
-    badgeBg: 'bg-[#0c2838]',
-    badgeText: 'text-sky-100',
-  },
-  Resilience: {
-    bg: 'bg-rose-50',
-    text: 'text-rose-900',
-    chip: 'bg-rose-100/70 text-rose-900 border border-rose-200/50',
-    cardBg: 'bg-[#fff1f2]/60',
-    cardBorder: 'border-rose-200/50',
-    badgeBg: 'bg-[#4c0519]',
-    badgeText: 'text-rose-100',
-  },
-  Council: {
-    bg: 'bg-purple-50',
-    text: 'text-purple-900',
-    chip: 'bg-purple-100/70 text-purple-900 border border-purple-200/50',
-    cardBg: 'bg-[#faf5ff]/60',
-    cardBorder: 'border-purple-200/50',
-    badgeBg: 'bg-[#2e1065]',
-    badgeText: 'text-purple-100',
-  },
-  Architecture: {
-    bg: 'bg-pink-50',
-    text: 'text-pink-900',
-    chip: 'bg-pink-100/70 text-pink-900 border border-pink-200/50',
-    cardBg: 'bg-[#fdf2f8]/60',
-    cardBorder: 'border-pink-200/50',
-    badgeBg: 'bg-[#500724]',
-    badgeText: 'text-pink-100',
-  },
 }
 
-export function getTeamColors(teamName: string | undefined): TeamStyle {
-  if (!teamName) return TEAM_COLORS.Executive
-  const normalized = teamName.charAt(0).toUpperCase() + teamName.slice(1).toLowerCase()
-  return TEAM_COLORS[normalized] || TEAM_COLORS[teamName] || TEAM_COLORS.Executive
+/** Backend team ids are lower-case ("forge"); hire events capitalise them. */
+export function toTeam(team: string | null | undefined): Team {
+  const t = (team ?? '').trim().toLowerCase()
+  const match = TEAM_ORDER.find((name) => name.toLowerCase() === t)
+  return match ?? 'Support'
 }
 
-export const AGENTS: AgentDef[] = [
-  // ── Executive (Always On) ─────────────────────────
-  {
-    name: 'Atlas',
-    team: 'Executive',
-    role: 'Mission Orchestrator (The Shogun)',
-    initials: 'AT',
-    charIdx: 5,
-    skills: ['orchestration', 'planning', 'arbitration'],
-    detail:
-      'The mission orchestrator. Atlas evaluates blackboard evidence to decide next actions: continue, retry, reassign, replan, clarify, escalate, or stop with bounded autonomy.',
-  },
-  {
-    name: 'Maya',
-    team: 'Executive',
-    role: 'Guild HR — Hiring Engine',
-    initials: 'MA',
-    charIdx: 4,
-    skills: ['hiring'],
-    detail:
-      'Staffs the mission dynamically by matching skill requirements against available specialists, authoring custom execution mandates for each specialist.',
-  },
+export function teamColors(team: string | null | undefined): TeamColors {
+  return TEAM_COLORS[toTeam(team)]
+}
 
-  // ── Planning — The Shogun\'s Council ─────────────────
-  {
-    name: 'Kenji',
-    team: 'Planning',
-    role: 'Requirements Analyst',
-    initials: 'KJ',
-    charIdx: 0,
-    skills: ['requirements', 'verification'],
-    detail:
-      'Deconstructs plain-language requests into concrete objectives and checkable acceptance criteria, identifying ambiguities before code is touched.',
-  },
-  {
-    name: 'Hana',
-    team: 'Planning',
-    role: 'Codebase Scout',
-    initials: 'HN',
-    charIdx: 1,
-    skills: ['recon', 'testing', 'security'],
-    detail:
-      'Reconnoitres the repository structure, discovers build and test commands, runs baseline tests, and flags architectural risk hotspots.',
-  },
-  {
-    name: 'Ryo',
-    team: 'Planning',
-    role: 'Task Planner',
-    initials: 'RY',
-    charIdx: 2,
-    skills: ['planning'],
-    detail:
-      'Translates objectives and codebase reconnaissance into a dependency-ordered DAG of tasks, dynamically replanning if blockers or unexpected conditions arise.',
-  },
-
-  // ── Samurai Forge — Implementation ──────────────────
-  {
-    name: 'Takeshi',
-    team: 'Forge',
-    role: 'Backend Engineer',
-    initials: 'TK',
-    charIdx: 3,
-    skills: ['python', 'api', 'backend', 'data'],
-    detail:
-      'Constructs backend features, APIs, database logic, and data pipelines with strict adherence to repository conventions and typing.',
-  },
-  {
-    name: 'Yuki',
-    team: 'Forge',
-    role: 'Frontend Engineer',
-    initials: 'YK',
-    charIdx: 4,
-    skills: ['frontend', 'javascript', 'typescript', 'react', 'css'],
-    detail:
-      'Crafts user interfaces, components, reactive states, and browser flows, ensuring seamless frontend-to-backend communication.',
-  },
-  {
-    name: 'Daichi',
-    team: 'Forge',
-    role: 'Debugger & Triage Specialist',
-    initials: 'DC',
-    charIdx: 5,
-    skills: ['debugging', 'fix', 'triage'],
-    detail:
-      'Diagnoses test failures, stack traces, and unhandled regressions, discovering root causes and executing surgical repairs.',
-  },
-  {
-    name: 'Sora',
-    team: 'Forge',
-    role: 'Refactoring & Style Keeper',
-    initials: 'SR',
-    charIdx: 0,
-    skills: ['refactor', 'style', 'lint'],
-    detail:
-      'Guarantees codebase hygiene, simplifies complex control flow, removes dead code, and resolves linter warnings without altering runtime behaviour.',
-  },
-
-  // ── Sentinel Dojo — Testing & Verification ──────────
-  {
-    name: 'Aiko',
-    team: 'Sentinel',
-    role: 'Test Runner',
-    initials: 'AK',
-    charIdx: 1,
-    skills: ['test_runner', 'lint', 'build'],
-    detail:
-      'Executes test suites (pytest, jest, cargo, go) and captures verifiable test execution logs as evidence on the shared mission board.',
-  },
-  {
-    name: 'Riku',
-    team: 'Sentinel',
-    role: 'Test Author',
-    initials: 'RK',
-    charIdx: 2,
-    skills: ['test_author', 'testing'],
-    detail:
-      'Authors unit and regression tests for uncovered code and bug reproductions, ensuring changes are fortified before verification.',
-  },
-  {
-    name: 'Mei',
-    team: 'Sentinel',
-    role: 'Independent Verifier',
-    initials: 'ME',
-    charIdx: 3,
-    skills: ['verification'],
-    detail:
-      'Operates in read-only mode to independently audit acceptance criteria against recorded test runs and diff evidence before sign-off.',
-  },
-
-  // ── Shadow Council — Review & Security ──────────────
-  {
-    name: 'Haruto',
-    team: 'Shadow',
-    role: 'Code Reviewer',
-    initials: 'HR',
-    charIdx: 4,
-    skills: ['review'],
-    detail:
-      'Inspects unified git diffs for maintainability, edge cases, backwards compatibility, and unintended side effects, recording formal findings.',
-  },
-  {
-    name: 'Kaito',
-    team: 'Shadow',
-    role: 'Security Inspector',
-    initials: 'KT',
-    charIdx: 5,
-    skills: ['security', 'audit'],
-    detail:
-      'Conducts static analysis for leaked secrets, injection vulnerabilities (SQL, shell), unsafe deserialization, and unvalidated inputs.',
-  },
-  {
-    name: 'Emi',
-    team: 'Shadow',
-    role: 'Arbiter',
-    initials: 'EM',
-    charIdx: 0,
-    skills: ['arbitration'],
-    detail:
-      'Resolves disputes between developers and reviewers based strictly on evidence, escalating to the human operator if irreconcilable.',
-  },
-
-  // ── Support ─────────────────────────────────────────
-  {
-    name: 'Scribe',
-    team: 'Support',
-    role: 'Evidence Scribe',
-    initials: 'SC',
-    charIdx: 1,
-    skills: ['report', 'documentation'],
-    detail:
-      'Compiles the final mission evidence report, categorizing changes into verified facts vs agent claims with links to test artifacts.',
-  },
-
-  // ── Compatibility / Legacy Agents ───────────────────
-  {
-    name: 'Mira',
-    team: 'Intelligence',
-    role: 'Demand & assortment intelligence',
-    initials: 'MI',
-    charIdx: 0,
-    detail: 'Maps demand, market size, and customer geography.',
-  },
-  {
-    name: 'Ravi',
-    team: 'Intelligence',
-    role: 'Supplier intelligence',
-    initials: 'RA',
-    charIdx: 1,
-    detail: 'Builds candidate supplier profiles and verifies capabilities.',
-  },
-  {
-    name: 'Anika',
-    team: 'Intelligence',
-    role: 'Category benchmarking',
-    initials: 'AN',
-    charIdx: 2,
-    detail: 'Benchmarks industry structures and lead times.',
-  },
-  {
-    name: 'Noor',
-    team: 'Intelligence',
-    role: 'Geopolitical risk intelligence',
-    initials: 'NO',
-    charIdx: 3,
-    detail: 'Scores route & region exposure to external shocks.',
-  },
-  {
-    name: 'Dev',
-    team: 'Network',
-    role: 'Procurement & landed cost',
-    initials: 'DE',
-    charIdx: 5,
-    detail: 'Calculates total landed cost and freight metrics.',
-  },
-  {
-    name: 'Rohan',
-    team: 'Architecture',
-    role: 'Master system architect',
-    initials: 'RO',
-    charIdx: 0,
-    detail: 'Assembles architectural topology and infrastructure blueprints.',
-  },
-]
-
-export function getAgent(name: string): AgentDef {
-  const found = AGENTS.find((a) => a.name.toLowerCase() === name.toLowerCase())
-  if (found) return found
-
-  // Fallback definition for any custom agent
+function fromBackend(a: GuildAgent): AgentDef {
   return {
-    name,
-    team: 'Support',
-    role: 'Engineering Specialist',
-    initials: name.slice(0, 2).toUpperCase(),
-    charIdx: Math.abs(name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 6,
-    detail: `Guild specialist ${name} assigned to the mission.`,
+    name: a.name,
+    team: toTeam(a.team),
+    role: a.role,
+    initials: a.name.slice(0, 2).toUpperCase(),
+    charIdx: a.char_idx,
+    detail: a.default_mandate,
+    badge: a.badge,
+    skills: a.skills,
+    tools: a.tools,
+    clearance: a.clearance,
+    alwaysOn: a.always_on,
   }
 }
 
-export const ARMORIQ_URL =
-  process.env.NEXT_PUBLIC_ARMORIQ_URL || 'https://platform.armoriq.ai/dashboard/api'
+/* ------------------------------------------------------------------ */
+/* Roster store                                                         */
+/* ------------------------------------------------------------------ */
+
+let roster: AgentDef[] = []
+let inflight: Promise<AgentDef[]> | null = null
+const listeners = new Set<(agents: AgentDef[]) => void>()
+
+export function loadGuild(force = false): Promise<AgentDef[]> {
+  if (roster.length && !force) return Promise.resolve(roster)
+  if (!inflight) {
+    inflight = endpoints
+      .agents()
+      .then((res) => {
+        roster = res.agents.map(fromBackend)
+        listeners.forEach((fn) => fn(roster))
+        return roster
+      })
+      .finally(() => {
+        inflight = null
+      })
+  }
+  return inflight
+}
+
+export function useGuild(): { agents: AgentDef[]; loading: boolean; error: string | null } {
+  const [agents, setAgents] = useState<AgentDef[]>(roster)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    listeners.add(setAgents)
+    loadGuild().catch((err) => setError(err instanceof Error ? err.message : String(err)))
+    return () => {
+      listeners.delete(setAgents)
+    }
+  }, [])
+
+  return { agents, loading: agents.length === 0 && !error, error }
+}
+
+export function getAgent(name: string): AgentDef | undefined {
+  return roster.find((a) => a.name === name)
+}

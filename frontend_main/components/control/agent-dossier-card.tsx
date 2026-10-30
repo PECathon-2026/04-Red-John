@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { TEAM_COLORS, type AgentDef } from '@/lib/agents'
-import { AGENT_DOSSIERS } from '@/lib/agent-dossiers'
 import { AgentSprite } from '@/components/pixel/agent-sprite'
 import { X, CheckCircle, Wrench } from 'lucide-react'
 
@@ -14,7 +13,6 @@ export function AgentDossierCard({
   agent: AgentDef
   onClose: () => void
 }) {
-  const dossier = AGENT_DOSSIERS[agent.name]
   const colors = TEAM_COLORS[agent.team]
   const closeRef = useRef<HTMLButtonElement>(null)
 
@@ -33,8 +31,6 @@ export function AgentDossierCard({
     },
     [onClose],
   )
-
-  if (!dossier) return null
 
   return (
     <div
@@ -66,6 +62,9 @@ export function AgentDossierCard({
                 {agent.name}
               </h3>
               <p className="text-xs text-muted-foreground">{agent.role}</p>
+              <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
+                {agent.badge} · {agent.clearance} clearance{agent.alwaysOn ? ' · always on' : ''}
+              </p>
             </div>
           </div>
 
@@ -84,20 +83,20 @@ export function AgentDossierCard({
           {/* Mission */}
           <div className="rounded-2xl bg-[#faf9fe] p-4 border border-purple-100/60">
             <h4 className="text-xs font-semibold text-purple-900 uppercase tracking-wider mb-1">
-              Primary Mission
+              Default Mandate
             </h4>
             <p className="text-sm leading-relaxed text-[#2d2844]">
-              {dossier.mission}
+              {agent.detail || 'Assigned by Atlas per task.'}
             </p>
           </div>
 
           {/* Responsibilities */}
           <div>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-              Key Responsibilities
+              Skills (what Maya hires on)
             </h4>
             <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {dossier.responsibilities.map((r) => (
+              {agent.skills.map((r) => (
                 <li
                   key={r}
                   className="flex items-start gap-2.5 rounded-xl bg-gray-50/80 p-2.5 text-xs text-[#2b2742]"
@@ -109,36 +108,14 @@ export function AgentDossierCard({
             </ul>
           </div>
 
-          {/* Workflow */}
-          {dossier.workflow && (
-            <div>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-                Execution Workflow
-              </h4>
-              <ol className="space-y-2">
-                {dossier.workflow.map((step, i) => (
-                  <li
-                    key={step}
-                    className="flex items-start gap-3 rounded-xl border border-black/[0.03] bg-white p-2.5 text-xs text-[#2b2742]"
-                  >
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-100 text-[10px] font-bold text-purple-700">
-                      {i + 1}
-                    </span>
-                    <span className="leading-snug">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
-
           {/* Tools */}
-          {dossier.tools && (
+          {agent.tools.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5">
-                Connected MCP Tools
+                Tools
               </h4>
               <div className="flex flex-wrap gap-2">
-                {dossier.tools.map((t) => (
+                {agent.tools.map((t) => (
                   <span
                     key={t}
                     className="flex items-center gap-1.5 rounded-lg bg-gray-100 px-2.5 py-1 text-xs font-mono text-[#332f4a]"

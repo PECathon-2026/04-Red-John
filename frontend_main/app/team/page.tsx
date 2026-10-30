@@ -3,28 +3,21 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { AGENTS, type AgentDef, type Team } from '@/lib/agents'
+import { TEAM_ORDER, useGuild, type AgentDef, type Team } from '@/lib/agents'
 import { TeamCard } from '@/components/theme/team-card'
 import { JapanBackground } from '@/components/theme/japan-background'
 import { AgentDossierCard } from '@/components/control/agent-dossier-card'
 import { ArrowLeft, Search, Sparkles } from 'lucide-react'
 
-const TEAMS: (Team | 'All')[] = [
-  'All',
-  'Executive',
-  'Planning',
-  'Forge',
-  'Sentinel',
-  'Shadow',
-  'Support',
-]
+const TEAMS: (Team | 'All')[] = ['All', ...TEAM_ORDER]
 
 export default function TeamShowcasePage() {
   const [selectedTeam, setSelectedTeam] = useState<Team | 'All'>('All')
   const [search, setSearch] = useState('')
   const [activeDossier, setActiveDossier] = useState<AgentDef | null>(null)
 
-  const filtered = AGENTS.filter((a) => {
+  const { agents: guild, loading, error } = useGuild()
+  const filtered = guild.filter((a) => {
     const matchesTeam = selectedTeam === 'All' || a.team === selectedTeam
     const matchesSearch =
       a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -78,8 +71,9 @@ export default function TeamShowcasePage() {
             Specialist Directory
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-[#2B2B2B]/75 sm:text-base">
-            Synchronized team of 21 AI specialists engineered for supply chain resilience,
-            architecture, intelligence reconnaissance, and autonomous code execution.
+            {guild.length || 16} specialists in six teams. Maya hires only the ones a mission
+            needs; Atlas hands their work from team to team until the change is tested,
+            reviewed and ready for a human to approve.
           </p>
         </div>
 
@@ -129,7 +123,7 @@ export default function TeamShowcasePage() {
               name={agent.name}
               title={agent.role}
               department={agent.team}
-              status="working"
+              status={agent.alwaysOn ? 'always on' : agent.clearance === 'AMBER' ? 'amber' : 'on call'}
               avatar={agent.charIdx}
               onOpenDetails={() => setActiveDossier(agent)}
             />
@@ -139,7 +133,11 @@ export default function TeamShowcasePage() {
         {filtered.length === 0 && (
           <div className="flex h-64 flex-col items-center justify-center text-center">
             <p className="text-sm font-medium text-[#2B2B2B]/70">
-              No specialists found matching &quot;{search}&quot;.
+              {error
+                ? `Could not load the guild from the backend: ${error}`
+                : loading
+                  ? 'Loading the guild…'
+                  : `No specialists found matching "${search}".`}
             </p>
           </div>
         )}

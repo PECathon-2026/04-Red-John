@@ -1,1 +1,0 @@
-"""Delivery package init."""

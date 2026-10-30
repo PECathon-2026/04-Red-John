@@ -92,7 +92,7 @@ export default function FullscreenSamuraiHomePage() {
             className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3.5 py-2 text-xs font-medium text-white backdrop-blur-md active:scale-95"
           >
             <Users className="h-3.5 w-3.5 text-rose-400" />
-            <span>Specialists (21)</span>
+            <span>Specialists (16)</span>
           </Link>
         </div>
       </div>

@@ -1,5 +1,5 @@
 # ============================================================
-#  Mycel — .gitignore
+#  DevPilot — .gitignore
 # ============================================================
 
 
@@ -192,22 +192,12 @@ scratch/
 # Temporary migration / analysis scripts
 backend_tree.txt
 structure.txt
-backend/scripts/temp_*.py
-backend/scripts/fix_imports_v*.py
-backend/scripts/migrate_architecture.py
 
 
 # ─────────────────────────────────────────────────────────────
 # Agent IDE (Antigravity)
 # ─────────────────────────────────────────────────────────────
 .gemini/
-
-
-# ─────────────────────────────────────────────────────────────
-# Mycel Runtime Workspaces
-# ─────────────────────────────────────────────────────────────
-/tmp/mycel_workspace/
-/backend/mycel_workspace/
 
 
 # ─────────────────────────────────────────────────────────────
@@ -223,7 +213,6 @@ python_modules/
 # ─────────────────────────────────────────────────────────────
 docs/_build/
 /site
-backend/docs
 # Graphify local-only artifacts
 graphify-out/
 .agents/
@@ -231,3 +220,4 @@ MOBILE_APP_FEATURE_SPEC.md
 .superpowers/
 
 .gitattributes
+.claude/

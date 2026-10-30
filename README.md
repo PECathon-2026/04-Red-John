@@ -181,5 +181,5 @@ All settings are environment variables (or `backend_main/.env`), documented in [
 | `backend_main/` | DevPilot backend — FastAPI, agents, orchestration, tools, safety, workers |
 | `missions/` | Six evaluation scenarios with hidden acceptance checks |
 | `docs/` | Project context, architecture, build phases, run logs |
-| `frontend/` | Control-room frontend inherited from Mycel (to be adapted) |
-| `backend/`, `jarvis/` | Earlier projects whose code was ported (not used at runtime) |
+| `frontend_main/` | DevPilot control room — Next.js, live mission view, approvals, mission board |
+| `DevPilot/` | Flutter mobile client |

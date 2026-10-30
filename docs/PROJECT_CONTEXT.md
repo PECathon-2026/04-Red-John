@@ -458,9 +458,8 @@ Model throughput: on Groq's free tier, limits are per account (~8,000 tokens per
 | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) | Detailed technical architecture |
 | [`docs/BACKEND_PHASES.md`](BACKEND_PHASES.md) | Build phases and status |
 | [`docs/runs/`](runs) | Live run logs and reports |
-| [`frontend/`](../frontend) | Mycel control-room frontend (to be adapted) |
-| [`backend/`](../backend) | Mycel backend (source of ported code; not used at runtime) |
-| [`jarvis/`](../jarvis) | Jarvis (source of ported tools and safety policy; not used at runtime) |
+| [`frontend_main/`](../frontend_main) | **DevPilot control room** (Next.js), fed live by the backend |
+| [`DevPilot/`](../DevPilot) | Flutter mobile client |
 
 ---
 

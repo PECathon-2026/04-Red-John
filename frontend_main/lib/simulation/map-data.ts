@@ -39,13 +39,13 @@ export interface RoomDef {
 
 export const ROOMS: RoomDef[] = [
   // ── Top Row ──
-  { id: 'research',     name: 'Research',     c1: 1,  r1: 1,  c2: 12, r2: 10, floor: 1, tint: 'rgba(100,190,190,0.45)', wallTint: '#3d5a5a', labelColor: '#7ecfcf', labelX: 5.2,  labelY: 0.4 },
-  { id: 'planning',     name: 'Planning',     c1: 15, r1: 1,  c2: 26, r2: 10, floor: 3, tint: 'rgba(120,160,210,0.40)', wallTint: '#3a4a6a', labelColor: '#a5b4fc', labelX: 19.4, labelY: 0.4 },
-  { id: 'resilience',   name: 'Resilience',   c1: 29, r1: 1,  c2: 40, r2: 10, floor: 5, tint: 'rgba(100,200,140,0.38)', wallTint: '#3a5a4a', labelColor: '#86efac', labelX: 32.4, labelY: 0.4 },
+  { id: 'research',     name: 'Planning',     c1: 1,  r1: 1,  c2: 12, r2: 10, floor: 1, tint: 'rgba(100,190,190,0.45)', wallTint: '#3d5a5a', labelColor: '#7ecfcf', labelX: 5.2,  labelY: 0.4 },
+  { id: 'planning',     name: 'Forge',        c1: 15, r1: 1,  c2: 26, r2: 10, floor: 3, tint: 'rgba(120,160,210,0.40)', wallTint: '#3a4a6a', labelColor: '#a5b4fc', labelX: 19.4, labelY: 0.4 },
+  { id: 'resilience',   name: 'Sentinel',     c1: 29, r1: 1,  c2: 40, r2: 10, floor: 5, tint: 'rgba(100,200,140,0.38)', wallTint: '#3a5a4a', labelColor: '#86efac', labelX: 32.4, labelY: 0.4 },
   // ── Middle Row ──
-  { id: 'strategy',     name: 'Strategy',           c1: 1,  r1: 13, c2: 12, r2: 22, floor: 4, tint: 'rgba(200,130,130,0.35)', wallTint: '#5a3a3a', labelColor: '#fca5a5', labelX: 0.61, labelY: 20, labelRotation: -90 },
+  { id: 'strategy',     name: 'Shadow',             c1: 1,  r1: 13, c2: 12, r2: 22, floor: 4, tint: 'rgba(200,130,130,0.35)', wallTint: '#5a3a3a', labelColor: '#fca5a5', labelX: 0.61, labelY: 20, labelRotation: -90 },
   { id: 'atlas',        name: 'Executive',       c1: 15, r1: 13, c2: 26, r2: 22, floor: 8, tint: 'rgba(180,160,100,0.35)', wallTint: '#4a4530', labelColor: '#ffd700', labelX: 18.5, labelY: 21.6 },
-  { id: 'architecture', name: 'Architecture',       c1: 29, r1: 13, c2: 40, r2: 22, floor: 2, tint: 'rgba(160,140,210,0.38)', wallTint: '#44385a', labelColor: '#c4b5fd', labelX: 41.5, labelY: 15, labelRotation: 90 },
+  { id: 'architecture', name: 'Support',            c1: 29, r1: 13, c2: 40, r2: 22, floor: 2, tint: 'rgba(160,140,210,0.38)', wallTint: '#44385a', labelColor: '#c4b5fd', labelX: 41.5, labelY: 15, labelRotation: 90 },
   // ── Bottom Lounge ──
   { id: 'lounge',       name: 'Break Lounge',       c1: 1,  r1: 25, c2: 40, r2: 32, floor: 6, tint: 'rgba(180,170,120,0.32)', wallTint: '#4a4535', labelColor: '#fde68a', labelX: 19, labelY: 32 },
 ];
@@ -264,51 +264,28 @@ export interface AgentSeatDef {
 }
 
 export const AGENT_SEATS: AgentSeatDef[] = [
-  // ── DevPilot Guild Specialists ──
-  // Executive Cabin
-  { name: 'Atlas',   role: 'Executive Orchestrator',  room: 'atlas',        charIdx: 5, seatCol: 20, seatRow: 18, seatDir: Direction.UP, isExecutive: true },
-  { name: 'Maya',    role: 'Guild HR Allocator',      room: 'atlas',        charIdx: 4, seatCol: 22, seatRow: 21, seatDir: Direction.UP, isExecutive: true },
-  // Planning (The Shogun's Council)
-  { name: 'Kenji',   role: 'Requirements Analyst',   room: 'planning',     charIdx: 0, seatCol: 17, seatRow: 5,  seatDir: Direction.RIGHT },
-  { name: 'Hana',    role: 'Codebase Scout',          room: 'planning',     charIdx: 1, seatCol: 22, seatRow: 5,  seatDir: Direction.LEFT },
-  { name: 'Ryo',     role: 'Task Planner',            room: 'planning',     charIdx: 2, seatCol: 17, seatRow: 7,  seatDir: Direction.RIGHT },
-  // Samurai Forge (Implementation)
-  { name: 'Takeshi', role: 'Backend Engineer',        room: 'research',     charIdx: 3, seatCol: 2,  seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Yuki',    role: 'Frontend Engineer',       room: 'research',     charIdx: 4, seatCol: 7,  seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Daichi',  role: 'Debugger & Triage',       room: 'research',     charIdx: 5, seatCol: 2,  seatRow: 9,  seatDir: Direction.UP },
-  { name: 'Sora',    role: 'Refactor & Style',        room: 'research',     charIdx: 0, seatCol: 7,  seatRow: 9,  seatDir: Direction.UP },
-  // Sentinel Dojo (Testing & Verification)
+  // Planning — turns the request into criteria and a plan
+  { name: 'Kenji',   role: 'Requirements Analyst',    room: 'research',     charIdx: 0, seatCol: 2,  seatRow: 5,  seatDir: Direction.UP },
+  { name: 'Hana',    role: 'Codebase Scout',          room: 'research',     charIdx: 1, seatCol: 7,  seatRow: 5,  seatDir: Direction.UP },
+  { name: 'Ryo',     role: 'Task Planner',            room: 'research',     charIdx: 2, seatCol: 2,  seatRow: 9,  seatDir: Direction.UP },
+  // Forge — writes and fixes the code
+  { name: 'Takeshi', role: 'Backend Engineer',        room: 'planning',     charIdx: 3, seatCol: 17, seatRow: 5,  seatDir: Direction.RIGHT },
+  { name: 'Yuki',    role: 'Frontend Engineer',       room: 'planning',     charIdx: 4, seatCol: 22, seatRow: 5,  seatDir: Direction.LEFT },
+  { name: 'Daichi',  role: 'Debugger',                room: 'planning',     charIdx: 5, seatCol: 17, seatRow: 7,  seatDir: Direction.RIGHT },
+  { name: 'Sora',    role: 'Refactor & Style Keeper', room: 'planning',     charIdx: 0, seatCol: 22, seatRow: 7,  seatDir: Direction.LEFT },
+  // Sentinel — tests and verifies
   { name: 'Aiko',    role: 'Test Runner',             room: 'resilience',   charIdx: 1, seatCol: 30, seatRow: 5,  seatDir: Direction.UP },
   { name: 'Riku',    role: 'Test Author',             room: 'resilience',   charIdx: 2, seatCol: 35, seatRow: 5,  seatDir: Direction.UP },
   { name: 'Mei',     role: 'Independent Verifier',    room: 'resilience',   charIdx: 3, seatCol: 30, seatRow: 9,  seatDir: Direction.UP },
-  // Shadow Council (Review & Security)
+  // Shadow — reviews, security, arbitration
   { name: 'Haruto',  role: 'Code Reviewer',           room: 'strategy',     charIdx: 4, seatCol: 2,  seatRow: 17, seatDir: Direction.UP },
   { name: 'Kaito',   role: 'Security Inspector',      room: 'strategy',     charIdx: 5, seatCol: 6,  seatRow: 17, seatDir: Direction.UP },
   { name: 'Emi',     role: 'Arbiter',                 room: 'strategy',     charIdx: 0, seatCol: 10, seatRow: 17, seatDir: Direction.UP },
-  // Support
-  { name: 'Scribe',  role: 'Evidence Scribe',         room: 'architecture', charIdx: 1, seatCol: 30, seatRow: 17, seatDir: Direction.UP },
-
-  // ── Compatibility agents ──
-  { name: 'Mira',    role: 'Lead Researcher',        room: 'research',     charIdx: 0, seatCol: 2,  seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Ravi',    role: 'Data Analyst',            room: 'research',     charIdx: 1, seatCol: 7,  seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Anika',   role: 'Market Analyst',          room: 'research',     charIdx: 2, seatCol: 2,  seatRow: 9,  seatDir: Direction.UP },
-  { name: 'Noor',    role: 'Trend Spotter',           room: 'research',     charIdx: 3, seatCol: 7,  seatRow: 9,  seatDir: Direction.UP },
-  { name: 'Aanya',   role: 'Planning Lead',           room: 'planning',     charIdx: 4, seatCol: 17, seatRow: 5,  seatDir: Direction.RIGHT },
-  { name: 'Dev',     role: 'Demand Planner',          room: 'planning',     charIdx: 5, seatCol: 22, seatRow: 5,  seatDir: Direction.LEFT },
-  { name: 'Kabir',   role: 'Supply Planner',          room: 'planning',     charIdx: 0, seatCol: 17, seatRow: 7,  seatDir: Direction.RIGHT },
-  { name: 'Tara',    role: 'Capacity Analyst',        room: 'planning',     charIdx: 1, seatCol: 22, seatRow: 7,  seatDir: Direction.LEFT },
-  { name: 'Zoya',    role: 'Risk Assessor',           room: 'resilience',   charIdx: 2, seatCol: 30, seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Ishaan',  role: 'Continuity Planner',      room: 'resilience',   charIdx: 3, seatCol: 35, seatRow: 5,  seatDir: Direction.UP },
-  { name: 'Leena',   role: 'Crisis Coordinator',      room: 'resilience',   charIdx: 4, seatCol: 30, seatRow: 9,  seatDir: Direction.UP },
-  { name: 'Arjun',   role: 'Recovery Specialist',     room: 'resilience',   charIdx: 5, seatCol: 35, seatRow: 9,  seatDir: Direction.UP },
-  { name: 'Helena',  role: 'Strategy Lead',           room: 'strategy',     charIdx: 0, seatCol: 2,  seatRow: 17, seatDir: Direction.UP },
-  { name: 'Vikram',  role: 'Business Strategist',     room: 'strategy',     charIdx: 1, seatCol: 6,  seatRow: 17, seatDir: Direction.UP },
-  { name: 'Nisha',   role: 'Portfolio Analyst',       room: 'strategy',     charIdx: 2, seatCol: 10, seatRow: 17, seatDir: Direction.UP },
-  { name: 'Omar',    role: 'Growth Planner',          room: 'strategy',     charIdx: 3, seatCol: 3,  seatRow: 21, seatDir: Direction.UP },
-  { name: 'Sofia',   role: 'Innovation Scout',        room: 'strategy',     charIdx: 4, seatCol: 8,  seatRow: 21, seatDir: Direction.UP },
-  { name: 'Rohan',   role: 'System Architect',        room: 'architecture', charIdx: 0, seatCol: 30, seatRow: 17, seatDir: Direction.UP },
-  { name: 'Priya',   role: 'Platform Engineer',       room: 'architecture', charIdx: 1, seatCol: 35, seatRow: 17, seatDir: Direction.UP },
-  { name: 'Ethan',   role: 'Infrastructure Lead',     room: 'architecture', charIdx: 2, seatCol: 32, seatRow: 21, seatDir: Direction.UP },
+  // Executive Cabin — Atlas orchestrates, Maya hires
+  { name: 'Atlas',   role: 'Mission Orchestrator',    room: 'atlas',        charIdx: 5, seatCol: 20, seatRow: 18, seatDir: Direction.UP, isExecutive: true },
+  { name: 'Maya',    role: 'Guild HR — Hiring Engine', room: 'atlas',       charIdx: 4, seatCol: 22, seatRow: 21, seatDir: Direction.UP, isExecutive: true },
+  // Support — writes the evidence report
+  { name: 'Scribe',  role: 'Mission Scribe',          room: 'architecture', charIdx: 1, seatCol: 30, seatRow: 17, seatDir: Direction.UP },
 ];
 
 // ═══════════════════════════════════════════════════════════════════

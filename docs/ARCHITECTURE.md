@@ -618,4 +618,4 @@ Every bug found in a live run has a regression test.
 | Loop detector | | Workspace sandbox, apply with conflict detection |
 | Control-room frontend and its event shapes | | Queue, leases, workers, crash recovery; evaluation harness |
 
-Code was **ported and adapted**, never imported at runtime: Mycel ([`backend/`](../backend), [`frontend/`](../frontend)) and Jarvis ([`jarvis/`](../jarvis)) remain untouched.
+Code was **ported and adapted**, never imported at runtime. The original Mycel and Jarvis folders have since been removed from this repository (they remain in git history).

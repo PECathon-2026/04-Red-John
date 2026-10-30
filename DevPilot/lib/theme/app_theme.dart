@@ -1,115 +1,221 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Central Design System tokens and Theme configuration for DevPilot.
-/// Implements the high-contrast editorial "Paper & Lime Performance Mobile" aesthetic.
+/// Design System Tokens for DevPilot Light & Modern Theme.
+/// Features high-contrast crisp readability, soft light canvas (#F8FAFC),
+/// pure white surfaces (#FFFFFF), curated vibrant accent colors,
+/// rounded corners to break rigid contrast, and clean Montserrat/Inter typography.
+abstract class T {
+  // ── CANVAS & SURFACES (Light Mode Default) ──
+  static const background     = Color(0xFFF8FAFC); // global scaffold canvas
+  static const surface        = Color(0xFFFFFFFF); // clean white cards
+  static const surfaceMuted   = Color(0xFFF1F5F9); // secondary containers / rails
+  static const surfaceAlt     = Color(0xFFE2E8F0); // subtle borders / alt surfaces
+
+  // ── FOREGROUND & TEXT ──
+  static const onSurface      = Color(0xFF0F172A); // headings, primary high-contrast text
+  static const onSurfaceVar   = Color(0xFF475569); // secondary text, comfortable labels
+  static const onSurfaceMuted = Color(0xFF94A3B8); // tertiary text, subtle meta
+  static const primary        = Color(0xFF0F172A); // primary button / core brand
+  static const onPrimary      = Color(0xFFFFFFFF); // text on primary
+
+  // ── BORDERS & SEPARATORS ──
+  static const border         = Color(0xFFE2E8F0); // 1px clean hairline border
+  static const borderStrong   = Color(0xFFCBD5E1); // enhanced separator
+
+  // ── CURATED ACCENT COLORS ──
+  static const accent         = Color(0xFF4F46E5); // Indigo
+  static const accentBlue     = Color(0xFF2563EB); // Royal Blue
+  static const accentTeal     = Color(0xFF0D9488); // Teal
+  static const accentPurple   = Color(0xFF7C3AED); // Violet
+  static const accentRose     = Color(0xFFE11D48); // Rose
+  static const ember          = Color(0xFFEA580C); // Warm Orange
+
+  // ── SEMANTIC STATUS ──
+  static const success        = Color(0xFF16A34A); // Emerald green (running, success)
+  static const destructive    = Color(0xFFDC2626); // Crimson red (errors, failed)
+  static const amber          = Color(0xFFD97706); // Amber (warnings, pending)
+
+  // ── CHART TONAL RAMP ──
+  static const chart1 = Color(0xFF2563EB);
+  static const chart2 = Color(0xFF4F46E5);
+  static const chart3 = Color(0xFF0D9488);
+  static const chart4 = Color(0xFF94A3B8);
+  static const chart5 = Color(0xFFE2E8F0);
+
+  // ── SHAPES & CORNER RADII (Breaks rigid contrast) ──
+  static const zero         = BorderRadius.zero;
+  static const rSm          = BorderRadius.all(Radius.circular(8));
+  static const rMd          = BorderRadius.all(Radius.circular(12));
+  static const rLg          = BorderRadius.all(Radius.circular(16));
+  static const rFull        = BorderRadius.all(Radius.circular(9999));
+  static const badgeCircle  = BorderRadius.all(Radius.circular(9999));
+
+  // ── SPACING ──
+  static const double xs  = 4;
+  static const double sm  = 8;
+  static const double md  = 16;
+  static const double lg  = 24;
+  static const double xl  = 32;
+  static const double x2l = 48;
+  static const double x3l = 64;
+
+  // ── TYPOGRAPHY ──
+  // Montserrat: Headings & Numerals — confident, clear, well-spaced
+  static TextStyle montserrat(
+    double size, {
+    FontWeight w = FontWeight.w500,
+    double trackEm = 0,
+    Color? color,
+    double height = 1.15,
+  }) =>
+      GoogleFonts.montserrat(
+        fontSize: size,
+        fontWeight: w,
+        letterSpacing: trackEm * size,
+        color: color ?? onSurface,
+        height: height,
+      );
+
+  // Inter / Sans: Body text, UI labels, metadata — legible, non-congested
+  static TextStyle geist(
+    double size, {
+    FontWeight w = FontWeight.w400,
+    double trackEm = 0,
+    Color? color,
+    double height = 1.45,
+  }) =>
+      GoogleFonts.inter(
+        fontSize: size,
+        fontWeight: w,
+        letterSpacing: trackEm * size,
+        color: color ?? onSurface,
+        height: height,
+      );
+
+  static TextStyle get displayLg    => montserrat(40, w: FontWeight.w600, trackEm: -0.02);
+  static TextStyle get displayMd    => montserrat(32, w: FontWeight.w600, trackEm: -0.02);
+  static TextStyle get displaySm    => montserrat(26, w: FontWeight.w600, trackEm: -0.01);
+  static TextStyle get numeralXl    => montserrat(52, w: FontWeight.w600, trackEm: -0.02);
+  static TextStyle get numeralSm   => GoogleFonts.spaceGrotesk(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.04 * 20,
+        fontFeatures: const [FontFeature.tabularFigures()],
+        color: onSurface,
+      );
+  static TextStyle mono(double size, {Color? color, FontWeight w = FontWeight.w400}) =>
+      GoogleFonts.jetBrainsMono(fontSize: size, color: color ?? onSurface, fontWeight: w);
+  static TextStyle get headlineLg   => montserrat(22, w: FontWeight.w600, trackEm: -0.01);
+  static TextStyle get headlineMd   => montserrat(18, w: FontWeight.w600);
+  static TextStyle get headlineSm   => montserrat(15, w: FontWeight.w600);
+  static TextStyle get bodyMd       => geist(14, w: FontWeight.w400);
+  static TextStyle get bodySm       => geist(12, color: onSurfaceVar);
+  static TextStyle get labelUpMd    => geist(11, w: FontWeight.w600, trackEm: 0.05, color: onSurfaceVar);
+  static TextStyle get labelUpSm    => geist(10, w: FontWeight.w600, trackEm: 0.05, color: onSurfaceVar);
+  static TextStyle get labelUpXs    => geist(9,  w: FontWeight.w700, trackEm: 0.04, color: onSurfaceVar);
+  static TextStyle get eyebrowWide  => geist(10, w: FontWeight.w600, trackEm: 0.08, color: onSurfaceVar);
+
+  // Material ThemeData (Clean Light Theme Default)
+  static ThemeData get theme => ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: background,
+    cardColor: surface,
+    colorScheme: const ColorScheme.light(
+      primary: primary,
+      onPrimary: onPrimary,
+      secondary: accent,
+      surface: surface,
+      onSurface: onSurface,
+      error: destructive,
+    ),
+    dividerTheme: const DividerThemeData(color: border, thickness: 1),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: background,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      iconTheme: IconThemeData(color: onSurface),
+    ),
+    cardTheme: const CardThemeData(
+      color: surface,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: rMd,
+        side: BorderSide(color: border, width: 1),
+      ),
+    ),
+  );
+}
+
+/// Backward compatibility class for widgets referencing AppTheme.*
 class AppTheme {
   AppTheme._();
 
-  // --- Paper & Lime Core Palette ---
+  static const Color surface = T.surface;
+  static const Color surfaceAlt = T.surfaceMuted;
+  static const Color surfaceRaised = T.surface;
+  static const Color surfaceInverse = T.onSurface;
 
-  /// Warm paper (#F4F2EC) — global scaffold and page canvas.
-  static const Color surface = Color(0xFFF4F2EC);
+  static const Color primary = T.primary;
+  static const Color primaryDeep = T.onSurface;
+  static const Color onPrimary = T.onPrimary;
+  static const Color accent = T.accent;
 
-  /// Paper-alt (#EBE8E0) — default card background, stat tiles, project preview cards.
-  static const Color surfaceAlt = Color(0xFFEBE8E0);
+  static const Color border = T.border;
+  static const Color borderSubtle = T.border;
+  static const Color borderStrong = T.borderStrong;
+  static const Color borderMedium = T.borderStrong;
+  static const Color neutralSoft = T.surfaceAlt;
+  static const Color background = T.background;
+  static const Color onSurface = T.onSurface;
+  static const Color onSurfaceVariant = T.onSurfaceVar;
+  static const Color onInverse = T.surface;
+  static const Color textPrimary = T.onSurface;
+  static const Color textSecondary = T.onSurfaceVar;
+  static const Color textMuted = T.onSurfaceMuted;
+  static const Color textDark = T.onSurface;
+  static const Color textLight = T.surface;
+  static const Color primaryDark = T.onSurface;
 
-  /// Pure white (#FFFFFF) — list-row cards to lift off paper without drop shadows.
-  static const Color surfaceRaised = Color(0xFFFFFFFF);
+  static const Color bgMain = T.background;
+  static const Color bgWarm = T.surfaceMuted;
+  static const Color surfaceCard = T.surface;
+  static const Color darkPill = T.onSurface;
+  static const Color cardPeach = T.surfaceMuted;
+  static const Color cardMint = T.surfaceMuted;
+  static const Color cardLavender = T.surfaceMuted;
+  static const Color accentOrange = T.ember;
 
-  /// Ink (#0E0F0C) — dark feature cards (console, schedule tile, tactical deck).
-  static const Color surfaceInverse = Color(0xFF0E0F0C);
+  static const Color success = T.success;
+  static const Color statusGreen = T.success;
+  static const Color statusRed = T.destructive;
+  static const Color statusAmber = T.amber;
+  static const Color error = T.destructive;
+  static const Color warning = T.amber;
 
-  /// Electric lime (#D7FE47) — strictly rationed accent (active status pill, active chip).
-  static const Color primary = Color(0xFFD7FE47);
-
-  /// Pressed lime (#C8F02A) — interactive active tap states and success indicators.
-  static const Color primaryDeep = Color(0xFFC8F02A);
-
-  /// Ink on lime (#0E0F0C).
-  static const Color onPrimary = Color(0xFF0E0F0C);
-
-  /// Ember orange (#FF5A1F) — reserved strictly for hero numerals and alert notification dots.
-  static const Color accent = Color(0xFFFF5A1F);
-
-  /// Ink primary text (#0E0F0C).
-  static const Color onSurface = Color(0xFF0E0F0C);
-
-  /// Mute gray (#8A8A82) — metadata, kicker labels, inactive states.
-  static const Color onSurfaceVariant = Color(0xFF8A8A82);
-
-  /// Warm paper text on ink surfaces (#F4F2EC).
-  static const Color onInverse = Color(0xFFF4F2EC);
-
-  /// Hairline dividers (#E3E0D7) — 1px dividers, never card outlines.
-  static const Color border = Color(0xFFE3E0D7);
-
-  /// Progress track fills (#DDDAD1).
-  static const Color borderStrong = Color(0xFFDDDAD1);
-
-  /// De-emphasized data bar fill (#C8C5BA).
-  static const Color neutralSoft = Color(0xFFC8C5BA);
-
-  // --- Backward Compatibility Aliases ---
-  static const Color bgMain = surface;
-  static const Color surfaceCard = surfaceRaised;
-  static const Color darkPill = surfaceInverse;
-  static const Color textDark = onSurface;
-  static const Color textSecondary = onSurfaceVariant;
-  static const Color textLight = onInverse;
-  static const Color borderSubtle = border;
-  static const Color borderMedium = borderStrong;
-  static const Color accentOrange = accent;
-  static const Color statusGreen = primaryDeep;
-  static const Color bgWarm = surfaceAlt;
-  static const Color cardPeach = surfaceAlt;
-  static const Color cardMint = surfaceAlt;
-  static const Color cardLavender = surfaceAlt;
-  static const Color statusAmber = Color(0xFFFFB300);
-  static const Color statusRed = Color(0xFFFF3B30);
-  static const Color terminalBg = surfaceInverse;
+  static const Color terminalBg = Color(0xFF0F172A);
   static const Color terminalText = Color(0xFFB9D8AC);
 
-  // --- Shapes & Corner Radii ---
+  static const BorderRadius cardRadius = T.rMd;
+  static const BorderRadius thumbRadius = T.rSm;
+  static const BorderRadius pillRadius = T.rFull;
+  static const BorderRadius sheetRadius = T.rLg;
+  static const BorderRadius buttonRadius = T.rSm;
+  static const BorderRadius chipRadius = T.rFull;
 
-  /// Default 24px corner radius for all cards, tiles, and grouped surfaces.
-  static final BorderRadius cardRadius = BorderRadius.circular(24);
-
-  /// 18px corner radius for photos and thumbnail previews.
-  static final BorderRadius thumbRadius = BorderRadius.circular(18);
-
-  /// Full 9999px pill radius for chips, buttons, avatars, and badges.
-  static final BorderRadius pillRadius = BorderRadius.circular(9999);
-
-  // Backward compatibility shape aliases
-  static final BorderRadius sheetRadius = BorderRadius.circular(24);
-  static final BorderRadius buttonRadius = pillRadius;
-  static final BorderRadius chipRadius = pillRadius;
-
-  // --- Flat Surfaces (Zero Drop Shadows) ---
   static const List<BoxShadow> cardShadow = [];
   static const List<BoxShadow> softShadow = [];
   static const List<BoxShadow> floatingShadow = [];
 
-  // --- Typography (Space Grotesk & Inter) ---
+  static ThemeData get lightTheme => T.theme;
+  static ThemeData get darkTheme => T.theme;
+  static ThemeData get themeData => T.theme;
 
-  // Space Grotesk: Display Numerals & Headings with Tabular Figures
-  static TextStyle get displayXl => GoogleFonts.spaceGrotesk(
-        fontSize: 84,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.04 * 84,
-        fontFeatures: const [FontFeature.tabularFigures()],
-        color: onSurface,
-      );
-
-  static TextStyle get displayMd => GoogleFonts.spaceGrotesk(
-        fontSize: 34,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -0.04 * 34,
-        fontFeatures: const [FontFeature.tabularFigures()],
-        color: onSurface,
-      );
-
+  static TextStyle get display => T.displayLg;
+  static TextStyle get displayXl => T.numeralXl;
+  static TextStyle get displayMd => T.displayMd;
   static TextStyle get numeralMd => GoogleFonts.spaceGrotesk(
         fontSize: 26,
         fontWeight: FontWeight.w700,
@@ -117,7 +223,6 @@ class AppTheme {
         fontFeatures: const [FontFeature.tabularFigures()],
         color: onSurface,
       );
-
   static TextStyle get numeralSm => GoogleFonts.spaceGrotesk(
         fontSize: 22,
         fontWeight: FontWeight.w700,
@@ -125,106 +230,50 @@ class AppTheme {
         fontFeatures: const [FontFeature.tabularFigures()],
         color: onSurface,
       );
-
-  static TextStyle get headlineMd => GoogleFonts.spaceGrotesk(
-        fontSize: 17,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.01 * 17,
-        color: onSurface,
-      );
-
-  static TextStyle get headlineSm => GoogleFonts.spaceGrotesk(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.01 * 15,
-        color: onSurface,
-      );
-
-  static TextStyle get cardTitle => GoogleFonts.spaceGrotesk(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.01 * 16,
-        color: onSurface,
-      );
-
-  // Inter: Humanist Neutral Sans for Body, Labels & Tracked-out Kickers
-  static TextStyle get bodyMd => GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0,
-        color: onSurface,
-      );
-
-  static TextStyle get bodySm => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0,
-        color: onSurfaceVariant,
-      );
-
-  static TextStyle get labelMd => GoogleFonts.inter(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        letterSpacing: -0.12,
-        color: onSurface,
-      );
-
-  static TextStyle get labelSm => GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.11,
-        color: onSurfaceVariant,
-      );
-
+  static TextStyle get titleLarge => T.displayMd;
+  static TextStyle get titleMedium => T.headlineMd;
+  static TextStyle get titleSmall => T.headlineSm;
+  static TextStyle get headlineMd => T.headlineMd;
+  static TextStyle get headlineSm => T.headlineSm;
+  static TextStyle get cardTitle => T.headlineSm;
+  static TextStyle get body => T.bodyMd;
+  static TextStyle get bodyMd => T.bodyMd;
+  static TextStyle get bodySm => T.bodySm;
+  static TextStyle get labelMd => T.bodySm;
+  static TextStyle get labelSm => T.labelUpSm;
   static TextStyle get labelUppercase => GoogleFonts.inter(
         fontSize: 10,
         fontWeight: FontWeight.w500,
         letterSpacing: 1.8,
         color: onSurfaceVariant,
       );
+  static TextStyle get caption => T.labelUpSm;
+  static TextStyle get mono => GoogleFonts.jetBrainsMono(fontSize: 12, color: T.onSurface);
+  static TextStyle get monoSmall => GoogleFonts.jetBrainsMono(fontSize: 10, color: T.onSurfaceVar);
 
-  static TextStyle get caption => GoogleFonts.inter(
-        fontSize: 9,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 1.35,
-        color: onSurfaceVariant,
-      );
-
-  // Backward compatibility legacy typography (const to preserve const widget trees)
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: T.onSurfaceVar,
+  );
   static const TextStyle displayLarge = TextStyle(
     fontSize: 32,
     fontWeight: FontWeight.w800,
-    color: onSurface,
+    color: T.onSurface,
     letterSpacing: -0.5,
     height: 1.15,
   );
   static const TextStyle displayMedium = TextStyle(
     fontSize: 26,
     fontWeight: FontWeight.w700,
-    color: onSurface,
+    color: T.onSurface,
     letterSpacing: -0.4,
     height: 1.2,
-  );
-  static const TextStyle titleLarge = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w700,
-    color: onSurface,
-    letterSpacing: -0.2,
-  );
-  static const TextStyle titleMedium = TextStyle(
-    fontSize: 17,
-    fontWeight: FontWeight.w600,
-    color: onSurface,
   );
   static const TextStyle bodyMedium = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    color: onSurface,
-  );
-  static const TextStyle bodySmall = TextStyle(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    color: onSurfaceVariant,
+    color: T.onSurface,
   );
   static const TextStyle pillLabel = TextStyle(
     fontSize: 13,
@@ -239,48 +288,4 @@ class AppTheme {
     height: 1.45,
     color: Color(0xFFB9D8AC),
   );
-
-  // --- Material 3 ThemeData ---
-  static ThemeData get themeData => lightTheme;
-
-  static ThemeData get lightTheme {
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.light,
-      scaffoldBackgroundColor: surface,
-      cardColor: surfaceAlt,
-      colorScheme: const ColorScheme.light(
-        primary: primary,
-        onPrimary: onPrimary,
-        secondary: primaryDeep,
-        onSecondary: onPrimary,
-        surface: surface,
-        onSurface: onSurface,
-        surfaceContainerHighest: surfaceAlt,
-        error: accent,
-        onError: Colors.white,
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        iconTheme: const IconThemeData(color: onSurface),
-        titleTextStyle: headlineMd,
-      ),
-      cardTheme: CardThemeData(
-        color: surfaceAlt,
-        elevation: 0,
-        margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(
-          borderRadius: cardRadius,
-        ),
-      ),
-      dividerTheme: const DividerThemeData(
-        color: Colors.transparent,
-        thickness: 0,
-        space: 0,
-      ),
-    );
-  }
 }

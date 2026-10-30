@@ -1,6 +1,6 @@
 # DevPilot Backend — Build Phases
 
-`backend_main/` is the production backend for DevPilot. It is a new codebase: code from Mycel (`backend/`) and Jarvis (`jarvis/`) is **ported** into it and adapted, never imported at runtime. That keeps the old projects free to change or be deleted.
+`backend_main/` is the production backend for DevPilot. It is a new codebase: code from Mycel and Jarvis was **ported** into it and adapted, never imported at runtime, so the old projects could be removed from the repository (they remain in git history).
 
 ## Architecture rules (apply to every phase)
 
