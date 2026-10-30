@@ -34,5 +34,6 @@ async def ready(container: ContainerDep) -> JSONResponse:
     healthy = checks["storage"] and checks["event_bus"]
     return JSONResponse(
         status_code=200 if healthy else 503,
-        content={"status": "ok" if healthy else "degraded", "checks": checks, "llm_routes": container.llm.describe()},
+        content={"status": "ok" if healthy else "degraded", "checks": checks, "llm_routes": container.llm.describe(),
+                 "llm_keys": container.llm.key_status()},
     )

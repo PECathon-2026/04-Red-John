@@ -47,11 +47,26 @@ def build_llm_gateway(settings: Settings) -> LLMGateway:
         timeout_s=settings.llm_request_timeout_s, max_attempts=settings.llm_max_attempts,
     )
     fallback = Route(gemini, settings.llm_fallback_model)
+    smart: list[Route] = [Route(groq, settings.llm_model_smart), fallback]
+    fast: list[Route] = [Route(groq, settings.llm_model_fast), fallback]
+    if settings.github_models_tokens:
+        github = OpenAICompatibleProvider(
+            "github", settings.github_models_base_url, settings.github_models_tokens,
+            timeout_s=settings.llm_request_timeout_s, max_attempts=settings.llm_max_attempts,
+        )
+        smart.insert(0, Route(github, settings.github_models_model))
+        fast.insert(0, Route(github, settings.github_models_model_fast))
+    if settings.azure_openai_endpoint and settings.azure_openai_deployment:
+        # Azure's v1 API is OpenAI-compatible; the "model" is the deployment name.
+        azure = OpenAICompatibleProvider(
+            "azure", settings.azure_openai_endpoint.rstrip("/") + "/openai/v1", settings.azure_openai_api_keys,
+            timeout_s=settings.llm_request_timeout_s, max_attempts=settings.llm_max_attempts,
+            auth_header="api-key",
+        )
+        smart.insert(0, Route(azure, settings.azure_openai_deployment))
+        fast.insert(0, Route(azure, settings.azure_openai_deployment_fast or settings.azure_openai_deployment))
     return LLMGateway(
-        routes={
-            ModelTier.SMART: [Route(groq, settings.llm_model_smart), fallback],
-            ModelTier.FAST: [Route(groq, settings.llm_model_fast), fallback],
-        },
+        routes={ModelTier.SMART: smart, ModelTier.FAST: fast},
         max_concurrency=settings.llm_max_concurrency,
     )
 

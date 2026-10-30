@@ -102,7 +102,8 @@ class AuthService:
             raise AuthenticationError("This account no longer has access")
         return Principal.of(user)
 
-    async def create_user(self, username: str, password: str, role: Role, *, created_by: str) -> User:
+    async def create_user(self, username: str, password: str, role: Role, *, created_by: str,
+                          user_id: str | None = None) -> User:
         name = username.strip().lower()
         if not name or not name.replace("-", "").replace("_", "").replace(".", "").isalnum():
             raise ValidationFailed("Usernames may contain letters, digits, '.', '-' and '_'")
@@ -110,7 +111,8 @@ class AuthService:
             raise ValidationFailed(f"Passwords must be at least {MIN_PASSWORD_LENGTH} characters")
         if await self._users.get_by_username(name):
             raise ConflictError(f"User {name} already exists")
-        user = User(username=name, password_hash=hash_password(password), role=role, created_by=created_by)
+        user = User(username=name, password_hash=hash_password(password), role=role, created_by=created_by,
+                    **({"user_id": user_id} if user_id else {}))
         await self._users.create(user)
         log.info("user %s created with role %s by %s", name, role, created_by)
         return user
@@ -130,5 +132,9 @@ class AuthService:
         """Create the bootstrap admin if it does not exist yet (never overwrites an existing account)."""
         if not username or not password:
             return
-        if await self._users.get_by_username(username.strip().lower()) is None:
-            await self.create_user(username, password, Role.ADMIN, created_by="bootstrap")
+        name = username.strip().lower()
+        if await self._users.get_by_username(name) is None:
+            # A fixed id: with in-memory storage the admin is recreated on every restart, and a random id
+            # would make every token issued before the restart point at a user that no longer exists.
+            await self.create_user(username, password, Role.ADMIN, created_by="bootstrap",
+                                   user_id=f"usr_bootstrap_{name}")

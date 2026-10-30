@@ -56,6 +56,12 @@ class LLMGateway:
             for tier, chain in self._routes.items()
         }
 
+    def key_status(self) -> dict[str, dict[str, int]]:
+        """Per provider: how many keys are healthy, cooling down (rate limited) or dead. Never the keys."""
+        providers = {r.provider.name: r.provider for chain in self._routes.values() for r in chain}
+        return {name: p.key_status() for name, p in providers.items()
+                if p.available and hasattr(p, "key_status")}
+
     async def complete(self, request: ChatRequest) -> ChatResponse:
         chain = self._routes.get(request.tier) or []
         if request.model:

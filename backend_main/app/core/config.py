@@ -5,13 +5,14 @@ Every knob the backend has lives here. Nothing else reads `os.environ`.
 """
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
 from pydantic import AliasChoices, Field, field_validator
-from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, PydanticBaseSettingsSource, SettingsConfigDict
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
@@ -39,11 +40,60 @@ class ExecutionMode(StrEnum):
 
 
 def _split_csv(value: object) -> list[str]:
+    """`a,b`, `[a, b]` and `["a", "b"]` all give ["a", "b"]; blanks and duplicates are dropped."""
     if value is None:
         return []
     if isinstance(value, str):
-        return [part.strip() for part in value.split(",") if part.strip()]
-    return [str(v).strip() for v in value if str(v).strip()]  # type: ignore[union-attr]
+        text = value.strip()
+        if text.startswith("[") and text.endswith("]"):
+            text = text[1:-1]
+        parts = text.split(",")
+    else:
+        parts = [str(v) for v in value]  # type: ignore[union-attr]
+    cleaned = (p.strip().strip("\"'").strip() for p in parts)
+    return list(dict.fromkeys(p for p in cleaned if p))
+
+
+_MULTILINE_LIST = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(\[[^\]]*\])", re.MULTILINE)
+
+
+class _MultilineListSource(PydanticBaseSettingsSource):
+    """Reads `NAME=[a, b, ...]` values that span several lines of `.env`, which python-dotenv cannot parse:
+
+        GROQ_API_KEYS=[key1,
+          key2,
+          key3]
+
+    Only bracketed values that actually span lines are taken; everything else is left to the normal reader.
+    """
+
+    def __init__(self, settings_cls: type[BaseSettings], env_file: Path | None) -> None:
+        super().__init__(settings_cls)
+        self._env_file = env_file
+
+    def get_field_value(self, field, field_name):  # noqa: ANN001, ANN201 - unused; __call__ does the work
+        return None, field_name, False
+
+    def __call__(self) -> dict[str, str]:
+        if self._env_file is None or not self._env_file.is_file():
+            return {}
+        # Key each value the way the dotenv source does (the alias for aliased fields), so it replaces that
+        # source's broken one-line value instead of sitting next to it.
+        names: dict[str, str] = {}
+        for field_name, field in self.settings_cls.model_fields.items():
+            names[field_name.lower()] = field_name
+            alias = field.validation_alias
+            for choice in getattr(alias, "choices", [alias] if isinstance(alias, str) else []):
+                if isinstance(choice, str):
+                    names[choice.lower()] = choice
+        text = self._env_file.read_text(encoding="utf-8")
+        found: dict[str, str] = {}
+        for match in _MULTILINE_LIST.finditer(text):
+            name, value = match.group(1).lower(), match.group(2)
+            if "\n" in value and name in names:
+                # A line break separates items too, so a missing comma at the end of a line still works.
+                found[names[name]] = ",".join(line.strip() for line in value.splitlines())
+        return found
 
 
 class Settings(BaseSettings):
@@ -98,6 +148,25 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("GEMINI_API_KEYS", "GEMINI_API_KEY"),
     )
     gemini_base_url: str = "https://generativelanguage.googleapis.com/v1beta/openai"
+    # Azure OpenAI (e.g. a GPT deployment in Azure AI Foundry). When a key and endpoint are set it is
+    # tried first for both tiers, with Groq and then Gemini as fallbacks.
+    azure_openai_api_keys: Annotated[list[str], NoDecode] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("AZURE_OPENAI_API_KEYS", "AZURE_OPENAI_API_KEY"),
+    )
+    azure_openai_endpoint: str = ""         # https://<resource>.openai.azure.com (or .cognitiveservices.azure.com)
+    azure_openai_deployment: str = ""       # deployment name for the smart tier
+    azure_openai_deployment_fast: str = ""  # optional cheaper deployment for the fast tier; default = the above
+    # GitHub Models (free GPT access with a GitHub token that has the "Models: read" permission). When set
+    # it is tried after Azure and before Groq. The free tier allows ~150 requests/day on mini models; once
+    # exhausted the gateway moves on to Groq/Gemini.
+    github_models_tokens: Annotated[list[str], NoDecode] = Field(
+        default_factory=list,
+        validation_alias=AliasChoices("GITHUB_MODELS_TOKENS", "GITHUB_MODELS_TOKEN"),
+    )
+    github_models_base_url: str = "https://models.github.ai/inference"
+    github_models_model: str = "openai/gpt-4.1-mini"
+    github_models_model_fast: str = "openai/gpt-4.1-mini"
     llm_model_smart: str = "openai/gpt-oss-120b"
     llm_model_fast: str = "openai/gpt-oss-20b"
     llm_fallback_model: str = "gemini-3.8-flash"
@@ -130,7 +199,7 @@ class Settings(BaseSettings):
 
     # ── Hiring (Maya) ─────────────────────────────────────────────
     hiring_threshold: float = 0.5
-    hiring_llm_mandates: bool = True       # let the LLM write each hire's one-line mandate
+    hiring_llm_mandates: bool = False      # let the LLM write each hire's mandate (costs a model call per hire)
     escalate_after_failures: int = 2       # a task failing this often goes to a different specialist
 
     # ── Orchestration (Atlas) ─────────────────────────────────────
@@ -138,6 +207,10 @@ class Settings(BaseSettings):
     orchestrator_max_rounds: int = 60      # hard stop for one run of the decision loop
     repair_max_attempts: int = 4           # rounds of fix → re-check before a human is asked
     llm_retry_backoff_s: float = 5.0       # wait before retrying a task whose model call failed
+    # When every provider is out mid-run, the agent waits and resends the same step (keeping its work)
+    # this many times before giving up; only then does the task fail and restart from scratch.
+    llm_outage_retries: int = 3
+    llm_outage_wait_s: float = 20.0
 
     # ── Execution (Phase 8) ───────────────────────────────────────
     # The queue and leases use Redis when BUS_BACKEND=redis, otherwise they are in-process.
@@ -160,7 +233,8 @@ class Settings(BaseSettings):
     max_request_bytes: int = 2_000_000
     metrics_enabled: bool = True
 
-    @field_validator("groq_api_keys", "gemini_api_keys", "cors_origins", "auto_approve_categories", mode="before")
+    @field_validator("groq_api_keys", "gemini_api_keys", "azure_openai_api_keys", "github_models_tokens",
+                     "cors_origins", "auto_approve_categories", mode="before")
     @classmethod
     def _csv(cls, value: object) -> list[str]:
         return _split_csv(value)
@@ -169,6 +243,18 @@ class Settings(BaseSettings):
     @classmethod
     def _csv_paths(cls, value: object) -> list[Path]:
         return [Path(p).expanduser().resolve() for p in _split_csv(value)]
+
+    @classmethod
+    def settings_customise_sources(
+        cls, settings_cls, init_settings, env_settings, dotenv_settings, file_secret_settings,  # noqa: ANN001
+    ):  # noqa: ANN206
+        # The dotenv source knows which file is really in use (`_env_file=` overrides the configured one).
+        env_file = getattr(dotenv_settings, "env_file", None)
+        if isinstance(env_file, (list, tuple)):
+            env_file = env_file[-1] if env_file else None
+        multiline = _MultilineListSource(settings_cls, Path(env_file) if env_file else None)
+        # Real environment variables still win; multi-line lists beat dotenv's broken first-line parse.
+        return init_settings, env_settings, multiline, dotenv_settings, file_secret_settings
 
     @property
     def workspaces_dir(self) -> Path:

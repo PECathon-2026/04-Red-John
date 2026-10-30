@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import random
 import re
 import time
 from dataclasses import dataclass
@@ -33,6 +32,8 @@ _TOOL_NAME_JUNK = re.compile(r"<\|.*$")
 class _Key:
     secret: str
     cooldown_until: float = 0.0
+    last_used: int = 0       # pick counter when this key was last handed out (0 = never)
+    dead: bool = False       # rejected with 401/403 (benched for a day)
 
     @property
     def preview(self) -> str:
@@ -48,15 +49,27 @@ class OpenAICompatibleProvider:
         *,
         timeout_s: float = 90.0,
         max_attempts: int = 12,
-        max_cooldown_wait_s: float = 20.0,
-        rate_limit_budget_s: float = 90.0,
+        server_error_bench_s: float = 10.0,
+        max_key_wait_s: float = 2.0,
+        max_total_wait_s: float = 10.0,
+        auth_header: str = "Authorization",
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self.name = name
-        # Longer than this and every key is effectively out: fail so the gateway can try another provider.
-        self._max_cooldown_wait_s = max_cooldown_wait_s
-        self._rate_limit_budget_s = rate_limit_budget_s
+        # "Authorization" sends `Bearer <key>`; Azure OpenAI wants the raw key in an `api-key` header.
+        self._auth_header = auth_header
+        # Newer models (GPT-5 / o-series on Azure and OpenAI) refuse `max_tokens` and custom temperatures.
+        # Learned from the first 400 that says so, then remembered for this provider.
+        self._use_max_completion_tokens = False
+        self._omit_temperature = False
+        # A key that hit a 5xx or a network error sits out this long; the next key takes the request.
+        self._server_error_bench_s = server_error_bench_s
+        # Groq answers bursts with 429s that clear in well under a second; waiting that long beats failing a
+        # whole task. Anything longer is an error right away.
+        self._max_key_wait_s = max_key_wait_s
+        self._max_total_wait_s = max_total_wait_s  # all such short waits together, per request
         self._keys = [_Key(k) for k in api_keys if k]
+        self._picks = 0  # a counter, not a clock: Windows' monotonic clock is too coarse to order quick picks
         self._max_attempts = max_attempts
         self._http = httpx.AsyncClient(
             base_url=base_url.rstrip("/"), timeout=timeout_s, transport=transport
@@ -69,20 +82,36 @@ class OpenAICompatibleProvider:
     async def aclose(self) -> None:
         await self._http.aclose()
 
-    async def _healthy_key(self) -> _Key:
+    async def _next_key(self, deadline: float = 0.0) -> _Key:
+        """The least recently used healthy key. With none left, wait only if one frees up within
+        `max_key_wait_s`; otherwise fail at once so the gateway can move on and the caller sees why."""
         now = time.monotonic()
         healthy = [k for k in self._keys if k.cooldown_until <= now]
         if healthy:
-            # Scatter traffic so concurrent agents do not hammer one key.
-            return random.choice(healthy)
-        soonest = min(self._keys, key=lambda k: k.cooldown_until)
-        wait = soonest.cooldown_until - now
-        if wait > self._max_cooldown_wait_s:
-            raise ExternalServiceError(
-                f"{self.name}: all {len(self._keys)} key(s) are rate limited or rejected for another {wait:.0f}s")
-        log.info("[%s] all %d keys cooling down; waiting %.1fs", self.name, len(self._keys), wait)
-        await asyncio.sleep(wait)
-        return soonest
+            # Least recently used first: load spreads evenly over the pool, and concurrent agents each get a
+            # different key because the pick is stamped before the request goes out.
+            key = min(healthy, key=lambda k: k.last_used)
+            self._picks += 1
+            key.last_used = self._picks
+            return key
+        cooling = [k.cooldown_until - now for k in self._keys if not k.dead]
+        if cooling and min(cooling) <= self._max_key_wait_s and now + min(cooling) <= deadline:
+            await asyncio.sleep(min(cooling))
+            return await self._next_key(deadline)
+        status = self.key_status()
+        free_in = f"; the first frees up in {min(cooling):.0f}s" if cooling else ""
+        raise ExternalServiceError(
+            f"{self.name}: no API key available ({status['cooling']} rate limited, {status['dead']} rejected, "
+            f"of {status['total']}){free_in}",
+            details={"keys": status},
+        )
+
+    def key_status(self) -> dict[str, int]:
+        """Counts only, never key values: healthy (usable now), cooling (rate limited), dead (rejected)."""
+        now = time.monotonic()
+        dead = sum(1 for k in self._keys if k.dead and k.cooldown_until > now)
+        cooling = sum(1 for k in self._keys if not k.dead and k.cooldown_until > now)
+        return {"total": len(self._keys), "healthy": len(self._keys) - dead - cooling, "cooling": cooling, "dead": dead}
 
     @staticmethod
     def _retry_after(response: httpx.Response) -> float:
@@ -119,16 +148,14 @@ class OpenAICompatibleProvider:
                                 str(error.get("failed_generation", ""))[:800])
 
     def _payload(self, request: ChatRequest, model: str) -> dict:
-        body: dict = {
-            "model": model,
-            "messages": request.messages,
-            "temperature": request.temperature,
-        }
+        body: dict = {"model": model, "messages": request.messages}
+        if not self._omit_temperature:
+            body["temperature"] = request.temperature
         if request.tools:
             body["tools"] = request.tools
             body["tool_choice"] = request.tool_choice or "auto"
         if request.max_tokens:
-            body["max_tokens"] = request.max_tokens
+            body["max_completion_tokens" if self._use_max_completion_tokens else "max_tokens"] = request.max_tokens
         if request.response_format:
             body["response_format"] = request.response_format
         return body
@@ -167,48 +194,88 @@ class OpenAICompatibleProvider:
             model=data.get("model", model),
         )
 
+    def _auth(self, key: _Key) -> dict[str, str]:
+        if self._auth_header.lower() == "authorization":
+            return {"Authorization": f"Bearer {key.secret}"}
+        return {self._auth_header: key.secret}
+
+    def _adapt_to_unsupported_param(self, response: httpx.Response) -> bool:
+        """True if a 400 named a parameter this model refuses and the payload can drop or rename it."""
+        if response.status_code != 400:
+            return False
+        text = response.text
+        if "max_tokens" in text and "max_completion_tokens" in text and not self._use_max_completion_tokens:
+            self._use_max_completion_tokens = True
+        elif "temperature" in text and ("unsupported" in text.lower() or "does not support" in text)                 and not self._omit_temperature:
+            self._omit_temperature = True
+        else:
+            return False
+        log.info("[%s] model refused a parameter; adapting (max_completion_tokens=%s, omit_temperature=%s)",
+                 self.name, self._use_max_completion_tokens, self._omit_temperature)
+        return True
+
     async def complete(self, request: ChatRequest, model: str) -> ChatResponse:
         if not self._keys:
             raise ExternalServiceError(f"{self.name}: no API keys configured")
         payload = self._payload(request, model)
         last_error = ""
-        # Rate limits are bounded by total waiting time, not by attempts: with a big key pool a burst of
-        # 429s with short cooldowns is normal and must not look like an outage.
-        attempt, rate_limited_since = 0, None
+        # Every failure moves straight on to the next key; no sleeping. When no key is left, _next_key raises.
+        # Rate limits do not count as attempts (each benches its key, so the loop ends when the pool is out).
+        attempt, rate_limited = 0, 0
+        deadline = time.monotonic() + self._max_total_wait_s
         while attempt < self._max_attempts:
-            if rate_limited_since is not None and time.monotonic() - rate_limited_since > self._rate_limit_budget_s:
-                raise ExternalServiceError(f"{self.name}: still rate limited after {self._rate_limit_budget_s:.0f}s")
-            key = await self._healthy_key()
+            if rate_limited > max(40, 4 * len(self._keys)):
+                raise ExternalServiceError(f"{self.name}: still rate limited after {rate_limited} tries across "
+                                           f"{len(self._keys)} key(s)")
+            key = await self._next_key(deadline)
             try:
                 response = await self._http.post(
                     "/chat/completions",
                     json=payload,
-                    headers={"Authorization": f"Bearer {key.secret}"},
+                    headers=self._auth(key),
                 )
             except httpx.TransportError as exc:
                 attempt += 1
+                key.cooldown_until = time.monotonic() + self._server_error_bench_s
                 last_error = f"transport error: {exc}"
-                await asyncio.sleep(min(2**attempt, 10))
+                log.warning("[%s] key %s: %s; trying the next key", self.name, key.preview, last_error)
                 continue
 
             if response.status_code == 200:
-                return self._parse(response.json(), self.name, model)
+                try:
+                    data = response.json()
+                except ValueError:
+                    data = None
+                if isinstance(data, dict):
+                    return self._parse(data, self.name, model)
+                # A 200 that isn't a completion (empty body, HTML from a wrong URL or a proxy) is a provider
+                # fault: fail this route so the gateway can fall back instead of crashing the agent.
+                raise ExternalServiceError(
+                    f"{self.name} returned a non-JSON reply (HTTP 200, "
+                    f"{response.headers.get('content-type', 'no content-type')}, {len(response.content)} bytes)",
+                    details={"body": response.text[:300]},
+                )
             if response.status_code == 429:
                 wait = self._retry_after(response)
                 key.cooldown_until = time.monotonic() + wait
-                rate_limited_since = rate_limited_since or time.monotonic()
-                log.info("[%s] key %s rate limited; benched %.1fs", self.name, key.preview, wait)
+                rate_limited += 1
+                log.info("[%s] key %s rate limited; benched %.1fs, switching key", self.name, key.preview, wait)
                 last_error = "rate limited"
+                continue
+            if self._adapt_to_unsupported_param(response):
+                payload = self._payload(request, model)
                 continue
             attempt += 1
             if response.status_code in (401, 403):
                 key.cooldown_until = time.monotonic() + 86_400
+                key.dead = True
                 log.error("[%s] key %s rejected (%s); benched", self.name, key.preview, response.status_code)
                 last_error = f"auth error {response.status_code}"
                 continue
             if response.status_code >= 500:
+                key.cooldown_until = time.monotonic() + self._server_error_bench_s
                 last_error = f"server error {response.status_code}"
-                await asyncio.sleep(min(2**attempt, 10))
+                log.warning("[%s] key %s: %s; trying the next key", self.name, key.preview, last_error)
                 continue
             if response.status_code == 413 or "context_length_exceeded" in response.text:
                 raise ContextTooLarge(f"{self.name}: request too large — {response.text[:300]}")

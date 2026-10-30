@@ -12,6 +12,7 @@ events that drive the control room's pixel office.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from dataclasses import dataclass, field
@@ -121,6 +122,7 @@ class _RunState:
     tokens: int = 0
     nudges: int = 0
     rejected: int = 0
+    outages: int = 0         # model calls that failed because no provider could answer
     warned: bool = False
     digest: list[str] = field(default_factory=list)   # one line per tool call: the agent's memory of this run
     # Context budget for this run (characters), and how far it has been shrunk after 413s.
@@ -184,8 +186,8 @@ class AgentRuntime:
         # fixed costs; the briefing, history and tool results share what is left.
         s = self._settings
         budget = int((s.llm_max_request_tokens - s.llm_max_output_tokens) * s.llm_chars_per_token)
-        if len(json.dumps(schemas)) > budget * 0.4:
-            schemas = [compact_schema(x) for x in schemas]
+        # Schemas go out with every single step; the compact form keeps the contract at ~half the size.
+        schemas = [compact_schema(x) for x in schemas]
         system = system_prompt(definition, mandate)
         room = max(4_000, budget - len(json.dumps(schemas)) - len(system))
         brief = briefing(mission, task, inbox, instructions)
@@ -282,8 +284,19 @@ class AgentRuntime:
                     "To hand back your result, call `finish`.")})
                 continue
             except ExternalServiceError as exc:
-                return done(RunStatus.FAILED, f"The language model was unavailable: {exc.message}",
-                            stop_reason="llm_unavailable")
+                # Failing here would throw away everything this agent has read and done, and the retry would
+                # pay for all of it again. Wait and resend the same step instead; give up only after a few tries.
+                state.outages += 1
+                if state.outages > self._settings.llm_outage_retries:
+                    return done(RunStatus.FAILED, f"The language model was unavailable: {exc.message}",
+                                stop_reason="llm_unavailable")
+                state.iterations -= 1  # this step never happened
+                await self._events.log(mission_id, (
+                    f"{definition.name} is waiting for the AI provider ({exc.message[:160]}); retrying in "
+                    f"{self._settings.llm_outage_wait_s:.0f}s ({state.outages}/{self._settings.llm_outage_retries})"),
+                    LogLevel.WARN)
+                await asyncio.sleep(self._settings.llm_outage_wait_s)
+                continue
             state.tokens += response.usage.total
             governor.record_llm_usage(definition.name, response.usage.total)
             messages.append(response.assistant_message())

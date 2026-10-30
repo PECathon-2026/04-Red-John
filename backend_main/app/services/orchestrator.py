@@ -186,11 +186,12 @@ class Orchestrator:
         for task in mission.tasks:
             if task.id not in answered:
                 continue
-            if task.status == TaskStatus.BLOCKED:
-                await self._board.update_task(mid, task.id, TaskStatus.PENDING, by=ATLAS)
-            elif task.status == TaskStatus.FAILED:
-                if task.attempts >= task.max_attempts:
-                    await self._board.set_task_details(mid, task.id, by=ATLAS, max_attempts=task.attempts + 2)
+            # The human said go on: give the task fresh tries whatever state it was left in. A pending task
+            # whose tries were all spent (e.g. on model outages) would otherwise escalate again straight away.
+            if task.status in (TaskStatus.PENDING, TaskStatus.BLOCKED, TaskStatus.FAILED) \
+                    and task.attempts >= task.max_attempts:
+                await self._board.set_task_details(mid, task.id, by=ATLAS, max_attempts=task.attempts + 2)
+            if task.status in (TaskStatus.BLOCKED, TaskStatus.FAILED):
                 await self._board.update_task(mid, task.id, TaskStatus.PENDING, by=ATLAS)
         planned = mission.task_by_origin("bootstrap:plan")
         status = MissionStatus.RUNNING if planned and planned.status == TaskStatus.DONE else MissionStatus.PLANNING
