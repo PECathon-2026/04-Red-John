@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:devpilot/screens/home_screen.dart';
 import 'package:devpilot/services/telemetry_service.dart';
 import 'package:devpilot/models/models.dart';
-import 'package:devpilot/widgets/running_task_card.dart';
+import 'package:devpilot/widgets/dicebear_avatar.dart';
 
 void main() {
-  group('HomeScreen Tests', () {
+  group('HomeScreen Tests - Monochrome Editorial Redesign', () {
     testWidgets(
-      'HomeScreen renders editorial header, ember alert dot, metric strip, projects and running task',
+      'HomeScreen renders editorial header without avatar, launch widget, projects, current agent, past executions, and system vitals',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -19,80 +19,59 @@ void main() {
 
         final service = TelemetryService(autoStart: false);
         ProjectItem? openedProject;
-        bool terminalOpened = false;
-        bool settingsOpened = false;
-        bool killTriggered = false;
 
         await tester.pumpWidget(
           MaterialApp(
             home: HomeScreen(
               service: service,
               onOpenProject: (p) => openedProject = p,
-              onOpenTerminal: () => terminalOpened = true,
-              onOpenSettings: () => settingsOpened = true,
-              onKillTriggered: () => killTriggered = true,
             ),
           ),
         );
 
-        // Verify Header Elements
-        expect(find.text('Hello, Aryan'), findsOneWidget);
-        expect(find.text('DEV PILOT'), findsOneWidget);
-        expect(find.textContaining('Your Projects'), findsOneWidget);
-        expect(find.byKey(const Key('header_avatar')), findsOneWidget);
-        expect(find.byKey(const Key('header_grid_icon')), findsOneWidget);
-        expect(find.byKey(const Key('ember_alert_dot')), findsOneWidget);
+        // 1. Verify Greeting Elements (no avatar, small hello, front name Aryan, single + button)
+        expect(find.text('DEVPILOT'), findsOneWidget);
+        expect(find.text('hello,'), findsOneWidget);
+        expect(find.text('Aryan'), findsOneWidget);
+        expect(find.byIcon(Icons.add), findsNothing);
+        // Ensure avatar is NOT present
+        expect(find.byKey(const Key('header_avatar')), findsNothing);
 
-        // Verify Metric Strip
-        expect(find.text('SYSTEM VITALS'), findsOneWidget);
-        expect(find.text('PIPELINE HEALTH'), findsOneWidget);
+        // 2. Verify Launch Mission Widget
+        expect(find.text('LAUNCH NEW MISSION'), findsOneWidget);
+        expect(find.text('Build something new →'), findsOneWidget);
+        expect(find.text('START MISSION'), findsOneWidget);
 
-        // Verify Workflow Cards
+        // 3. Verify Projects Section (no pill buttons)
+        expect(find.text('PROJECTS'), findsOneWidget);
         expect(find.text('Admin Dashboard'), findsOneWidget);
         expect(find.text('Wallet Mobile'), findsOneWidget);
-        expect(find.text('45 hours'), findsWidgets);
-        expect(find.text('9 hours'), findsOneWidget);
 
-        // Verify RunningTaskCard
-        expect(find.byType(RunningTaskCard), findsOneWidget);
-        expect(find.text('DevPilot Core Engine'), findsWidgets);
-        expect(find.text('Compiling Shaders & AST'), findsOneWidget);
-        expect(find.text('LAN E2EE'), findsOneWidget);
+        // 4. Verify Current Execution Section (only running agent, no system stats)
+        expect(find.text('CURRENT EXECUTION'), findsOneWidget);
+        expect(find.byType(CuteAvatar), findsWidgets);
+        expect(find.text('RUNNING'), findsWidgets);
 
-        // Verify Absence of bottom tabs
-        expect(find.text('Agents'), findsNothing);
-        expect(find.text('Terminal'), findsNothing);
-        expect(find.byType(BottomNavigationBar), findsNothing);
+        // 5. Verify Past Executions Section
+        expect(find.text('PAST EXECUTIONS'), findsOneWidget);
+        expect(find.text('View all →'), findsOneWidget);
+        expect(find.text('Feature Discounts 15%'), findsOneWidget);
 
-        // Verify Project Card Tap
+        // 6. Verify System Vitals Section
+        expect(find.text('SYSTEM VITALS'), findsOneWidget);
+        expect(find.text('CPU LOAD'), findsOneWidget);
+        expect(find.text('RAM USAGE'), findsOneWidget);
+        expect(find.text('NETWORK'), findsOneWidget);
+        expect(find.text('BATTERY'), findsOneWidget);
+
+        // Verify Project Tap
         await tester.tap(find.text('Admin Dashboard'));
         await tester.pumpAndSettle();
         expect(openedProject?.title, equals('Admin Dashboard'));
-
-        // Verify Arrow Button Tap on Wallet Mobile
-        await tester.tap(find.byIcon(Icons.arrow_outward_rounded).at(1));
-        await tester.pumpAndSettle();
-        expect(openedProject?.title, equals('Wallet Mobile'));
-
-        // Verify Settings Button Tap
-        await tester.tap(find.byKey(const Key('header_grid_icon')));
-        await tester.pumpAndSettle();
-        expect(settingsOpened, isTrue);
-
-        // Verify Terminal Button Tap
-        await tester.tap(find.byIcon(Icons.terminal_rounded));
-        await tester.pumpAndSettle();
-        expect(terminalOpened, isTrue);
-
-        // Verify Macro Kill All Action triggers onKillTriggered
-        await tester.ensureVisible(find.text('Kill All'));
-        await tester.tap(find.text('Kill All'));
-        await tester.pumpAndSettle();
-        expect(killTriggered, isTrue);
       },
     );
 
-    testWidgets('Tapping RunningTaskCard opens active project', (tester) async {
+    testWidgets('Tapping running agent opens active project', (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 2.0;
       addTearDown(() {
@@ -112,8 +91,9 @@ void main() {
         ),
       );
 
-      await tester.ensureVisible(find.byType(RunningTaskCard));
-      await tester.tap(find.byType(RunningTaskCard));
+      // Tap on running execution card
+      await tester.ensureVisible(find.text('CURRENT EXECUTION'));
+      await tester.tap(find.text('RUNNING').first);
       await tester.pumpAndSettle();
 
       expect(openedProject?.title, equals('Admin Dashboard'));
