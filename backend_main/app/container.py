@@ -18,8 +18,10 @@ from app.infrastructure.jobs.memory import InMemoryJobQueue, InMemoryMissionLeas
 from app.infrastructure.llm.gateway import LLMGateway, Route
 from app.infrastructure.llm.openai_compat import OpenAICompatibleProvider
 from app.infrastructure.llm.types import ModelTier
+from app.infrastructure.ratelimit import InMemoryRateLimiter, RateLimiter
 from app.infrastructure.storage.base import Storage
 from app.infrastructure.storage.memory import InMemoryStorage
+from app.security.auth import AuthService, TokenService
 from app.security.sandbox import WorkspaceManager
 from app.services.apply import ApplyService
 from app.services.approval_gate import ApprovalGate
@@ -79,6 +81,26 @@ def build_jobs(settings: Settings) -> tuple[JobQueue, MissionLease]:
     return InMemoryJobQueue(claim_after_s=settings.job_claim_after_s), InMemoryMissionLease()
 
 
+def build_rate_limiter(settings: Settings) -> RateLimiter:
+    if settings.bus_backend == BusBackend.REDIS:
+        from app.infrastructure.ratelimit import RedisRateLimiter
+
+        return RedisRateLimiter(settings.redis_url)
+    return InMemoryRateLimiter()
+
+
+def build_auth(settings: Settings, storage: Storage) -> AuthService:
+    secret = settings.jwt_secret
+    if len(secret) < 32:
+        # Development only (production refuses to start without one): tokens die with the process.
+        import secrets as _secrets
+
+        secret = _secrets.token_urlsafe(48)
+        if settings.auth_enabled and not settings.is_production:
+            log.warning("JWT_SECRET is not set; using a random one — logins end when this process restarts")
+    return AuthService(storage.users, TokenService(secret, settings.jwt_ttl_minutes))
+
+
 def default_limits(settings: Settings) -> MissionLimits:
     return MissionLimits(
         max_tool_calls=settings.mission_max_tool_calls,
@@ -108,6 +130,8 @@ class Container:
     lease: MissionLease = field(init=False)
     runner: MissionRunner = field(init=False)
     apply: ApplyService = field(init=False)
+    auth: AuthService = field(init=False)
+    rate_limiter: RateLimiter = field(init=False)
 
     @classmethod
     def build(cls, settings: Settings, *, llm: LLMGateway | None = None) -> Container:
@@ -150,6 +174,8 @@ class Container:
             audit_list=storage.audit.list,
         )
         container.apply = ApplyService(board, storage, events, workspaces, settings)
+        container.auth = build_auth(settings, storage)
+        container.rate_limiter = build_rate_limiter(settings)
         container.job_queue, container.lease = build_jobs(settings)
         if settings.execution_mode == ExecutionMode.QUEUE:
             container.runner = QueueRunner(container.job_queue, container.lease)
@@ -165,11 +191,22 @@ class Container:
                         limits or default_limits(self.settings), board=self.board)
 
     async def start(self) -> None:
+        problems = self.settings.production_problems()
+        if problems:
+            raise RuntimeError("Refusing to start in production: " + "; ".join(problems))
         self.settings.data_dir.mkdir(parents=True, exist_ok=True)
         await self.storage.start()
         await self.event_bus.start()
         await self.job_queue.start()
         await self.lease.start()
+        await self.rate_limiter.start()
+        if self.settings.auth_enabled:
+            await self.auth.ensure_admin(self.settings.bootstrap_admin_username, self.settings.bootstrap_admin_password)
+            if not await self.storage.users.list():
+                log.warning("authentication is on but no users exist: set BOOTSTRAP_ADMIN_PASSWORD to create the "
+                            "first admin")
+        else:
+            log.warning("AUTH_ENABLED=false: every request acts as a local admin — never expose this server")
         if not self.llm.available:
             log.warning("no LLM API keys configured; agents will not be able to run")
         if self.settings.auto_approve_categories:
@@ -183,6 +220,7 @@ class Container:
     async def stop(self) -> None:
         await self.runner.shutdown()
         await self.llm.aclose()
+        await self.rate_limiter.stop()
         await self.lease.stop()
         await self.job_queue.stop()
         await self.event_bus.stop()

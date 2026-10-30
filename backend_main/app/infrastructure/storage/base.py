@@ -6,6 +6,7 @@ from typing import Protocol
 from app.domain.events import EventEnvelope
 from app.domain.governance import Approval, ApprovalStatus, AuditEntry
 from app.domain.mission import AgentMessage, Evidence, Mission, MissionStatus
+from app.domain.users import User
 
 
 class EventStore(Protocol):
@@ -71,6 +72,18 @@ class MessageRepository(Protocol):
     async def list(self, mission_id: str, *, after_seq: int = 0, limit: int = 500) -> list[AgentMessage]: ...
 
 
+class UserRepository(Protocol):
+    async def create(self, user: User) -> User: ...
+
+    async def get(self, user_id: str) -> User | None: ...
+
+    async def get_by_username(self, username: str) -> User | None: ...
+
+    async def update(self, user: User) -> User: ...
+
+    async def list(self) -> list[User]: ...
+
+
 class ConcurrencyConflict(Exception):
     """The mission was changed by someone else since it was loaded."""
 
@@ -84,6 +97,7 @@ class Storage(Protocol):
     missions: MissionRepository
     evidence: EvidenceRepository
     messages: MessageRepository
+    users: UserRepository
 
     async def start(self) -> None: ...
 

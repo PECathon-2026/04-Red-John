@@ -2,11 +2,21 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.deps import ContainerDep
+from app.core import metrics
+from app.core.errors import NotFoundError
 
 router = APIRouter(tags=["health"])
+
+
+@router.get("/metrics", include_in_schema=False, response_class=PlainTextResponse)
+async def prometheus_metrics(container: ContainerDep) -> str:
+    """Prometheus metrics for this process. Expose it to your scraper only (it is not authenticated)."""
+    if not container.settings.metrics_enabled:
+        raise NotFoundError("metrics are disabled")
+    return metrics.render()
 
 
 @router.get("/health/live")

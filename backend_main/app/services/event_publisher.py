@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from app.core import metrics
 from app.domain.events import EventEnvelope, EventKind, LogLevel, mission_topic
 from app.infrastructure.bus.base import EventBus
 from app.infrastructure.storage.base import EventStore
@@ -27,6 +28,7 @@ class EventPublisher:
         event = await self._store.append(
             EventEnvelope(mission_id=mission_id, kind=kind, data=data or {})
         )
+        metrics.EVENTS.inc(kind=str(kind))
         try:
             await self._bus.publish(mission_topic(mission_id), event.model_dump(mode="json"))
         except Exception:

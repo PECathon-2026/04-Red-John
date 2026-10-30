@@ -13,6 +13,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 
+from app.core import metrics
 from app.core.errors import ExternalServiceError
 from app.infrastructure.llm.types import ChatRequest, ChatResponse, LLMProvider, ModelTier
 
@@ -67,11 +68,14 @@ class LLMGateway:
                 async with self._semaphore:
                     response = await route.provider.complete(request, route.model)
             except ExternalServiceError as exc:
+                metrics.LLM_CALLS.inc(provider=route.provider.name, result="error")
                 log.warning("llm route %s:%s failed: %s %s", route.provider.name, route.model, exc.message,
                             str(exc.details.get("body", ""))[:300])
                 errors.append(f"{route.provider.name}: {exc.message}")
                 continue
             self.ledger.record(request.caller, response)
+            metrics.LLM_CALLS.inc(provider=route.provider.name, result="ok")
+            metrics.LLM_TOKENS.inc(response.usage.total, caller=request.caller)
             return response
         raise ExternalServiceError(
             "No LLM provider could serve the request", details={"attempts": errors}

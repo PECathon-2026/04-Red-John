@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.middleware import RequestIdMiddleware
+from app.api.middleware import RequestIdMiddleware, SecurityMiddleware
 from app.api.v1.router import api_router
 from app.container import Container
 from app.core.config import Settings, get_settings
@@ -41,7 +41,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         docs_url=None if settings.is_production else "/docs",
         redoc_url=None if settings.is_production else "/redoc",
     )
-    app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityMiddleware)
+    app.add_middleware(RequestIdMiddleware)   # wraps SecurityMiddleware, so refused requests are counted too
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
