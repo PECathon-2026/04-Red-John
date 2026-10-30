@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   title: 'DevPilot — Autonomous AI Engineering Organization',
   description:
     'Modern autonomous AI organization that plans, builds, tests, and reviews changes to your software & supply systems.',
+  icons: {
+    icon: '/images/devpilot-logo-cropped.png',
+    apple: '/images/devpilot-logo-cropped.png',
+  },
 }
 
 export const viewport: Viewport = {

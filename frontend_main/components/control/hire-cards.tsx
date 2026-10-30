@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { getAgent, TEAM_COLORS } from '@/lib/agents'
+import { getAgent, getTeamColors, TEAM_COLORS } from '@/lib/agents'
 import { formatElapsed, type AgentState, type HireEvent } from '@/lib/mission-sim'
 import { AgentSprite } from '@/components/pixel/agent-sprite'
 import { HireDossierCard } from './hire-dossier-card'
@@ -81,7 +81,7 @@ function IdentityCard({
   onOpen: () => void
 }) {
   const def = getAgent(hire.agent)
-  const colors = TEAM_COLORS[hire.team]
+  const colors = getTeamColors(hire.team)
 
   return (
     <button

@@ -40,6 +40,24 @@ export type AgentState = {
   finishedAt: number | null
 }
 
+export type MissionTask = {
+  id: string
+  title: string
+  kind: string
+  status: 'pending' | 'in_progress' | 'done' | 'failed' | 'blocked'
+  assigned_to?: string | null
+  depends_on?: string[]
+  description?: string
+  progress?: number
+}
+
+export type MissionCriterion = {
+  id: string
+  statement: string
+  status: 'pending' | 'met' | 'unmet' | 'unverifiable'
+  evidence_ids?: string[]
+}
+
 export type MissionState = {
   /** ms elapsed since mission start */
   clock: number
@@ -53,6 +71,31 @@ export type MissionState = {
   /** true when running the scripted marketing timeline (no backend project) */
   demo?: boolean
   pendingApprovals: ApprovalRequest[]
+  mission?: {
+    mission_id: string
+    title?: string | null
+    request: string
+    status: string
+    status_reason?: string | null
+    baseline_commit?: string
+    created_at?: number
+    updated_at?: number
+    hired_agents?: string[]
+  }
+  tasks?: MissionTask[]
+  readyTasks?: string[]
+  objectives?: string[]
+  acceptanceCriteria?: MissionCriterion[]
+  evidence?: any[]
+  findings?: any[]
+  decisions?: any[]
+  issues?: any[]
+  progress?: {
+    total_tasks?: number
+    done_tasks?: number
+    percent?: number
+    tool_calls?: number
+  }
   crisisAlert?: {
     title: string
     severity: string
@@ -61,6 +104,7 @@ export type MissionState = {
   }
   unlockBlueprint?: () => void
   dismissApproval?: (approval_id: string) => void
+  runMission?: () => Promise<void>
 }
 
 /* ------------------------------------------------------------------ */
@@ -224,16 +268,14 @@ export function useMissionSim(projectId?: string | null): MissionState {
         if (Array.isArray(data.missions) && data.missions.length > 0) {
           setDiscoveredId(data.missions[0].mission_id)
         } else {
-          const createRes = await fetch(`${API_URL}/api/v1/projects/create`, {
+          const createRes = await fetch(`${API_URL}/api/v1/missions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              businessType: 'Hardware & IoT Electronics',
-              productDescription: 'Autonomous sensor node with cellular backhaul',
-              targetRegions: ['North America', 'European Union'],
-              annualUnits: '50,000 units / year',
-              targetLaunch: 'Q4 2026',
-              priorities: 'Resilience over lowest initial landed cost; Dual-sourcing on MCUs',
+              request: 'Add discount code support to cart with validation and total calculation',
+              repo_path: 'missions/01-feature-discounts/repo',
+              title: 'Feature: Cart Discount Engine',
+              start: false,
             }),
           })
           if (!createRes.ok) {
@@ -241,8 +283,9 @@ export function useMissionSim(projectId?: string | null): MissionState {
             return
           }
           const created = await createRes.json()
-          if (!cancelled && created.project_id) {
-            setDiscoveredId(created.project_id)
+          const mid = created.mission?.mission_id || created.project_id
+          if (!cancelled && mid) {
+            setDiscoveredId(mid)
           }
         }
       } catch {
@@ -297,10 +340,21 @@ export function useMissionSim(projectId?: string | null): MissionState {
       try {
         const data = await fetchSnapshot()
         if (!active || !data) return
-        setState({
+        setState((prev) => ({
+          ...prev,
           ...data,
+          tasks: (data as any).tasks || prev.tasks || [],
+          readyTasks: (data as any).readyTasks || prev.readyTasks || [],
+          objectives: (data as any).objectives || prev.objectives || [],
+          acceptanceCriteria: (data as any).acceptanceCriteria || prev.acceptanceCriteria || [],
+          evidence: (data as any).evidence || prev.evidence || [],
+          findings: (data as any).findings || prev.findings || [],
+          decisions: (data as any).decisions || prev.decisions || [],
+          issues: (data as any).issues || prev.issues || [],
+          progress: (data as any).progress || prev.progress,
+          mission: (data as any).mission || prev.mission,
           loadingReport: Boolean(data.complete) && !data.architecture_report,
-        })
+        }))
         if (data.complete && !data.architecture_report) scheduleReportFetch(0)
       } catch (err) {
         setBackendOffline(true)
@@ -396,6 +450,61 @@ export function useMissionSim(projectId?: string | null): MissionState {
                   ...prev.agents,
                   [data.agent]: { ...a, phase: 'done', finishedAt: relTime }
                 }
+              }
+            } else if (kind === 'release') {
+              const a = prev.agents[data.agent]
+              if (a) {
+                next.agents = {
+                  ...prev.agents,
+                  [data.agent]: { ...a, phase: 'done', task: 'Released', finishedAt: relTime }
+                }
+              }
+            } else if (kind === 'task_updated') {
+              const t = data.task
+              if (t) {
+                const existing = prev.tasks || []
+                const idx = existing.findIndex(item => item.id === t.id)
+                if (idx >= 0) {
+                  const updated = [...existing]
+                  updated[idx] = { ...updated[idx], ...t }
+                  next.tasks = updated
+                } else {
+                  next.tasks = [...existing, t]
+                }
+              }
+            } else if (kind === 'plan_updated') {
+              if (Array.isArray(data.tasks)) {
+                next.tasks = data.tasks
+              }
+            } else if (kind === 'evidence') {
+              next.evidence = [...(prev.evidence || []), data.evidence || data]
+            } else if (kind === 'finding') {
+              next.findings = [...(prev.findings || []), data.finding || data]
+            } else if (kind === 'issue') {
+              next.issues = [...(prev.issues || []), data.issue || data]
+            } else if (kind === 'criterion') {
+              const c = data.criterion
+              if (c) {
+                const existing = prev.acceptanceCriteria || []
+                const idx = existing.findIndex(item => item.id === c.id)
+                if (idx >= 0) {
+                  const updated = [...existing]
+                  updated[idx] = { ...updated[idx], ...c }
+                  next.acceptanceCriteria = updated
+                } else {
+                  next.acceptanceCriteria = [...existing, c]
+                }
+              }
+            } else if (kind === 'decision') {
+              const d = data.decision || data
+              next.decisions = [...(prev.decisions || []), d]
+              next.logs = [
+                ...prev.logs,
+                { id: prev.logs.length, at: relTime, level: 'action', text: `Atlas [${d.type || d.decision || 'DECIDE'}]: ${d.reason || ''}` }
+              ]
+            } else if (kind === 'mission_status') {
+              if (next.mission) {
+                next.mission = { ...next.mission, status: data.status, status_reason: data.reason }
               }
             } else if (kind === 'complete') {
               next.complete = true
@@ -600,10 +709,22 @@ export function useMissionSim(projectId?: string | null): MissionState {
     }))
   }
 
+  const runMission = async () => {
+    if (!effectiveProjectId) return
+    try {
+      await fetch(`${API_URL}/api/v1/missions/${effectiveProjectId}/run`, {
+        method: 'POST',
+      })
+    } catch (err) {
+      console.error('Failed to run mission:', err)
+    }
+  }
+
   return {
     ...state,
     unlockBlueprint,
     dismissApproval,
+    runMission,
   }
 }
 

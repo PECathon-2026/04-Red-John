@@ -1,108 +1,115 @@
-import Link from 'next/link'
-import { ArrowRight, Compass, Shield, Users, Search } from 'lucide-react'
+'use client'
 
-export default function WelcomePage() {
+import Image from 'next/image'
+import Link from 'next/link'
+import { ArrowRight, Users, Shield, Compass } from 'lucide-react'
+
+export default function FullscreenSamuraiHomePage() {
   return (
-    <main className="relative flex min-h-svh flex-col justify-between overflow-hidden bg-[#fbf6f0]">
-      {/* Background ambient glows */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-rose-200/35 blur-3xl" />
-        <div className="absolute -right-20 top-40 h-96 w-96 rounded-full bg-pink-200/35 blur-3xl" />
-        <div className="absolute bottom-20 left-1/3 h-96 w-96 rounded-full bg-red-100/30 blur-3xl" />
+    <main className="relative flex h-screen min-h-screen w-full flex-col justify-between overflow-hidden bg-[#0d040c] select-none selection:bg-rose-900 selection:text-rose-100">
+      {/* ── 1. FULL-SCREEN SAMURAI BACKDROP (1920x1080 Native 16:9, Ultra Clean) ── */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/samurai-hero-fullscreen-1080p.png"
+          alt="DevPilot Samurai Sentinel"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center select-none pointer-events-none"
+        />
+
+        {/* Ambient radial crimson glow blooms */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgba(186,24,76,0.18)_0%,transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_100%,rgba(112,13,43,0.15)_0%,transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_100%_at_50%_50%,transparent_50%,rgba(10,2,8,0.5)_100%)]" />
+
+        {/* Subtle breathing visor pulse overlay */}
+        <div className="pointer-events-none absolute left-1/2 top-[34%] -translate-x-1/2 -translate-y-1/2 h-16 w-32 rounded-full bg-red-600/15 blur-xl animate-pulse" />
       </div>
 
-      {/* Minimal Glass Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-5 md:px-10">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1c1917] text-white">
-            <Compass className="h-4 w-4" />
+      {/* ── 2. TOP HEADER (DevPilot Logo on left, Only Previous Links on right) ── */}
+      <header className="relative z-20 flex items-center justify-between px-6 py-5 md:px-12 md:py-8">
+        {/* DevPilot Logo (Clickable -> /) */}
+        <Link
+          href="/"
+          className="group flex items-center transition-transform hover:scale-105 active:scale-95"
+          title="DevPilot — Autonomous AI Engineering Organization"
+        >
+          <div className="relative">
+            <Image
+              src="/images/devpilot-logo-cropped.png"
+              alt="DevPilot Logo"
+              width={260}
+              height={38}
+              priority
+              className="h-7 sm:h-8 md:h-9 w-auto object-contain drop-shadow-[0_2px_14px_rgba(255,255,255,0.2)] transition-all duration-300 group-hover:brightness-125 group-hover:drop-shadow-[0_0_18px_rgba(239,68,68,0.7)]"
+            />
+            {/* Katana light shine streak on hover */}
+            <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full" />
           </div>
-          <span className="text-sm font-bold tracking-wider text-[#1c1917] uppercase">
-            DevPilot
-          </span>
-        </div>
+        </Link>
 
-        <div className="flex items-center gap-3">
+        {/* Previous Homescreen Links: Specialists Roster, Sign In, Enter Dashboard */}
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
+          <Link
+            href="/team"
+            className="hidden sm:flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-2 text-xs font-medium text-white/85 shadow-sm backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/30 hover:text-white hover:scale-105 active:scale-95"
+          >
+            <Users className="h-3.5 w-3.5 text-rose-400" />
+            <span>Specialists (21)</span>
+          </Link>
+
           <Link
             href="/login"
-            className="rounded-full border border-white/70 bg-white/50 px-4 py-1.5 text-xs font-semibold text-[#1c1917] shadow-2xs backdrop-blur-md transition-all hover:bg-white/80"
+            className="rounded-full border border-white/15 bg-black/40 px-4 py-2 text-xs font-semibold text-white/90 shadow-sm backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/30 hover:text-white hover:scale-105 active:scale-95"
           >
             Sign In
           </Link>
+
           <Link
             href="/control"
-            className="flex items-center gap-1.5 rounded-full bg-[#1c1917] px-4 py-1.5 text-xs font-semibold text-rose-100 shadow-sm transition-all hover:bg-rose-950 hover:scale-105 active:scale-95"
+            className="group flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-600 via-rose-600 to-red-600 px-4 sm:px-5 py-2 text-xs font-bold text-white shadow-[0_0_25px_rgba(225,29,72,0.45)] backdrop-blur-md transition-all hover:scale-105 hover:brightness-110 active:scale-95"
           >
             <span>Enter Dashboard</span>
-            <ArrowRight className="h-3 w-3" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative z-10 mx-auto flex max-w-3xl flex-1 flex-col items-center justify-center px-6 py-12 text-center">
-        {/* Pill */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-rose-200/60 bg-white/60 px-3.5 py-1 text-xs font-medium text-rose-900 shadow-2xs backdrop-blur-md">
-          <Users className="h-3 w-3 text-rose-600" />
-          <span>Autonomous AI Engineering Organization</span>
-        </div>
-
-        {/* Main Title */}
-        <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-[#1c1917] sm:text-6xl md:text-7xl">
-          Quiet precision.{' '}
-          <span className="bg-gradient-to-r from-rose-600 via-pink-600 to-red-600 bg-clip-text text-transparent">
-            Autonomous execution.
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mt-5 max-w-xl text-sm leading-relaxed text-[#57534e] sm:text-base">
-          A synchronized organization of 21 AI specialists that researches, constructs, stress-tests, and executes changes across software and supply systems with disciplined efficiency.
-        </p>
-
-        {/* Actions */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+      {/* ── 3. CENTER HERO AREA (Samurai stands in center, clear and unobstructed) ── */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-end pb-8 sm:pb-10 px-6 pointer-events-none">
+        {/* Mobile-only quick navigation pills */}
+        <div className="pointer-events-auto flex sm:hidden flex-wrap items-center justify-center gap-2.5">
           <Link
             href="/control"
-            className="flex items-center gap-2 rounded-full bg-[#1c1917] px-6 py-2.5 text-xs font-semibold text-rose-100 shadow-md transition-all hover:scale-105 hover:bg-rose-950 active:scale-95"
+            className="flex items-center gap-1.5 rounded-full bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-lg active:scale-95"
           >
             <span>Launch Mission Control</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
-
           <Link
             href="/team"
-            className="flex items-center gap-2 rounded-full border border-white/70 bg-white/50 px-5 py-2.5 text-xs font-semibold text-[#1c1917] shadow-2xs backdrop-blur-md transition-all hover:bg-white/70"
+            className="flex items-center gap-1.5 rounded-full border border-white/20 bg-black/50 px-3.5 py-2 text-xs font-medium text-white backdrop-blur-md active:scale-95"
           >
-            <span>Specialists Roster (21)</span>
+            <Users className="h-3.5 w-3.5 text-rose-400" />
+            <span>Specialists (21)</span>
           </Link>
         </div>
+      </div>
 
-        {/* 3 Minimal Glass Cards */}
-        <div className="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-3 max-w-2xl w-full">
-          <div className="rounded-2xl border border-rose-100/70 bg-white/50 p-4 text-left backdrop-blur-md shadow-2xs">
-            <h4 className="text-xs font-bold text-[#1c1917]">Executive Command</h4>
-            <p className="mt-0.5 text-[10px] text-[#78716c]">Atlas & Maya coordinate organizational directives and specialist resource allocation.</p>
-          </div>
-          <div className="rounded-2xl border border-emerald-100/70 bg-white/50 p-4 text-left backdrop-blur-md shadow-2xs">
-            <h4 className="text-xs font-bold text-[#1c1917]">Intelligence & Recon</h4>
-            <p className="mt-0.5 text-[10px] text-[#78716c]">Deep supplier universe scouting and external vulnerability mapping.</p>
-          </div>
-          <div className="rounded-2xl border border-pink-100/70 bg-white/50 p-4 text-left backdrop-blur-md shadow-2xs">
-            <h4 className="text-xs font-bold text-[#1c1917]">Resilience & Defense</h4>
-            <p className="mt-0.5 text-[10px] text-[#78716c]">Disruption stress-testing and autonomous reroute playbooks.</p>
-          </div>
+      {/* ── 4. MINIMAL FOOTER (Operational status from original homescreen) ── */}
+      <footer className="relative z-20 flex items-center justify-between border-t border-white/10 bg-black/40 px-6 py-3.5 md:px-12 backdrop-blur-md text-xs text-white/60">
+        <div className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+          <span className="font-medium text-white/80">Mission systems operational</span>
         </div>
-      </section>
 
-      {/* Minimal Footer */}
-      <footer className="relative z-10 border-t border-rose-100/40 bg-white/40 py-3 backdrop-blur-md">
-        <div className="flex items-center justify-between px-6 text-xs text-[#78716c]">
-          <div className="flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-sakura-pulse" />
-            <span>Mission systems operational</span>
-          </div>
-          <div>DevPilot Autonomous Systems</div>
+        <div className="flex items-center gap-4">
+          <Link href="/team" className="hover:text-white transition-colors">
+            21 AI Specialists
+          </Link>
+          <span className="text-white/20">•</span>
+          <span className="text-white/70">DevPilot Autonomous Systems</span>
         </div>
       </footer>
     </main>

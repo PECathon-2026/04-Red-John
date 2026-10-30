@@ -10,11 +10,11 @@ import { Search, Users } from 'lucide-react'
 const TEAMS: (Team | 'All')[] = [
   'All',
   'Executive',
-  'Intelligence',
-  'Network',
-  'Resilience',
-  'Council',
-  'Architecture',
+  'Planning',
+  'Forge',
+  'Sentinel',
+  'Shadow',
+  'Support',
 ]
 
 export function AgentRosterTab({

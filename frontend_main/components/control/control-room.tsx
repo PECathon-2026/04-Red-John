@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { useMissionSim } from '@/lib/mission-sim'
 import { OfficeViewport } from './office-viewport'
@@ -38,7 +39,7 @@ interface NavItem {
 
 export function ControlRoom() {
   const searchParams = useSearchParams()
-  const projectId = searchParams.get('project')
+  const projectId = searchParams.get('project') || searchParams.get('mission')
   const mission = useMissionSim(projectId)
 
   const [activeSection, setActiveSection] = useState<NavSection>('dashboard')
@@ -55,10 +56,10 @@ export function ControlRoom() {
 
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: Compass },
-    { id: 'agents', label: 'Specialists', icon: Users, badge: 21 },
+    { id: 'agents', label: 'Specialists', icon: Users, badge: 16 },
     { id: 'logs', label: 'Activity Logs', icon: Scroll, badge: mission.logs.length },
     { id: 'hires', label: 'Personnel', icon: Shield, badge: mission.hires.length },
-    { id: 'blueprint', label: 'Blueprint', icon: GitFork },
+    { id: 'blueprint', label: 'Mission Board', icon: GitFork },
   ]
 
   return (
@@ -72,10 +73,17 @@ export function ControlRoom() {
         <div className="flex flex-col items-center gap-5">
           <Link
             href="/"
-            className="group flex h-8 w-8 items-center justify-center rounded-full bg-[#1c1917] text-rose-300 shadow-xs transition-all duration-300 hover:scale-110 hover:bg-rose-950 active:scale-95"
-            title="Overview"
+            className="group relative flex h-8 w-8 items-center justify-center rounded-full bg-[#0d0914] p-1 border border-white/20 shadow-xs transition-all duration-300 hover:scale-110 hover:border-rose-400 active:scale-95 overflow-hidden"
+            title="DevPilot Overview"
           >
-            <Compass className="h-4 w-4 transition-transform duration-300 group-hover:rotate-45" />
+            <Image
+              src="/images/devpilot-logo-cropped.png"
+              alt="DevPilot"
+              width={80}
+              height={12}
+              className="h-auto w-full object-contain transition-transform duration-300 group-hover:scale-110"
+              priority
+            />
           </Link>
 
           {/* Nav Icons with Smooth Fluid Indicator */}
@@ -210,6 +218,7 @@ export function ControlRoom() {
                   loadingReport={mission.loadingReport}
                   demo={mission.demo}
                   projectId={projectId}
+                  mission={mission}
                 />
               </div>
             )}

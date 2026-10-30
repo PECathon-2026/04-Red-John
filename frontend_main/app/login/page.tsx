@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { loginUser, saveSession, setBypassMode, isBypassMode } from '@/lib/auth'
 import { Lock, Mail, ArrowRight } from 'lucide-react'
@@ -52,8 +53,19 @@ export default function LoginPage() {
 
       <div className="glass-panel relative z-10 w-full max-w-sm overflow-hidden p-6 sm:p-7 shadow-xl">
         <div className="text-center">
-          <span className="text-2xl">🌸</span>
-          <h2 className="mt-2 text-base font-bold tracking-tight text-[#1c1917] uppercase">
+          <Link href="/" className="inline-block transition-transform hover:scale-105">
+            <div className="mx-auto flex h-14 w-full max-w-[240px] items-center justify-center rounded-xl bg-[#0d0914] border border-white/10 px-3 py-1.5 shadow-md">
+              <Image
+                src="/images/devpilot-logo-cropped.png"
+                alt="DevPilot Logo"
+                width={200}
+                height={30}
+                className="h-7 w-auto object-contain"
+                priority
+              />
+            </div>
+          </Link>
+          <h2 className="mt-3 text-base font-bold tracking-tight text-[#1c1917] uppercase">
             Dojo Access
           </h2>
           <p className="mt-0.5 text-xs text-[#78716c]">

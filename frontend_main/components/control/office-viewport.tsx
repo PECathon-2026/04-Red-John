@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
 import { formatElapsed, type MissionState } from '@/lib/mission-sim'
 import PixelOffice from '@/components/pixel/pixel-office'
 import { ArchitectChat } from './architect-chat'
@@ -16,10 +18,6 @@ export function OfficeViewport({
   const { clock } = mission
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  const activeCount = Object.values(mission.agents).filter(
-    (a) => a.phase === 'working',
-  ).length
-
   return (
     <section
       aria-label="Agent Office Floor"
@@ -31,17 +29,28 @@ export function OfficeViewport({
     >
       {/* Clean Minimal Glass Header (Unnecessary badges & complete button removed) */}
       <div className="flex shrink-0 items-center justify-between border-b border-white/40 bg-white/30 px-5 py-3 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          <span className="h-2 w-2 rounded-full bg-rose-500 animate-sakura-pulse" />
-          <h3 className="text-xs font-semibold tracking-wide text-[#1c1917] uppercase">
-            Autonomous Agent Floor
-          </h3>
-          <span className="text-[11px] text-[#78716c]">
-            ({activeCount} active)
-          </span>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-7 items-center justify-center rounded-md bg-[#0d0914] px-2 py-0.5 border border-white/10 shadow-2xs transition-transform group-hover:scale-105">
+              <Image
+                src="/images/devpilot-logo-cropped.png"
+                alt="DevPilot"
+                width={95}
+                height={15}
+                className="h-3.5 w-auto object-contain"
+                priority
+              />
+            </div>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2.5">
+          {mission.mission && (
+            <span className="hidden sm:inline-block max-w-[200px] truncate rounded-full border border-rose-200/60 bg-white/50 px-2.5 py-0.5 text-[10px] font-semibold text-rose-900 shadow-2xs">
+              {mission.mission.title || mission.mission.mission_id}
+            </span>
+          )}
+
           {/* Minimalist Mission Clock */}
           <span className="font-mono text-xs font-medium text-[#78716c]">
             T+{formatElapsed(clock)}

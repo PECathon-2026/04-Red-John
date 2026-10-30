@@ -245,19 +245,30 @@ export async function saveDraftSetup(token: string, setup: unknown): Promise<voi
 /** Persist the wizard answers and mark onboarding complete. */
 export async function saveSetup(
   token: string,
-  setup: unknown,
+  setup: any,
 ): Promise<{ project_id: string; status: string }> {
   try {
+    const payload = {
+      request: setup.request || setup.priorities || setup.productDescription || 'Autonomous engineering mission',
+      repo_path: setup.repo_path || 'missions/01-feature-discounts/repo',
+      title: setup.title || setup.businessType || 'DevPilot Mission',
+      start: true,
+      ...setup,
+    }
     const res = await fetch(`${API_URL}/api/v1/projects/create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(setup),
+      body: JSON.stringify(payload),
     })
     if (!res.ok) throw new Error('Could not save your setup and create project')
-    return await res.json()
+    const data = await res.json()
+    return {
+      project_id: data.project_id || data.mission_id || data.mission?.mission_id,
+      status: data.status || 'created',
+    }
   } catch (err) {
     // If backend is offline or bypass is active, create an offline mock project
     const mockProjectId = `offline-proj-${Date.now().toString(36)}`

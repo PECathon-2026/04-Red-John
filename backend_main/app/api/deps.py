@@ -9,11 +9,19 @@ from app.container import Container
 
 
 def get_container(request: Request) -> Container:
-    return request.app.state.container
+    container = getattr(request.app.state, "container", None)
+    if container is None:
+        container = Container.build()
+        request.app.state.container = container
+    return container
 
 
 def get_ws_container(websocket: WebSocket) -> Container:
-    return websocket.app.state.container
+    container = getattr(websocket.app.state, "container", None)
+    if container is None:
+        container = Container.build()
+        websocket.app.state.container = container
+    return container
 
 
 ContainerDep = Annotated[Container, Depends(get_container)]

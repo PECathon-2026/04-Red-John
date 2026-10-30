@@ -13,7 +13,7 @@ export function AgentCardsSidebar({
   const [search, setSearch] = useState('')
 
   // Featured Organization Leads
-  const featuredLeaderNames = ['Atlas', 'Maya', 'Mira']
+  const featuredLeaderNames = ['Atlas', 'Maya', 'Kenji']
   const featuredAgents = featuredLeaderNames
     .map((name) => AGENTS.find((a) => a.name === name))
     .filter(Boolean) as AgentDef[]

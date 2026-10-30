@@ -6,27 +6,27 @@ export function AgentLeaderboardCard() {
   const leaders = [
     {
       name: 'Atlas',
-      role: 'Lead Architect',
+      role: 'Mission Orchestrator',
       score: '6,715',
       avatarIdx: 5,
     },
     {
       name: 'Maya',
-      role: 'Resource Allocator',
+      role: 'Guild Allocator',
       score: '5,104',
       avatarIdx: 4,
     },
     {
-      name: 'Mira',
-      role: 'Demand Intel',
-      score: '3,235',
+      name: 'Kenji',
+      role: 'Requirements Analyst',
+      score: '3,840',
       avatarIdx: 0,
     },
     {
-      name: 'Dev',
-      role: 'Landed Cost',
-      score: '1,969',
-      avatarIdx: 5,
+      name: 'Takeshi',
+      role: 'Backend Samurai',
+      score: '2,960',
+      avatarIdx: 3,
     },
   ]
 
@@ -44,7 +44,7 @@ export function AgentLeaderboardCard() {
 
       {/* Agents Ranks */}
       <div className="space-y-1.5">
-        {leaders.map((leader, i) => (
+        {leaders.map((leader) => (
           <div
             key={leader.name}
             className="flex items-center justify-between gap-2 rounded-lg p-1 transition-colors hover:bg-rose-50/50"

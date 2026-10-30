@@ -53,6 +53,31 @@ export const DEPARTMENTS: Record<string, DepartmentConfig> = {
     archetype: 'architect',
     icon: 'compass',
   },
+  Planning: {
+    english: 'SHOGUN COUNCIL (PLANNING)',
+    archetype: 'strategist',
+    icon: 'compass',
+  },
+  Forge: {
+    english: 'SAMURAI FORGE (ENGINEERING)',
+    archetype: 'samurai',
+    icon: 'katana',
+  },
+  Sentinel: {
+    english: 'SENTINEL DOJO (VERIFICATION)',
+    archetype: 'monk',
+    icon: 'shield',
+  },
+  Shadow: {
+    english: 'SHADOW COUNCIL (SECURITY & REVIEW)',
+    archetype: 'ninja',
+    icon: 'shuriken',
+  },
+  Support: {
+    english: 'SUPPORT (SCRIBE)',
+    archetype: 'artisan',
+    icon: 'torii',
+  },
 }
 
 /**
@@ -163,7 +188,9 @@ export function getMemberTheme(name: string, index = 0): JapaneseColorTheme {
 }
 
 export function getDepartmentConfig(department: string): DepartmentConfig {
+  const normalized = department.charAt(0).toUpperCase() + department.slice(1).toLowerCase()
   return (
+    DEPARTMENTS[normalized] ||
     DEPARTMENTS[department] || {
       english: department.toUpperCase(),
       archetype: 'artisan',

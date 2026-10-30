@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,6 +51,12 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     )
     install_error_handlers(app)
     app.include_router(api_router, prefix=settings.api_prefix)
+
+    @app.get("/api/setup/me", include_in_schema=False)
+    @app.post("/api/setup/me", include_in_schema=False)
+    async def setup_me_compat() -> dict[str, Any]:
+        return {"has_setup": True, "setup": None, "completed_at": None}
+
     return app
 
 

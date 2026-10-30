@@ -1,5 +1,10 @@
 export type Team =
   | 'Executive'
+  | 'Planning'
+  | 'Forge'
+  | 'Sentinel'
+  | 'Shadow'
+  | 'Support'
   | 'Intelligence'
   | 'Network'
   | 'Resilience'
@@ -16,20 +21,20 @@ export type AgentDef = {
   charIdx: number
   /* detailed description of the work this agent does */
   detail: string
+  skills?: string[]
 }
 
-export const TEAM_COLORS: Record<
-  Team,
-  {
-    bg: string
-    text: string
-    chip: string
-    cardBg: string
-    cardBorder: string
-    badgeBg: string
-    badgeText: string
-  }
-> = {
+export type TeamStyle = {
+  bg: string
+  text: string
+  chip: string
+  cardBg: string
+  cardBorder: string
+  badgeBg: string
+  badgeText: string
+}
+
+export const TEAM_COLORS: Record<string, TeamStyle> = {
   Executive: {
     bg: 'bg-amber-50',
     text: 'text-amber-900',
@@ -38,6 +43,51 @@ export const TEAM_COLORS: Record<
     cardBorder: 'border-amber-200/50',
     badgeBg: 'bg-[#1c1917]',
     badgeText: 'text-amber-100',
+  },
+  Planning: {
+    bg: 'bg-sky-50',
+    text: 'text-sky-900',
+    chip: 'bg-sky-100/70 text-sky-900 border border-sky-200/50',
+    cardBg: 'bg-[#f0f9ff]/60',
+    cardBorder: 'border-sky-200/50',
+    badgeBg: 'bg-[#0c2838]',
+    badgeText: 'text-sky-100',
+  },
+  Forge: {
+    bg: 'bg-rose-50',
+    text: 'text-rose-900',
+    chip: 'bg-rose-100/70 text-rose-900 border border-rose-200/50',
+    cardBg: 'bg-[#fff1f2]/60',
+    cardBorder: 'border-rose-200/50',
+    badgeBg: 'bg-[#4c0519]',
+    badgeText: 'text-rose-100',
+  },
+  Sentinel: {
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-900',
+    chip: 'bg-emerald-100/70 text-emerald-900 border border-emerald-200/50',
+    cardBg: 'bg-[#f0fdf4]/60',
+    cardBorder: 'border-emerald-200/50',
+    badgeBg: 'bg-[#163022]',
+    badgeText: 'text-emerald-100',
+  },
+  Shadow: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-900',
+    chip: 'bg-purple-100/70 text-purple-900 border border-purple-200/50',
+    cardBg: 'bg-[#faf5ff]/60',
+    cardBorder: 'border-purple-200/50',
+    badgeBg: 'bg-[#2e1065]',
+    badgeText: 'text-purple-100',
+  },
+  Support: {
+    bg: 'bg-stone-50',
+    text: 'text-stone-900',
+    chip: 'bg-stone-100/70 text-stone-900 border border-stone-200/50',
+    cardBg: 'bg-[#fafaf9]/60',
+    cardBorder: 'border-stone-200/50',
+    badgeBg: 'bg-[#292524]',
+    badgeText: 'text-stone-100',
   },
   Intelligence: {
     bg: 'bg-emerald-50',
@@ -86,33 +136,193 @@ export const TEAM_COLORS: Record<
   },
 }
 
+export function getTeamColors(teamName: string | undefined): TeamStyle {
+  if (!teamName) return TEAM_COLORS.Executive
+  const normalized = teamName.charAt(0).toUpperCase() + teamName.slice(1).toLowerCase()
+  return TEAM_COLORS[normalized] || TEAM_COLORS[teamName] || TEAM_COLORS.Executive
+}
+
 export const AGENTS: AgentDef[] = [
+  // ── Executive (Always On) ─────────────────────────
   {
     name: 'Atlas',
     team: 'Executive',
-    role: 'Chief Supply Chain Architect / Orchestrator',
+    role: 'Mission Orchestrator (The Shogun)',
     initials: 'AT',
     charIdx: 5,
+    skills: ['orchestration', 'planning', 'arbitration'],
     detail:
-      'The organizational brain — but not the recruiter. Once Maya has assembled the task force, Atlas interprets the mission brief, determines what information is missing, builds the master research plan, delegates to every cabin, monitors progress, resolves deadlocks, convenes the Strategy Council, and commissions the final architecture.',
+      'The mission orchestrator. Atlas evaluates blackboard evidence to decide next actions: continue, retry, reassign, replan, clarify, escalate, or stop with bounded autonomy.',
   },
   {
     name: 'Maya',
     team: 'Executive',
-    role: 'Chief Resource Allocator / AI Hiring Engine',
+    role: 'Guild HR — Hiring Engine',
     initials: 'MA',
     charIdx: 4,
+    skills: ['hiring'],
     detail:
-      'The first decision-maker on every mission. Maya reads the incoming brief — product, geography, constraints, priorities — queries the live agent registry, and hires only the specialists the project actually needs. She is the reason a 21-agent organization runs as a 4-agent task force when that is all the problem requires.',
+      'Staffs the mission dynamically by matching skill requirements against available specialists, authoring custom execution mandates for each specialist.',
   },
+
+  // ── Planning — The Shogun\'s Council ─────────────────
+  {
+    name: 'Kenji',
+    team: 'Planning',
+    role: 'Requirements Analyst',
+    initials: 'KJ',
+    charIdx: 0,
+    skills: ['requirements', 'verification'],
+    detail:
+      'Deconstructs plain-language requests into concrete objectives and checkable acceptance criteria, identifying ambiguities before code is touched.',
+  },
+  {
+    name: 'Hana',
+    team: 'Planning',
+    role: 'Codebase Scout',
+    initials: 'HN',
+    charIdx: 1,
+    skills: ['recon', 'testing', 'security'],
+    detail:
+      'Reconnoitres the repository structure, discovers build and test commands, runs baseline tests, and flags architectural risk hotspots.',
+  },
+  {
+    name: 'Ryo',
+    team: 'Planning',
+    role: 'Task Planner',
+    initials: 'RY',
+    charIdx: 2,
+    skills: ['planning'],
+    detail:
+      'Translates objectives and codebase reconnaissance into a dependency-ordered DAG of tasks, dynamically replanning if blockers or unexpected conditions arise.',
+  },
+
+  // ── Samurai Forge — Implementation ──────────────────
+  {
+    name: 'Takeshi',
+    team: 'Forge',
+    role: 'Backend Engineer',
+    initials: 'TK',
+    charIdx: 3,
+    skills: ['python', 'api', 'backend', 'data'],
+    detail:
+      'Constructs backend features, APIs, database logic, and data pipelines with strict adherence to repository conventions and typing.',
+  },
+  {
+    name: 'Yuki',
+    team: 'Forge',
+    role: 'Frontend Engineer',
+    initials: 'YK',
+    charIdx: 4,
+    skills: ['frontend', 'javascript', 'typescript', 'react', 'css'],
+    detail:
+      'Crafts user interfaces, components, reactive states, and browser flows, ensuring seamless frontend-to-backend communication.',
+  },
+  {
+    name: 'Daichi',
+    team: 'Forge',
+    role: 'Debugger & Triage Specialist',
+    initials: 'DC',
+    charIdx: 5,
+    skills: ['debugging', 'fix', 'triage'],
+    detail:
+      'Diagnoses test failures, stack traces, and unhandled regressions, discovering root causes and executing surgical repairs.',
+  },
+  {
+    name: 'Sora',
+    team: 'Forge',
+    role: 'Refactoring & Style Keeper',
+    initials: 'SR',
+    charIdx: 0,
+    skills: ['refactor', 'style', 'lint'],
+    detail:
+      'Guarantees codebase hygiene, simplifies complex control flow, removes dead code, and resolves linter warnings without altering runtime behaviour.',
+  },
+
+  // ── Sentinel Dojo — Testing & Verification ──────────
+  {
+    name: 'Aiko',
+    team: 'Sentinel',
+    role: 'Test Runner',
+    initials: 'AK',
+    charIdx: 1,
+    skills: ['test_runner', 'lint', 'build'],
+    detail:
+      'Executes test suites (pytest, jest, cargo, go) and captures verifiable test execution logs as evidence on the shared mission board.',
+  },
+  {
+    name: 'Riku',
+    team: 'Sentinel',
+    role: 'Test Author',
+    initials: 'RK',
+    charIdx: 2,
+    skills: ['test_author', 'testing'],
+    detail:
+      'Authors unit and regression tests for uncovered code and bug reproductions, ensuring changes are fortified before verification.',
+  },
+  {
+    name: 'Mei',
+    team: 'Sentinel',
+    role: 'Independent Verifier',
+    initials: 'ME',
+    charIdx: 3,
+    skills: ['verification'],
+    detail:
+      'Operates in read-only mode to independently audit acceptance criteria against recorded test runs and diff evidence before sign-off.',
+  },
+
+  // ── Shadow Council — Review & Security ──────────────
+  {
+    name: 'Haruto',
+    team: 'Shadow',
+    role: 'Code Reviewer',
+    initials: 'HR',
+    charIdx: 4,
+    skills: ['review'],
+    detail:
+      'Inspects unified git diffs for maintainability, edge cases, backwards compatibility, and unintended side effects, recording formal findings.',
+  },
+  {
+    name: 'Kaito',
+    team: 'Shadow',
+    role: 'Security Inspector',
+    initials: 'KT',
+    charIdx: 5,
+    skills: ['security', 'audit'],
+    detail:
+      'Conducts static analysis for leaked secrets, injection vulnerabilities (SQL, shell), unsafe deserialization, and unvalidated inputs.',
+  },
+  {
+    name: 'Emi',
+    team: 'Shadow',
+    role: 'Arbiter',
+    initials: 'EM',
+    charIdx: 0,
+    skills: ['arbitration'],
+    detail:
+      'Resolves disputes between developers and reviewers based strictly on evidence, escalating to the human operator if irreconcilable.',
+  },
+
+  // ── Support ─────────────────────────────────────────
+  {
+    name: 'Scribe',
+    team: 'Support',
+    role: 'Evidence Scribe',
+    initials: 'SC',
+    charIdx: 1,
+    skills: ['report', 'documentation'],
+    detail:
+      'Compiles the final mission evidence report, categorizing changes into verified facts vs agent claims with links to test artifacts.',
+  },
+
+  // ── Compatibility / Legacy Agents ───────────────────
   {
     name: 'Mira',
     team: 'Intelligence',
     role: 'Demand & assortment intelligence',
     initials: 'MI',
     charIdx: 0,
-    detail:
-      'Maps demand, market size, product / category segmentation, sales velocity, seasonality, assortment, demand volatility, product lifecycle, customer geography, and category trends — producing base / low / high demand scenarios.',
+    detail: 'Maps demand, market size, and customer geography.',
   },
   {
     name: 'Ravi',
@@ -120,8 +330,7 @@ export const AGENTS: AgentDef[] = [
     role: 'Supplier intelligence',
     initials: 'RA',
     charIdx: 1,
-    detail:
-      'Builds the supplier universe for every required category and component: capabilities, locations, MOQ, pricing, lead time, capacity, certifications, and reputation. Tags every claim VERIFIED, ESTIMATED, or UNKNOWN.',
+    detail: 'Builds candidate supplier profiles and verifies capabilities.',
   },
   {
     name: 'Anika',
@@ -129,171 +338,48 @@ export const AGENTS: AgentDef[] = [
     role: 'Category benchmarking',
     initials: 'AN',
     charIdx: 2,
-    detail:
-      'Benchmarks industry supply structures: competitor assortment, supplier concentration, typical sourcing models, private-label opportunities, domestic vs imported sourcing, and typical distribution structures.',
+    detail: 'Benchmarks industry structures and lead times.',
   },
   {
     name: 'Noor',
     team: 'Intelligence',
-    role: 'Geopolitical / external risk intelligence',
+    role: 'Geopolitical risk intelligence',
     initials: 'NO',
     charIdx: 3,
-    detail:
-      'Tracks tariffs, trade restrictions, country risk, natural-disaster exposure, political instability, port and transport risks, commodity volatility, and regulatory changes — the raw risk intelligence the Resilience cell consumes.',
-  },
-  {
-    name: 'Aanya',
-    team: 'Network',
-    role: 'Supply-chain network design',
-    initials: 'AA',
-    charIdx: 4,
-    detail:
-      'Designs the physical flow of products through the network: supplier → processing → manufacturing → warehouse → distribution → customer. Weighs facility locations, transport links, tiers, geographic concentration, and redundancy.',
+    detail: 'Scores route & region exposure to external shocks.',
   },
   {
     name: 'Dev',
     team: 'Network',
-    role: 'Procurement & total landed cost',
+    role: 'Procurement & landed cost',
     initials: 'DE',
     charIdx: 5,
-    detail:
-      'Computes total landed cost, not just unit price: freight, insurance, duties, handling, warehousing, inventory carrying cost, expected disruption cost, and switching cost for every supplier lane.',
-  },
-  {
-    name: 'Kabir',
-    team: 'Network',
-    role: 'Logistics & fulfillment',
-    initials: 'KA',
-    charIdx: 0,
-    detail:
-      'Plans transport modes, route selection, shipping times, warehouse placement, distribution, lane reliability, route alternatives, and last-mile considerations for every candidate lane.',
-  },
-  {
-    name: 'Tara',
-    team: 'Network',
-    role: 'Inventory & capacity planning',
-    initials: 'TA',
-    charIdx: 1,
-    detail:
-      'Sizes safety stock, reorder points, and inventory buffers per SKU / category and location; validates supplier, manufacturing, and warehouse capacity against demand coverage and stockout exposure.',
-  },
-  {
-    name: 'Zoya',
-    team: 'Resilience',
-    role: 'Failure / risk mapping',
-    initials: 'ZO',
-    charIdx: 2,
-    detail:
-      'Builds the risk map across supplier, category, SKU, warehouse, route, store, and region — surfacing single points of failure, single-source exposure, geographic concentration, and capacity bottlenecks.',
-  },
-  {
-    name: 'Ishaan',
-    team: 'Resilience',
-    role: 'Disruption scenario generation',
-    initials: 'IS',
-    charIdx: 3,
-    detail:
-      'Generates plausible, research-informed disruption scenarios at every level: supplier outage, category demand spikes, warehouse loss, regional disruption, tariff shocks, and fuel-cost surges.',
-  },
-  {
-    name: 'Leena',
-    team: 'Resilience',
-    role: 'Stress testing',
-    initials: 'LE',
-    charIdx: 4,
-    detail:
-      'Runs every disruption scenario against every candidate topology and measures what happens to the whole business — shortage days, incremental cost, and service level — then re-tests with fixes applied.',
-  },
-  {
-    name: 'Arjun',
-    team: 'Resilience',
-    role: 'Continuity & recovery planning',
-    initials: 'AR',
-    charIdx: 5,
-    detail:
-      'Writes the playbook for when things break: trigger → detection → immediate action → fallback supplier / route → inventory release → allocation change → escalation → recovery, for every important scenario.',
-  },
-  {
-    name: 'Helena',
-    team: 'Council',
-    role: 'Cost strategist',
-    initials: 'HE',
-    charIdx: 0,
-    detail:
-      'Advocates the most economically efficient network — optimizing landed cost, working capital, logistics cost, supplier prices, and inventory costs. Challenges expensive redundancy.',
-  },
-  {
-    name: 'Vikram',
-    team: 'Council',
-    role: 'Resilience strategist',
-    initials: 'VI',
-    charIdx: 1,
-    detail:
-      'Advocates protecting the company from disruption — redundancy, alternate suppliers, geographic diversification, recovery time, and service continuity. Deliberately challenges overly cost-optimized designs.',
-  },
-  {
-    name: 'Nisha',
-    team: 'Council',
-    role: 'Operations strategist',
-    initials: 'NI',
-    charIdx: 2,
-    detail:
-      'Asks "Can this actually run?" — challenging unrealistic lead times, impossible capacities, warehouse limitations, supplier qualification gaps, and operational complexity.',
-  },
-  {
-    name: 'Omar',
-    team: 'Council',
-    role: 'Risk / compliance strategist',
-    initials: 'OM',
-    charIdx: 3,
-    detail:
-      'Asks "What are we missing?" — challenging regulatory exposure, geopolitical dependencies, tariffs, quality requirements, hidden single points of failure, and unsupported research claims.',
-  },
-  {
-    name: 'Sofia',
-    team: 'Council',
-    role: 'Council chair',
-    initials: 'SO',
-    charIdx: 4,
-    detail:
-      'Runs the adversarial debate: collects independent proposals, forces cross-examination, requests extra evidence, compares candidate architectures, and records the final decision with explicit trade-offs.',
+    detail: 'Calculates total landed cost and freight metrics.',
   },
   {
     name: 'Rohan',
     team: 'Architecture',
-    role: 'Master supply-chain architect',
+    role: 'Master system architect',
     initials: 'RO',
     charIdx: 0,
-    detail:
-      'Assembles the final supply network architecture — every node and edge with identity, location, function, capacity, cost, lead time, dependencies, and alternatives.',
-  },
-  {
-    name: 'Priya',
-    team: 'Architecture',
-    role: 'Implementation planner',
-    initials: 'PR',
-    charIdx: 1,
-    detail:
-      'Turns the architecture into an executable rollout: phased supplier qualification, warehouse setup, lane validation, safety-stock build, and contingency exercises — flagging what is ready now vs needs validation or negotiation.',
-  },
-  {
-    name: 'Ethan',
-    team: 'Architecture',
-    role: 'Independent validator',
-    initials: 'ET',
-    charIdx: 2,
-    detail:
-      'Attacks the blueprint before sign-off: every component sourced, capacity supports demand, lead times feasible, costs consistent, resilience scenarios answered, and no recommendation based on fabricated information.',
+    detail: 'Assembles architectural topology and infrastructure blueprints.',
   },
 ]
 
-export function getAgent(name: string): AgentDef | undefined {
-  return AGENTS.find((a) => a.name === name)
+export function getAgent(name: string): AgentDef {
+  const found = AGENTS.find((a) => a.name.toLowerCase() === name.toLowerCase())
+  if (found) return found
+
+  // Fallback definition for any custom agent
+  return {
+    name,
+    team: 'Support',
+    role: 'Engineering Specialist',
+    initials: name.slice(0, 2).toUpperCase(),
+    charIdx: Math.abs(name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)) % 6,
+    detail: `Guild specialist ${name} assigned to the mission.`,
+  }
 }
 
-/**
- * External ArmorIQ platform log endpoint.
- * Set NEXT_PUBLIC_ARMORIQ_URL to override; falls back to the platform root.
- */
 export const ARMORIQ_URL =
   process.env.NEXT_PUBLIC_ARMORIQ_URL || 'https://platform.armoriq.ai/dashboard/api'
