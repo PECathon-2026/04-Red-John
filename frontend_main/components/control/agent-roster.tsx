@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { AGENTS, type AgentDef, type Team } from '@/lib/agents'
 import type { AgentState } from '@/lib/mission-sim'
 import { TeamCard } from '@/components/theme/team-card'
 import { AgentDossierCard } from './agent-dossier-card'
-import { Search, Users } from 'lucide-react'
+import { Search, Users, ArrowRight } from 'lucide-react'
 
 const TEAMS: (Team | 'All')[] = [
   'All',
@@ -55,8 +56,19 @@ export function AgentRosterTab({
             </div>
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-44 sm:w-52">
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/team"
+              className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/80 bg-white/60 px-3 py-1.5 text-xs font-semibold text-[#1D1D1F] shadow-2xs backdrop-blur-md transition-all hover:bg-white hover:scale-105 active:scale-95 group"
+              title="Open full page specialists showcase"
+            >
+              <span>Full Showcase</span>
+              <ArrowRight className="h-3 w-3 text-rose-600 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+
+            {/* Search Input */}
+            <div className="relative w-40 sm:w-48">
             <input
               type="text"
               value={search}
@@ -67,6 +79,7 @@ export function AgentRosterTab({
             <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8c827a]" />
           </div>
         </div>
+      </div>
 
         {/* Team Filter Pills */}
         <div className="flex flex-wrap gap-1.5 pt-0.5">

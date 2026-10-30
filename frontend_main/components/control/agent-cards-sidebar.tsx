@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Search, Sparkles } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowRight, Users } from 'lucide-react'
 import { AGENTS, type AgentDef } from '@/lib/agents'
 import { TeamCard } from '@/components/theme/team-card'
 
@@ -10,61 +10,32 @@ export function AgentCardsSidebar({
 }: {
   onSelectAgent?: (agent: AgentDef) => void
 }) {
-  const [search, setSearch] = useState('')
-
   // Featured Organization Leads
   const featuredLeaderNames = ['Atlas', 'Maya', 'Kenji']
   const featuredAgents = featuredLeaderNames
     .map((name) => AGENTS.find((a) => a.name === name))
     .filter(Boolean) as AgentDef[]
 
-  const filteredAgents = AGENTS.filter(
-    (a) =>
-      a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a.role.toLowerCase().includes(search.toLowerCase()) ||
-      a.team.toLowerCase().includes(search.toLowerCase()),
-  )
-
-  const displayList = search.trim() ? filteredAgents : featuredAgents
-
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 shrink-0">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-rose-600" />
-          <h3 className="text-xs font-bold tracking-wide text-[#1D1D1F] uppercase">
-            Specialist Leads
-          </h3>
-        </div>
-        <span className="text-[10px] font-medium text-[#2B2B2B]/60">
-          {search.trim() ? `${filteredAgents.length} found` : '3 Team Leads'}
-        </span>
-      </div>
-
-      {/* Minimalist Glass Search Pill */}
-      <div className="pb-2 shrink-0">
-        <div className="flex items-center rounded-full border border-white/70 bg-white/50 p-1 pl-3 pr-1 backdrop-blur-md shadow-xs transition-all focus-within:border-rose-400 focus-within:bg-white/80">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search team specialists..."
-            className="w-full bg-transparent text-xs text-[#1D1D1F] outline-none placeholder:text-[#8c827a]"
-          />
-          <button
-            type="button"
-            aria-label="Search"
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1D1D1F] text-white hover:bg-rose-900 transition-colors"
-          >
-            <Search className="h-2.5 w-2.5" />
-          </button>
-        </div>
+      <div className="flex items-center justify-between pb-2.5 shrink-0">
+        <h3 className="text-xs font-bold tracking-wide text-[#1D1D1F] uppercase">
+          Specialist Leads
+        </h3>
+        <Link
+          href="/team"
+          className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-700 shadow-2xs transition-all hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:scale-105 active:scale-95 group"
+          title="Open complete 21 Specialists Guild"
+        >
+          <span>View All</span>
+          <ArrowRight className="h-2.5 w-2.5 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
 
       {/* Cards Area with Un-crushable TeamCards */}
       <div className="space-y-2.5" data-lenis-prevent>
-        {displayList.map((agent, idx) => (
+        {featuredAgents.map((agent, idx) => (
           <TeamCard
             key={agent.name}
             index={idx}
@@ -77,14 +48,18 @@ export function AgentCardsSidebar({
             className="p-3.5 sm:p-4"
           />
         ))}
+      </div>
 
-        {displayList.length === 0 && (
-          <div className="flex h-28 flex-col items-center justify-center text-center">
-            <p className="text-xs text-[#2B2B2B]/60">
-              No specialists found for &quot;{search}&quot;.
-            </p>
-          </div>
-        )}
+      {/* View All Roster footer button */}
+      <div className="pt-2.5 shrink-0">
+        <Link
+          href="/team"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-rose-200/70 bg-white/70 py-2 text-xs font-semibold text-rose-900 shadow-2xs backdrop-blur-md transition-all hover:bg-white hover:border-rose-400 hover:scale-[1.01] active:scale-95 group"
+        >
+          <Users className="h-3.5 w-3.5 text-rose-600" />
+          <span>View All 21 Specialists</span>
+          <ArrowRight className="h-3 w-3 text-rose-600 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
     </div>
   )
